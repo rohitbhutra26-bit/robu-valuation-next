@@ -8,7 +8,7 @@ interface IndustryBenchmarksProps {
 }
 
 // Indian market industry benchmarks (NSE/BSE universe medians)
-const BENCHMARKS: Record<string, {
+export const BENCHMARKS: Record<string, {
   label: string;
   pe: number;
   pb: number;
@@ -42,7 +42,7 @@ const BENCHMARKS: Record<string, {
   'Mining': { label: 'Mining', pe: 10, pb: 1.5, roe: 12, revenueGrowth: 6, netMargin: 18, epsGrowth: 8, debtToEquity: 0.6 },
 };
 
-const DEFAULT_BENCHMARK = { label: 'Broad Market', pe: 22, pb: 3.5, roe: 15, revenueGrowth: 12, netMargin: 12, epsGrowth: 12, debtToEquity: 1.0 };
+export const DEFAULT_BENCHMARK = { label: 'Broad Market', pe: 22, pb: 3.5, roe: 15, revenueGrowth: 12, netMargin: 12, epsGrowth: 12, debtToEquity: 1.0 };
 
 function CompareRow({
   label,

@@ -1,6 +1,7 @@
 'use client';
 
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
 
 interface ValuationEngineProps {
   company: Company;
@@ -69,6 +70,25 @@ function computeEarningsYieldMethod(financials: FinancialYear[], company: Compan
   };
 }
 
+function computeSectorPEMethod(financials: FinancialYear[], company: Company) {
+  // Use last year with valid EPS
+  const validEPS = financials.filter(f => f.eps > 0);
+  const lastValid = validEPS.length > 0 ? validEPS[validEPS.length - 1] : null;
+  const eps = lastValid?.eps ?? 0;
+
+  const bench = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
+  const sectorPE = bench.pe;
+  const fairValue = eps > 0 && sectorPE > 0 ? eps * sectorPE : 0;
+
+  return {
+    fairValue,
+    method: 'Sector PE',
+    desc: `EPS × ${bench.label} median PE (${sectorPE}x) — what it's worth at industry average`,
+    sectorPE,
+    sectorLabel: bench.label,
+  };
+}
+
 function computeImpliedGrowth(financials: FinancialYear[], company: Company, assumptions: ValuationAssumptions): number {
   // At current price, what net margin × growth makes sense?
   // currentPrice = (latestRevenue × (1+g)^n × margin / shares) × exitPE
@@ -120,10 +140,11 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
   const peResult = computePEMethod(financials, assumptions, company);
   const pegResult = computePEGMethod(financials, company);
   const eyResult = computeEarningsYieldMethod(financials, company);
+  const sectorResult = computeSectorPEMethod(financials, company);
   const impliedGrowth = computeImpliedGrowth(financials, company, assumptions);
 
-  // Composite = average of valid methods
-  const validFVs = [peResult.fairValue, pegResult.fairValue, eyResult.fairValue].filter(v => v > 0);
+  // Composite = average of all valid methods (4 now)
+  const validFVs = [peResult.fairValue, pegResult.fairValue, eyResult.fairValue, sectorResult.fairValue].filter(v => v > 0);
   const compositeFV = validFVs.length > 0 ? validFVs.reduce((a, b) => a + b, 0) / validFVs.length : 0;
   const compositeUpside = compositeFV > 0 ? (compositeFV / company.currentPrice - 1) * 100 : 0;
   const compositeCAGR = compositeFV > 0
@@ -161,7 +182,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
       {/* Composite fair value — big number */}
       <div className="bg-border/20 rounded-xl p-4 flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted mb-1">Composite Fair Value <span className="text-muted">(avg of 3 methods)</span></p>
+          <p className="text-xs text-muted mb-1">Composite Fair Value <span className="text-muted">(avg of {validFVs.length} methods)</span></p>
           <p className="text-2xl font-bold font-mono text-gold">
             ₹{compositeFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
@@ -185,8 +206,8 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
         </div>
       </div>
 
-      {/* 3 method cards */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* 4 method cards */}
+      <div className="grid grid-cols-2 gap-3">
         <MethodCard
           method={peResult.method}
           desc={peResult.desc}
@@ -198,6 +219,12 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           method={pegResult.method}
           desc={pegResult.desc}
           fairValue={pegResult.fairValue}
+          currentPrice={company.currentPrice}
+        />
+        <MethodCard
+          method={sectorResult.method}
+          desc={sectorResult.desc}
+          fairValue={sectorResult.fairValue}
           currentPrice={company.currentPrice}
         />
         <MethodCard
@@ -253,6 +280,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
       <div className="text-xs text-muted border-t border-border pt-3 space-y-1 leading-relaxed">
         <p><span className="text-primary font-medium">Forward PE</span> — projects future profits using your assumptions above</p>
         <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, a fair PE is ~20x (PEG = 1). Below 1 = potentially cheap</p>
+        <p><span className="text-primary font-medium">Sector PE</span> — what the stock would be worth if it traded at the industry median P/E</p>
         <p><span className="text-primary font-medium">Earnings Yield</span> — compares stock earnings vs Indian govt bond rate ({RISK_FREE_RATE}%). Higher = better</p>
       </div>
     </div>
