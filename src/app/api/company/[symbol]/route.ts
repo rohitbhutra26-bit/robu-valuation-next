@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DATA_SERVER = 'http://localhost:8000';
+const DATA_SERVER = process.env.DATA_SERVER_URL || 'http://localhost:8000';
 
 export async function GET(
   request: NextRequest,
