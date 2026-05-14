@@ -8,15 +8,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        terminal: '#0A0E1A',
-        card: '#111827',
-        border: '#2D3748',        // slightly lighter — borders now visible
+        terminal: '#000000',
+        card: '#0F0F0F',
+        border: '#1E1E1E',
         gold: '#F59E0B',
         gain: '#10B981',
         loss: '#EF4444',
         primary: '#F9FAFB',
-        muted: '#A1A9B8',         // was #6B7280 — bumped for WCAG AA contrast
-        accent: '#60A5FA',        // blue-400, readable on dark bg
+        muted: '#A1A9B8',
+        accent: '#60A5FA',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

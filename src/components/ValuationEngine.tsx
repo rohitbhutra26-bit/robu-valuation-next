@@ -35,8 +35,9 @@ function computePEGMethod(financials: FinancialYear[], company: Company) {
   const years = Math.max(validEPS.length - 1, 1);
   const epsCAGR = (Math.pow(last.eps / first.eps, 1 / years) - 1) * 100;
 
-  // Fair PE at PEG 1 = EPS growth rate, capped 8–60x
-  const fairPE = Math.min(Math.max(epsCAGR, 8), 60);
+  // Fair PE at PEG 1 = EPS growth rate, capped 12–65x
+  // 12x floor because even slow-growing quality Indian companies rarely trade below 12x
+  const fairPE = Math.min(Math.max(epsCAGR, 12), 65);
   const fairValue = last.eps * fairPE;
   const peg = company.pe > 0 && epsCAGR > 0 ? company.pe / epsCAGR : 0;
 
@@ -55,17 +56,20 @@ function computeEarningsYieldMethod(financials: FinancialYear[], company: Compan
   const lastValid = validEPS.length > 0 ? validEPS[validEPS.length - 1] : null;
   const eps = lastValid?.eps ?? 0;
 
-  // Required yield = Risk-free rate + Equity Risk Premium (3.5% for India)
-  // This gives a fair PE = 1 / requiredYield, which is growth-agnostic but anchored to bonds
-  const ERP = 3.5; // India equity risk premium %
-  const requiredYield = (RISK_FREE_RATE + ERP) / 100; // ~10.3% for a no-growth company
-  const fairValue = eps > 0 ? eps / requiredYield : 0; // fair PE ≈ 9.7x for zero-growth
+  // Required yield = Risk-free rate + India ERP, then apply growth premium
+  // A stock growing 10–15%/yr deserves a lower required yield than a bond
+  // We use RFR + ERP as the starting point, then divide by 1.3 to credit growth
+  // This gives a fair PE of ~12–15x for average growers, reasonable for Indian markets
+  const ERP = 3.0; // India equity risk premium %
+  const baseYield = (RISK_FREE_RATE + ERP) / 100; // ~9.8%
+  const requiredYield = baseYield / 1.3; // ~7.5% → fair PE ≈ 13x
+  const fairValue = eps > 0 ? eps / requiredYield : 0;
   const currentEY = company.pe > 0 ? (1 / company.pe) * 100 : 0;
 
   return {
     fairValue,
     method: 'Earnings Yield',
-    desc: `EPS ÷ (RFR ${RISK_FREE_RATE}% + ERP ${ERP}%) — bond-equivalent floor value`,
+    desc: `EPS ÷ ${(requiredYield * 100).toFixed(1)}% required yield (RFR ${RISK_FREE_RATE}% + ERP ${ERP}% ÷ growth adj.)`,
     currentEY,
   };
 }
