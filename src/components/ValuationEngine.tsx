@@ -54,14 +54,17 @@ function computeEarningsYieldMethod(financials: FinancialYear[], company: Compan
   const lastValid = validEPS.length > 0 ? validEPS[validEPS.length - 1] : null;
   const eps = lastValid?.eps ?? 0;
 
-  const requiredYield = (RISK_FREE_RATE / 100) * 0.65; // expect 65% of RFR as earnings yield for growth stocks
-  const fairValue = eps > 0 ? eps / requiredYield : 0;
+  // Required yield = Risk-free rate + Equity Risk Premium (3.5% for India)
+  // This gives a fair PE = 1 / requiredYield, which is growth-agnostic but anchored to bonds
+  const ERP = 3.5; // India equity risk premium %
+  const requiredYield = (RISK_FREE_RATE + ERP) / 100; // ~10.3% for a no-growth company
+  const fairValue = eps > 0 ? eps / requiredYield : 0; // fair PE ≈ 9.7x for zero-growth
   const currentEY = company.pe > 0 ? (1 / company.pe) * 100 : 0;
 
   return {
     fairValue,
     method: 'Earnings Yield',
-    desc: `EPS ÷ Required Yield (${(requiredYield * 100).toFixed(1)}% vs RFR ${RISK_FREE_RATE}%)`,
+    desc: `EPS ÷ (RFR ${RISK_FREE_RATE}% + ERP ${ERP}%) — bond-equivalent floor value`,
     currentEY,
   };
 }
