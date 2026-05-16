@@ -126,25 +126,35 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
           ref={dropdownRef}
           className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-xl z-50 fade-in"
         >
-          {results.map((r, i) => (
-            <button
-              key={r.symbol}
-              onClick={() => handleSelect(r.symbol)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
-                i === activeIndex
-                  ? 'bg-border'
-                  : 'hover:bg-border/50'
-              } ${r.symbol === selectedSymbol ? 'border-l-2 border-gold' : ''}`}
-            >
-              <div>
-                <span className="text-sm font-semibold text-gold font-mono">{r.symbol}</span>
-                <p className="text-xs text-muted mt-0.5 truncate max-w-[160px]">{r.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted">{r.sector || 'NSE'}</p>
-              </div>
-            </button>
-          ))}
+          {results.map((r, i) => {
+            const isBSE = r.exchange === 'BSE';
+            return (
+              <button
+                key={r.symbol}
+                onClick={() => handleSelect(r.symbol)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
+                  i === activeIndex ? 'bg-border' : 'hover:bg-border/50'
+                } ${r.symbol === selectedSymbol ? 'border-l-2 border-gold' : ''}`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div>
+                    <span className="text-sm font-semibold text-gold font-mono">{r.symbol}</span>
+                    <p className="text-xs text-muted mt-0.5 truncate max-w-[150px]">{r.name}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded ${
+                    isBSE
+                      ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                      : 'bg-gain/10 text-gain border border-gain/20'
+                  }`}>
+                    {r.exchange || 'NSE'}
+                  </span>
+                  <p className="text-[10px] text-muted truncate max-w-[80px]">{r.sector}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 

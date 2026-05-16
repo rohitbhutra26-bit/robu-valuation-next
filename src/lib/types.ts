@@ -86,6 +86,7 @@ export interface SearchResult {
   symbol: string;
   name: string;
   sector: string;
-  currentPrice: number;
-  changePercent: number;
+  exchange?: string;
+  currentPrice?: number;
+  changePercent?: number;
 }
