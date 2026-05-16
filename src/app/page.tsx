@@ -138,13 +138,16 @@ export default function Home() {
             </div>
           )}
 
-          {/* Right status */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
-              <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
-              <span>Live NSE &amp; BSE</span>
-            </div>
-            <div className="px-2 py-1 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono">BETA v1.0</div>
+          {/* Right — empty on home, live dot on stock view */}
+          <div className="flex items-center gap-2">
+            {!homeMode && company && (
+              <div className="flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
+                <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
+                <span className="font-mono text-muted/70">
+                  {company.symbol.endsWith('.BO') ? 'BSE' : 'NSE'} · Live
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -152,17 +155,17 @@ export default function Home() {
       {/* ── Home landing ───────────────────────────────────── */}
       {homeMode && (
         <main className="flex-1 flex items-center justify-center overflow-y-auto">
-          <div className="w-full max-w-[540px] px-6 py-12 flex flex-col items-center">
+          <div className="w-full max-w-[620px] px-8 py-12 flex flex-col items-center">
 
             {/* Wordmark */}
-            <RobuLogo size={60} />
-            <h1 className="mt-5 text-3xl font-bold text-primary tracking-tight">Robu Terminal</h1>
-            <p className="mt-2 text-sm text-muted text-center">
+            <RobuLogo size={72} />
+            <h1 className="mt-6 text-4xl font-bold text-primary tracking-tight">Robu Terminal</h1>
+            <p className="mt-3 text-base text-muted text-center">
               Institutional-grade valuation for every Indian stock
             </p>
 
-            {/* Search bar */}
-            <div className="w-full mt-10">
+            {/* Search bar — bigger */}
+            <div className="w-full mt-12 [&_input]:text-base [&_input]:py-4 [&_input]:pl-11 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
 
@@ -174,7 +177,7 @@ export default function Home() {
                   <button
                     key={sym}
                     onClick={() => handleSelect(sym)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-card border border-border text-muted hover:text-primary hover:border-gold/40 transition-all"
+                    className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-card border border-border text-muted hover:text-primary hover:border-gold/40 transition-all"
                   >
                     {sym}
                   </button>
@@ -182,8 +185,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Subtle footer hint */}
-            <p className="mt-12 text-xs text-muted/50 text-center">
+            <p className="mt-14 text-xs text-muted/40 text-center">
               Search any NSE or BSE listed company by name or symbol
             </p>
           </div>

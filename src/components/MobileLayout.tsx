@@ -25,13 +25,25 @@ interface Props {
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 export function RobuLogo({ size = 32 }: { size?: number }) {
+  const id = `rg-${size}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="7" fill="#111111" />
-      <path d="M8 8L8 24" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M8 8C8 8 21 8 21 13.5C21 19 8 19 8 19" stroke="#F59E0B" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M11 19L21 24" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M21 24L25 20" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+      <defs>
+        <linearGradient id={id} x1="8" y1="7" x2="32" y2="33" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="100%" stopColor="#D97706" />
+        </linearGradient>
+      </defs>
+      {/* Background — rounded square, near-black */}
+      <rect width="40" height="40" rx="10" fill="#0A0A0A" />
+      {/* Stem (left vertical bar) */}
+      <path d="M10 8L10 32" stroke={`url(#${id})`} strokeWidth="3.5" strokeLinecap="round" />
+      {/* Bowl — geometric arc */}
+      <path d="M10 8C10 8 26 8 26 17C26 26 10 26 10 26" stroke={`url(#${id})`} strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Leg */}
+      <path d="M13 26L26 33" stroke={`url(#${id})`} strokeWidth="3.5" strokeLinecap="round" />
+      {/* Rising trend tail — the Robu signature */}
+      <path d="M26 33L32 26" stroke={`url(#${id})`} strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
 }
@@ -150,7 +162,12 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
             {company.symbol.endsWith('.BO') ? 'BSE' : 'NSE'}
           </span>
         )}
-        <span className="text-xs px-2 py-0.5 bg-gold/10 border border-gold/30 rounded font-mono text-gold">BETA</span>
+        {showStock && (
+          <div className="flex items-center gap-1 text-[11px] text-muted/60">
+            <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
+            <span>Live</span>
+          </div>
+        )}
       </div>
     </header>
   );
