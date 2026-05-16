@@ -1,15 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0F1117"/>
-  <!-- Candlestick chart bars -->
-  <!-- Bar 1 (left) - bearish red -->
-  <line x1="8" y1="7" x2="8" y2="25" stroke="#EF4444" stroke-width="1" stroke-linecap="round"/>
-  <rect x="5.5" y="12" width="5" height="8" rx="0.5" fill="#EF4444"/>
-  <!-- Bar 2 (middle) - bullish green -->
-  <line x1="16" y1="5" x2="16" y2="27" stroke="#10B981" stroke-width="1" stroke-linecap="round"/>
-  <rect x="13.5" y="10" width="5" height="10" rx="0.5" fill="#10B981"/>
-  <!-- Bar 3 (right) - bullish gold -->
-  <line x1="24" y1="6" x2="24" y2="24" stroke="#F59E0B" stroke-width="1" stroke-linecap="round"/>
-  <rect x="21.5" y="9" width="5" height="9" rx="0.5" fill="#F59E0B"/>
-  <!-- Rising trend line -->
-  <polyline points="8,18 16,13 24,10" stroke="#F59E0B" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+  <!-- R: vertical bar -->
+  <path d="M8 8L8 24" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- R: bowl -->
+  <path d="M8 8C8 8 21 8 21 13.5C21 19 8 19 8 19" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- R: leg with rising tail (stock chart metaphor) -->
+  <path d="M11 19L21 24" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M21 24L25 20" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
 </svg>

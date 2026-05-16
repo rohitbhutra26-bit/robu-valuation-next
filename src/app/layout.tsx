@@ -2,11 +2,24 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ROBU Valuation Terminal',
-  description: 'Institutional-grade stock valuation platform for Indian equities',
+  title: 'Robu Terminal',
+  description: 'Institutional-grade stock valuation for Indian equities — NSE & BSE',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: 'cover',
+  },
+  themeColor: '#111111',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Robu Terminal',
   },
 };
 

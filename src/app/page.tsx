@@ -12,6 +12,7 @@ import SensitivityMatrix from '@/components/SensitivityMatrix';
 import IndustryBenchmarks from '@/components/IndustryBenchmarks';
 import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
+import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
 const DEFAULT_SYMBOL = 'TCS';
 
@@ -83,18 +84,29 @@ export default function Home() {
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
   return (
-    <div className="h-screen bg-terminal flex flex-col overflow-hidden">
+    <>
+    {/* ═══════════════════ MOBILE LAYOUT ═══════════════════ */}
+    <MobileLayout
+      company={company}
+      financials={financials}
+      selectedSymbol={selectedSymbol}
+      isLoading={isLoading}
+      error={error}
+      assumptions={assumptions}
+      setAssumptions={setAssumptions}
+      onSelect={setSelectedSymbol}
+      onRetry={() => loadCompany(selectedSymbol)}
+    />
+
+    {/* ═══════════════════ DESKTOP LAYOUT ══════════════════ */}
+    <div className="hidden md:flex h-screen bg-terminal flex-col overflow-hidden">
       {/* Top bar */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gold to-amber-700 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
-              </svg>
-            </div>
+            <RobuLogo size={28} />
             <div>
-              <h1 className="text-sm font-bold text-primary tracking-tight">ROBU Valuation Terminal</h1>
+              <h1 className="text-sm font-bold text-primary tracking-tight">Robu Terminal</h1>
               <p className="text-xs text-muted">Indian Equities Research Platform</p>
             </div>
           </div>
@@ -271,6 +283,8 @@ export default function Home() {
 
       </div>
     </div>
+    {/* end desktop */}
+    </>
   );
 }
 
