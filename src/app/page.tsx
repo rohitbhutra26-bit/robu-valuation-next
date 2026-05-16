@@ -113,7 +113,7 @@ export default function Home() {
         {/* ── LEFT SIDEBAR — search only ── */}
         <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-y-auto">
           <div className="p-3 border-b border-border">
-            <p className="text-xs text-muted uppercase tracking-wide mb-2 font-medium">Search NSE</p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-2 font-medium">Search NSE & BSE</p>
             <CompanySearch onSelect={(s) => setSelectedSymbol(s)} selectedSymbol={selectedSymbol} />
           </div>
 
