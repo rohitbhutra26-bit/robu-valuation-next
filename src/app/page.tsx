@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
@@ -14,14 +14,15 @@ import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
-const DEFAULT_SYMBOL = 'TCS';
+const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
 export default function Home() {
-  const [company, setCompany] = useState<Company | null>(null);
+  const [company, setCompany]       = useState<Company | null>(null);
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState(DEFAULT_SYMBOL);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState('');
+  const [isLoading, setIsLoading]   = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  const [homeMode, setHomeMode]     = useState(true);   // true = landing page
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>({
     revenueGrowthRate: 15,
     netMarginAssumption: 20,
@@ -29,6 +30,7 @@ export default function Home() {
     years: 5,
   });
 
+  // ── Load company data ─────────────────────────────────────────────────────
   const loadCompany = useCallback(async (symbol: string) => {
     setIsLoading(true);
     setError(null);
@@ -61,8 +63,7 @@ export default function Home() {
         const latest = fins[fins.length - 1];
         const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
         const avgGrowth = growthValues.length
-          ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length
-          : 15;
+          ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
         setAssumptions({
           revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
           netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
@@ -77,9 +78,20 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    loadCompany(selectedSymbol);
-  }, [selectedSymbol, loadCompany]);
+  // ── Navigation helpers ────────────────────────────────────────────────────
+  function handleSelect(symbol: string) {
+    setSelectedSymbol(symbol);
+    setHomeMode(false);
+    loadCompany(symbol);
+  }
+
+  function goHome() {
+    setHomeMode(true);
+    setCompany(null);
+    setFinancials([]);
+    setError(null);
+    setSelectedSymbol('');
+  }
 
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
@@ -94,201 +106,226 @@ export default function Home() {
       error={error}
       assumptions={assumptions}
       setAssumptions={setAssumptions}
-      onSelect={setSelectedSymbol}
+      onSelect={handleSelect}
       onRetry={() => loadCompany(selectedSymbol)}
     />
 
     {/* ═══════════════════ DESKTOP LAYOUT ══════════════════ */}
     <div className="hidden md:flex h-screen bg-terminal flex-col overflow-hidden">
-      {/* Top bar */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-3">
+
+      {/* ── Header ─────────────────────────────────────────── */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-2.5">
+
+          {/* Logo — always clickable to go home */}
+          <button
+            onClick={goHome}
+            className="flex items-center gap-3 group"
+          >
             <RobuLogo size={28} />
-            <div>
-              <h1 className="text-sm font-bold text-primary tracking-tight">Robu Terminal</h1>
-              <p className="text-xs text-muted">Indian Equities Research Platform</p>
+            <div className="text-left">
+              <p className="text-sm font-bold text-primary tracking-tight group-hover:text-gold transition-colors">
+                Robu Terminal
+              </p>
+              <p className="text-[11px] text-muted leading-none">Indian Equities Research</p>
             </div>
-          </div>
+          </button>
+
+          {/* Center search — only when a stock is loaded */}
+          {!homeMode && (
+            <div className="w-72">
+              <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
+            </div>
+          )}
+
+          {/* Right status */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
               <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
-              <span>Live NSE Data</span>
+              <span>Live NSE &amp; BSE</span>
             </div>
             <div className="px-2 py-1 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono">BETA v1.0</div>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* ── Home landing ───────────────────────────────────── */}
+      {homeMode && (
+        <main className="flex-1 flex items-center justify-center overflow-y-auto">
+          <div className="w-full max-w-[540px] px-6 py-12 flex flex-col items-center">
 
-        {/* ── LEFT SIDEBAR — search only ── */}
-        <aside className="w-[240px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-y-auto">
-          <div className="p-3 border-b border-border">
-            <p className="text-xs text-muted uppercase tracking-wide mb-2 font-medium">Search NSE & BSE</p>
-            <CompanySearch onSelect={(s) => setSelectedSymbol(s)} selectedSymbol={selectedSymbol} />
-          </div>
+            {/* Wordmark */}
+            <RobuLogo size={60} />
+            <h1 className="mt-5 text-3xl font-bold text-primary tracking-tight">Robu Terminal</h1>
+            <p className="mt-2 text-sm text-muted text-center">
+              Institutional-grade valuation for every Indian stock
+            </p>
 
-          <div className="p-3 border-b border-border">
-            <p className="text-xs text-muted uppercase tracking-wide mb-2 font-medium">Quick Select</p>
-            <div className="flex flex-wrap gap-1.5">
-              {['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'].map((sym) => (
-                <button
-                  key={sym}
-                  onClick={() => setSelectedSymbol(sym)}
-                  className={`px-2 py-1 rounded text-xs font-mono transition-all ${
-                    selectedSymbol === sym
-                      ? 'bg-gold text-terminal font-semibold'
-                      : 'bg-border text-muted hover:bg-border/80 hover:text-primary'
-                  }`}
-                >
-                  {sym}
-                </button>
-              ))}
+            {/* Search bar */}
+            <div className="w-full mt-10">
+              <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
-          </div>
 
-        </aside>
-
-        {/* ── CENTER — main analysis ── */}
-        <main className="flex-1 overflow-y-auto min-w-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm text-muted">Loading {selectedSymbol}...</p>
-                <p className="text-xs text-muted mt-1">Fetching live NSE data</p>
+            {/* Quick picks */}
+            <div className="w-full mt-8">
+              <p className="text-[11px] uppercase tracking-widest text-muted mb-3 font-medium">Popular</p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_PICKS.map((sym) => (
+                  <button
+                    key={sym}
+                    onClick={() => handleSelect(sym)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-card border border-border text-muted hover:text-primary hover:border-gold/40 transition-all"
+                  >
+                    {sym}
+                  </button>
+                ))}
               </div>
             </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-sm">
-                <p className="text-sm text-loss font-medium mb-1">Failed to load {selectedSymbol}</p>
-                <p className="text-xs text-muted mb-3">{error}</p>
-                <button onClick={() => loadCompany(selectedSymbol)} className="px-3 py-1.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold hover:bg-gold/20">
-                  Retry
-                </button>
+
+            {/* Subtle footer hint */}
+            <p className="mt-12 text-xs text-muted/50 text-center">
+              Search any NSE or BSE listed company by name or symbol
+            </p>
+          </div>
+        </main>
+      )}
+
+      {/* ── Stock analysis layout ───────────────────────────── */}
+      {!homeMode && (
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* LEFT SIDEBAR — quick picks only */}
+          <aside className="w-[180px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-y-auto">
+            <div className="p-3">
+              <p className="text-[10px] text-muted uppercase tracking-widest mb-2 font-medium">Quick Select</p>
+              <div className="flex flex-col gap-1">
+                {QUICK_PICKS.map((sym) => (
+                  <button
+                    key={sym}
+                    onClick={() => handleSelect(sym)}
+                    className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-mono transition-all ${
+                      selectedSymbol === sym
+                        ? 'bg-gold text-terminal font-semibold'
+                        : 'text-muted hover:bg-border/60 hover:text-primary'
+                    }`}
+                  >
+                    {sym}
+                  </button>
+                ))}
               </div>
             </div>
-          ) : company ? (
-            <div className="p-4 space-y-4">
-              {/* Company header */}
-              <CompanyHeader company={company} />
+          </aside>
 
-              {/* Key metrics */}
-              <KeyMetrics company={company} financials={financials} />
+          {/* CENTER — main analysis */}
+          <main className="flex-1 overflow-y-auto min-w-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-sm text-muted">Loading {selectedSymbol}…</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center max-w-sm">
+                  <p className="text-sm text-loss font-medium mb-1">Failed to load {selectedSymbol}</p>
+                  <p className="text-xs text-muted mb-3">{error}</p>
+                  <button onClick={() => loadCompany(selectedSymbol)} className="px-3 py-1.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold hover:bg-gold/20">
+                    Retry
+                  </button>
+                </div>
+              </div>
+            ) : company ? (
+              <div className="p-4 space-y-4">
+                <CompanyHeader company={company} />
+                <KeyMetrics company={company} financials={financials} />
 
-              {/* ── VALUATION ENGINE — top priority ── */}
-              {financials.length > 0 && (
-                <>
-                  {/* Assumptions — full width */}
-                  <div className="bg-card border border-border rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
-                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      </svg>
-                      <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
-                      <span className="ml-auto text-xs text-muted">Adjust below — all outputs update live</span>
-                    </div>
-
-                    {/* 4 assumption controls in a row */}
-                    <div className="grid grid-cols-4 gap-4 mb-3">
-                      {/* Revenue Growth */}
-                      <SliderInput
-                        label="Revenue Growth"
-                        value={assumptions.revenueGrowthRate}
-                        min={1} max={50} step={0.5} suffix="%"
-                        color="text-accent"
-                        onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                        hint={`FY24 actual: ${latest?.revenueGrowth.toFixed(1)}%`}
-                      />
-                      {/* Net Margin */}
-                      <SliderInput
-                        label="Net Margin"
-                        value={assumptions.netMarginAssumption}
-                        min={1} max={50} step={0.5} suffix="%"
-                        color="text-gain"
-                        onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-                        hint={`FY24 actual: ${latest?.netMargin.toFixed(1)}%`}
-                      />
-                      {/* Exit PE */}
-                      <SliderInput
-                        label="Exit P/E"
-                        value={assumptions.exitPE}
-                        min={5} max={100} step={1} suffix="x"
-                        color="text-gold"
-                        onChange={(v) => setAssumptions(a => ({ ...a, exitPE: v }))}
-                        hint={`Current P/E: ${company.pe.toFixed(1)}x`}
-                      />
-                      {/* Years */}
-                      <div>
-                        <p className="text-xs text-muted mb-1.5">Horizon</p>
-                        <div className="flex gap-1.5 flex-wrap">
-                          {[3,5,7,10].map(y => (
-                            <button
-                              key={y}
-                              onClick={() => setAssumptions(a => ({ ...a, years: y }))}
-                              className={`flex-1 min-w-[36px] py-1.5 rounded text-xs font-semibold transition-all ${
-                                assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted hover:text-primary'
-                              }`}
-                            >
-                              {y}Y
-                            </button>
-                          ))}
+                {financials.length > 0 && (
+                  <>
+                    {/* Valuation Assumptions */}
+                    <div className="bg-card border border-border rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
+                        <span className="ml-auto text-xs text-muted">Adjust below — all outputs update live</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-4 mb-3">
+                        <SliderInput
+                          label="Revenue Growth" value={assumptions.revenueGrowthRate}
+                          min={1} max={50} step={0.5} suffix="%" color="text-accent"
+                          onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
+                          hint={`${latest?.year} actual: ${latest?.revenueGrowth.toFixed(1)}%`}
+                        />
+                        <SliderInput
+                          label="Net Margin" value={assumptions.netMarginAssumption}
+                          min={1} max={50} step={0.5} suffix="%" color="text-gain"
+                          onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
+                          hint={`${latest?.year} actual: ${latest?.netMargin.toFixed(1)}%`}
+                        />
+                        <SliderInput
+                          label="Exit P/E" value={assumptions.exitPE}
+                          min={5} max={100} step={1} suffix="x" color="text-gold"
+                          onChange={(v) => setAssumptions(a => ({ ...a, exitPE: v }))}
+                          hint={`Current P/E: ${company.pe.toFixed(1)}x`}
+                        />
+                        <div>
+                          <p className="text-xs text-muted mb-1.5">Horizon</p>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {[3,5,7,10].map(y => (
+                              <button
+                                key={y}
+                                onClick={() => setAssumptions(a => ({ ...a, years: y }))}
+                                className={`flex-1 min-w-[36px] py-1.5 rounded text-xs font-semibold transition-all ${
+                                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted hover:text-primary'
+                                }`}
+                              >
+                                {y}Y
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted mt-2">Projection years</p>
                         </div>
-                        <p className="text-xs text-muted mt-2">Projection years</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Scenario Analysis — full width */}
-                  <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                    <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                    <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                    <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+                    <EarningsQuality financials={financials} />
+                  </>
+                )}
 
-                  {/* Sensitivity Matrix — full width */}
-                  <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                {financials.length > 0 && <FinancialsTable financials={financials} />}
+              </div>
+            ) : null}
+          </main>
 
-                  {/* Valuation Engine — 3 methods */}
-                  <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+          {/* RIGHT PANEL — AI + Industry */}
+          <aside className="w-[300px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
+            {company ? (
+              <div className="p-3 space-y-3">
+                <AIOverview company={company} />
+                <IndustryBenchmarks company={company} financials={financials} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-sm text-muted px-4 text-center">Select a company to view analysis</p>
+              </div>
+            )}
+          </aside>
 
-                  {/* Earnings Quality */}
-                  <EarningsQuality financials={financials} />
-                </>
-              )}
+        </div>
+      )}
 
-              {/* Financials table */}
-              {financials.length > 0 && (
-                <FinancialsTable financials={financials} />
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted text-sm">Select a company to begin</p>
-            </div>
-          )}
-        </main>
-
-        {/* ── RIGHT PANEL — AI + Industry ── */}
-        <aside className="w-[300px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
-          {company ? (
-            <div className="p-3 space-y-3">
-              <AIOverview company={company} />
-              <IndustryBenchmarks company={company} financials={financials} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-muted px-4 text-center">Select a company to view analysis</p>
-            </div>
-          )}
-        </aside>
-
-      </div>
     </div>
     {/* end desktop */}
     </>
   );
 }
 
-/* ── Inline SliderInput component (used only in this page) ── */
+/* ── SliderInput ─────────────────────────────────────────────────────────── */
 function SliderInput({
   label, value, min, max, step, suffix, color, onChange, hint,
 }: {
@@ -303,13 +340,8 @@ function SliderInput({
         <p className="text-xs text-muted">{label}</p>
         <div className="flex items-center gap-0.5">
           <input
-            type="number"
-            min={min} max={max} step={step}
-            value={value}
-            onChange={(e) => {
-              const n = parseFloat(e.target.value);
-              if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max));
-            }}
+            type="number" min={min} max={max} step={step} value={value}
+            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max)); }}
             className={`w-14 text-right text-sm font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           />
           <span className={`text-sm font-bold font-mono ${color}`}>{suffix}</span>
@@ -319,7 +351,7 @@ function SliderInput({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${pct}%, #2D3748 ${pct}%, #2D3748 100%)` }}
+        style={{ background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${pct}%, #1E1E1E ${pct}%, #1E1E1E 100%)` }}
       />
       {hint && <p className="text-xs text-muted mt-1 font-mono">{hint}</p>}
     </div>
