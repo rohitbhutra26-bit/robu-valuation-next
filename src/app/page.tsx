@@ -13,6 +13,7 @@ import SensitivityMatrix from '@/components/SensitivityMatrix';
 import IndustryBenchmarks from '@/components/IndustryBenchmarks';
 import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
+import WhatMustHappen from '@/components/WhatMustHappen';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
@@ -320,6 +321,7 @@ export default function Home() {
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
                     <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+                    <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
                     <EarningsQuality financials={financials} />
                   </>
                 )}

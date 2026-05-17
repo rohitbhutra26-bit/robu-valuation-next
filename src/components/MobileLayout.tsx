@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { getSectorProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
 import ScenarioCards from './ScenarioCards';
 import FinancialsTable from './FinancialsTable';
 import ValuationEngine from './ValuationEngine';
 import EarningsQuality from './EarningsQuality';
+import WhatMustHappen from './WhatMustHappen';
 
 type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials';
 
@@ -371,15 +373,18 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company || financials.length === 0) return null;
   const latest = financials[financials.length - 1];
+  const sectorProfile = getSectorProfile(company.sector);
 
   return (
     <div className="px-4 pt-4 pb-28 space-y-4">
-      {/* Assumptions card */}
+      {/* Assumptions card — now sector-aware */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
           <h3 className="text-sm font-semibold text-primary">Assumptions</h3>
-          <span className="ml-auto text-xs text-muted">Live updates</span>
+          <span className="ml-auto text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
+            {sectorProfile.sectorLabel}
+          </span>
         </div>
         <MobileSlider
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
@@ -387,17 +392,28 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
           hint={`Actual: ${latest.revenueGrowth.toFixed(1)}%`}
         />
+        {sectorProfile.model !== 'pb' && (
+          <MobileSlider
+            label="Net Margin" value={assumptions.netMarginAssumption}
+            min={1} max={50} step={0.5} suffix="%" color="text-gain"
+            onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
+            hint={`Actual: ${latest.netMargin.toFixed(1)}%`}
+          />
+        )}
         <MobileSlider
-          label="Net Margin" value={assumptions.netMarginAssumption}
-          min={1} max={50} step={0.5} suffix="%" color="text-gain"
-          onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-          hint={`Actual: ${latest.netMargin.toFixed(1)}%`}
-        />
-        <MobileSlider
-          label="Exit P/E" value={assumptions.exitPE}
-          min={5} max={100} step={1} suffix="x" color="text-gold"
-          onChange={(v) => setAssumptions(a => ({ ...a, exitPE: v }))}
-          hint={`Current: ${company.pe.toFixed(1)}x`}
+          label={sectorProfile.exitMultipleLabel}
+          value={assumptions.exitMultiple}
+          min={sectorProfile.exitMultipleMin}
+          max={sectorProfile.exitMultipleMax}
+          step={sectorProfile.exitMultipleStep}
+          suffix="x"
+          color="text-gold"
+          onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
+          hint={
+            sectorProfile.model === 'pe' ? `Current P/E: ${company.pe.toFixed(1)}x` :
+            sectorProfile.model === 'pb' ? `Current P/B: ${company.pb.toFixed(1)}x` :
+            `Default: ${sectorProfile.defaultExitMultiple}x`
+          }
         />
         <div>
           <p className="text-sm text-muted mb-2">Horizon</p>
@@ -417,17 +433,14 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         </div>
       </div>
 
-      {/* Scenario cards — stacked on mobile */}
-      <div className="bg-card border border-border rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-primary">Scenarios</h3>
-          <span className="text-xs text-muted font-mono">Current ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-        </div>
-        <MobileScenarios financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
-      </div>
+      {/* Scenario cards — now sector-aware with probability weights */}
+      <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
 
       {/* Valuation Engine */}
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+
+      {/* What Must Happen */}
+      <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
     </div>
   );
 }
