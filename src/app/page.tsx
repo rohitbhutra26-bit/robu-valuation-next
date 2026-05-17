@@ -133,29 +133,20 @@ export default function Home() {
 
           {/* Center search — only when a stock is loaded */}
           {!homeMode && (
-            <div className="w-72">
+            <div className="w-[480px]">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
           )}
 
-          {/* Right — empty on home, live dot on stock view */}
-          <div className="flex items-center gap-2">
-            {!homeMode && company && (
-              <div className="flex items-center gap-1.5 text-xs text-muted" suppressHydrationWarning>
-                <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
-                <span className="font-mono text-muted/70">
-                  {company.symbol.endsWith('.BO') ? 'BSE' : 'NSE'} · Live
-                </span>
-              </div>
-            )}
-          </div>
+          {/* Right — intentionally empty */}
+          <div className="w-[80px]" />
         </div>
       </header>
 
       {/* ── Home landing ───────────────────────────────────── */}
       {homeMode && (
         <main className="flex-1 flex items-center justify-center overflow-y-auto">
-          <div className="w-full max-w-[620px] px-8 py-12 flex flex-col items-center">
+          <div className="w-full max-w-[740px] px-8 py-12 flex flex-col items-center">
 
             {/* Wordmark */}
             <RobuLogo size={72} />
@@ -165,7 +156,7 @@ export default function Home() {
             </p>
 
             {/* Search bar — bigger */}
-            <div className="w-full mt-12 [&_input]:text-base [&_input]:py-4 [&_input]:pl-11 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
+            <div className="w-full mt-12 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
 

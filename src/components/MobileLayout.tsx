@@ -24,26 +24,27 @@ interface Props {
 }
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
+// Solid-fill design — no gradient IDs, no rendering conflicts across instances
 export function RobuLogo({ size = 32 }: { size?: number }) {
-  const id = `rg-${size}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <defs>
-        <linearGradient id={id} x1="8" y1="7" x2="32" y2="33" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FDE68A" />
-          <stop offset="100%" stopColor="#D97706" />
-        </linearGradient>
-      </defs>
-      {/* Background — rounded square, near-black */}
-      <rect width="40" height="40" rx="10" fill="#0A0A0A" />
-      {/* Stem (left vertical bar) */}
-      <path d="M10 8L10 32" stroke={`url(#${id})`} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Bowl — geometric arc */}
-      <path d="M10 8C10 8 26 8 26 17C26 26 10 26 10 26" stroke={`url(#${id})`} strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Leg */}
-      <path d="M13 26L26 33" stroke={`url(#${id})`} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Rising trend tail — the Robu signature */}
-      <path d="M26 33L32 26" stroke={`url(#${id})`} strokeWidth="3" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Rounded-square container */}
+      <rect width="40" height="40" rx="9" fill="#141414"/>
+      {/* Amber border — makes icon visible against any dark bg */}
+      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#F59E0B" strokeWidth="1.5" strokeOpacity="0.45" fill="none"/>
+
+      {/* ── Left stem ── */}
+      <rect x="8" y="7" width="5.5" height="26" rx="1.5" fill="#F59E0B"/>
+
+      {/* ── Bowl of R — outer D shape with inner cutout via evenodd ── */}
+      <path
+        fillRule="evenodd"
+        d="M13.5 7 C29 7 29 25 13.5 25 Z  M13.5 11.5 C24 11.5 24 20.5 13.5 20.5 Z"
+        fill="#F59E0B"
+      />
+
+      {/* ── Diagonal leg ── */}
+      <path d="M14 24.5L28 33" stroke="#F59E0B" strokeWidth="5" strokeLinecap="round"/>
     </svg>
   );
 }
