@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { getSectorProfile } from '@/lib/sectorModelMap';
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
 import KeyMetrics from '@/components/KeyMetrics';
@@ -27,6 +28,7 @@ export default function Home() {
     revenueGrowthRate: 15,
     netMarginAssumption: 20,
     exitPE: 25,
+    exitMultiple: 25,   // will be set correctly once sector is known
     years: 5,
   });
 
@@ -64,10 +66,16 @@ export default function Home() {
         const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
         const avgGrowth = growthValues.length
           ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
+
+        // Pick default exit multiple from the sector profile
+        const sectorProfile = getSectorProfile(companyData.sector);
+        const exitPE = Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100);
+
         setAssumptions({
           revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
           netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
-          exitPE: Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
+          exitPE,
+          exitMultiple: sectorProfile.defaultExitMultiple,
           years: 5,
         });
       }
@@ -236,54 +244,80 @@ export default function Home() {
                 {financials.length > 0 && (
                   <>
                     {/* Valuation Assumptions */}
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
-                          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                        </svg>
-                        <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
-                        <span className="ml-auto text-xs text-muted">Adjust below — all outputs update live</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-4 mb-3">
-                        <SliderInput
-                          label="Revenue Growth" value={assumptions.revenueGrowthRate}
-                          min={1} max={50} step={0.5} suffix="%" color="text-accent"
-                          onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                          hint={`${latest?.year} actual: ${latest?.revenueGrowth.toFixed(1)}%`}
-                        />
-                        <SliderInput
-                          label="Net Margin" value={assumptions.netMarginAssumption}
-                          min={1} max={50} step={0.5} suffix="%" color="text-gain"
-                          onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-                          hint={`${latest?.year} actual: ${latest?.netMargin.toFixed(1)}%`}
-                        />
-                        <SliderInput
-                          label="Exit P/E" value={assumptions.exitPE}
-                          min={5} max={100} step={1} suffix="x" color="text-gold"
-                          onChange={(v) => setAssumptions(a => ({ ...a, exitPE: v }))}
-                          hint={`Current P/E: ${company.pe.toFixed(1)}x`}
-                        />
-                        <div>
-                          <p className="text-xs text-muted mb-1.5">Horizon</p>
-                          <div className="flex gap-1.5 flex-wrap">
-                            {[3,5,7,10].map(y => (
-                              <button
-                                key={y}
-                                onClick={() => setAssumptions(a => ({ ...a, years: y }))}
-                                className={`flex-1 min-w-[36px] py-1.5 rounded text-xs font-semibold transition-all ${
-                                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted hover:text-primary'
-                                }`}
-                              >
-                                {y}Y
-                              </button>
-                            ))}
+                    {(() => {
+                      const sectorProfile = getSectorProfile(company.sector);
+                      return (
+                        <div className="bg-card border border-border rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg>
+                            <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
+                            <span className="ml-auto text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
+                              {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
+                            </span>
                           </div>
-                          <p className="text-xs text-muted mt-2">Projection years</p>
+                          <div className="grid grid-cols-4 gap-4">
+                            <SliderInput
+                              label="Revenue Growth" value={assumptions.revenueGrowthRate}
+                              min={1} max={50} step={0.5} suffix="%" color="text-accent"
+                              onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
+                              hint={`${latest?.year} actual: ${latest?.revenueGrowth.toFixed(1)}%`}
+                            />
+                            {sectorProfile.model !== 'pb' && (
+                              <SliderInput
+                                label="Net Margin" value={assumptions.netMarginAssumption}
+                                min={1} max={50} step={0.5} suffix="%" color="text-gain"
+                                onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
+                                hint={`${latest?.year} actual: ${latest?.netMargin.toFixed(1)}%`}
+                              />
+                            )}
+                            {sectorProfile.model === 'pb' && (
+                              <SliderInput
+                                label="Book Value Growth" value={assumptions.revenueGrowthRate}
+                                min={1} max={40} step={0.5} suffix="%" color="text-gain"
+                                onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
+                                hint={`ROE: ${company.roe.toFixed(1)}% → proxy for BV growth`}
+                              />
+                            )}
+                            <SliderInput
+                              label={sectorProfile.exitMultipleLabel}
+                              value={assumptions.exitMultiple}
+                              min={sectorProfile.exitMultipleMin}
+                              max={sectorProfile.exitMultipleMax}
+                              step={sectorProfile.exitMultipleStep}
+                              suffix="x"
+                              color="text-gold"
+                              onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
+                              hint={
+                                sectorProfile.model === 'pe' ? `Current P/E: ${company.pe.toFixed(1)}x` :
+                                sectorProfile.model === 'pb' ? `Current P/B: ${company.pb.toFixed(1)}x` :
+                                `Sector default: ${sectorProfile.defaultExitMultiple}x`
+                              }
+                            />
+                            <div>
+                              <p className="text-xs text-muted mb-1.5">Horizon</p>
+                              <div className="flex gap-1.5 flex-wrap">
+                                {[3,5,7,10].map(y => (
+                                  <button
+                                    key={y}
+                                    onClick={() => setAssumptions(a => ({ ...a, years: y }))}
+                                    className={`flex-1 min-w-[36px] py-1.5 rounded text-xs font-semibold transition-all ${
+                                      assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted hover:text-primary'
+                                    }`}
+                                  >
+                                    {y}Y
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="text-xs text-muted mt-2">Projection years</p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
-                    <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                    <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
                     <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
                     <EarningsQuality financials={financials} />

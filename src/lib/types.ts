@@ -42,7 +42,8 @@ export interface Company {
 export interface ValuationAssumptions {
   revenueGrowthRate: number;
   netMarginAssumption: number;
-  exitPE: number;
+  exitPE: number;           // kept for cross-check methods (PEG, Earnings Yield)
+  exitMultiple: number;     // sector-appropriate: P/E for FMCG/IT, EV/EBITDA for Metals, P/B for Banks
   years: number;
 }
 
