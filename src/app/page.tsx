@@ -14,6 +14,7 @@ import IndustryBenchmarks from '@/components/IndustryBenchmarks';
 import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
+import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
@@ -336,6 +337,7 @@ export default function Home() {
             {company ? (
               <div className="p-3 space-y-3">
                 <AIOverview company={company} />
+                <HistoricalValuationChart company={company} />
                 <IndustryBenchmarks company={company} financials={financials} />
               </div>
             ) : (

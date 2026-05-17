@@ -10,6 +10,7 @@ import FinancialsTable from './FinancialsTable';
 import ValuationEngine from './ValuationEngine';
 import EarningsQuality from './EarningsQuality';
 import WhatMustHappen from './WhatMustHappen';
+import HistoricalValuationChart from './HistoricalValuationChart';
 
 type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials';
 
@@ -498,8 +499,9 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company) return null;
   return (
-    <div className="px-4 pt-4 pb-28">
+    <div className="px-4 pt-4 pb-28 space-y-4">
       <AIOverview company={company} />
+      <HistoricalValuationChart company={company} />
     </div>
   );
 }
