@@ -16,9 +16,19 @@ import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
+import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
+
+type ActiveView = 'valuation' | 'financials' | 'peers';
+
+// ─── Nav item definition ───────────────────────────────────────────────────────
+const NAV_ITEMS: { view: ActiveView; icon: string; label: string; badge?: string }[] = [
+  { view: 'valuation',  icon: '◈',  label: 'Valuation'  },
+  { view: 'financials', icon: '📋', label: 'Financials'  },
+  { view: 'peers',      icon: '👥', label: 'Peer Compare', badge: 'NEW' },
+];
 
 export default function Home() {
   const [company, setCompany]       = useState<Company | null>(null);
@@ -26,21 +36,23 @@ export default function Home() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [isLoading, setIsLoading]   = useState(false);
   const [error, setError]           = useState<string | null>(null);
-  const [homeMode, setHomeMode]     = useState(true);   // true = landing page
+  const [homeMode, setHomeMode]     = useState(true);
+  const [activeView, setActiveView] = useState<ActiveView>('valuation');
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>({
     revenueGrowthRate: 15,
     netMarginAssumption: 20,
     exitPE: 25,
-    exitMultiple: 25,   // will be set correctly once sector is known
+    exitMultiple: 25,
     years: 5,
   });
 
-  // ── Load company data ─────────────────────────────────────────────────────
+  // ── Load company ──────────────────────────────────────────────────────────
   const loadCompany = useCallback(async (symbol: string) => {
     setIsLoading(true);
     setError(null);
     setCompany(null);
     setFinancials([]);
+    setActiveView('valuation');
 
     try {
       const [companyRes, financialsRes] = await Promise.all([
@@ -69,11 +81,8 @@ export default function Home() {
         const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
         const avgGrowth = growthValues.length
           ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
-
-        // Pick default exit multiple from the sector profile
         const sectorProfile = getSectorProfile(companyData.sector);
         const exitPE = Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100);
-
         setAssumptions({
           revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
           netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
@@ -89,7 +98,6 @@ export default function Home() {
     }
   }, []);
 
-  // ── Navigation helpers ────────────────────────────────────────────────────
   function handleSelect(symbol: string) {
     setSelectedSymbol(symbol);
     setHomeMode(false);
@@ -102,13 +110,14 @@ export default function Home() {
     setFinancials([]);
     setError(null);
     setSelectedSymbol('');
+    setActiveView('valuation');
   }
 
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
   return (
     <>
-    {/* ═══════════════════ MOBILE LAYOUT ═══════════════════ */}
+    {/* ═══════════════════ MOBILE ═══════════════════ */}
     <MobileLayout
       company={company}
       financials={financials}
@@ -121,57 +130,42 @@ export default function Home() {
       onRetry={() => loadCompany(selectedSymbol)}
     />
 
-    {/* ═══════════════════ DESKTOP LAYOUT ══════════════════ */}
+    {/* ═══════════════════ DESKTOP ══════════════════ */}
     <div className="hidden md:flex h-screen bg-terminal flex-col overflow-hidden">
 
-      {/* ── Header ─────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────────── */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex-shrink-0">
         <div className="flex items-center justify-between px-5 py-2.5">
-
-          {/* Logo — always clickable to go home */}
-          <button
-            onClick={goHome}
-            className="flex items-center gap-3 group"
-          >
+          <button onClick={goHome} className="flex items-center gap-3 group">
             <RobuLogo size={28} />
             <div className="text-left">
-              <p className="text-sm font-bold text-primary tracking-tight group-hover:text-gold transition-colors">
-                Robu Terminal
-              </p>
+              <p className="text-sm font-bold text-primary tracking-tight group-hover:text-gold transition-colors">Robu Terminal</p>
               <p className="text-[11px] text-muted leading-none">Indian Equities Research</p>
             </div>
           </button>
 
-          {/* Center search — only when a stock is loaded */}
           {!homeMode && (
             <div className="w-[480px]">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
           )}
 
-          {/* Right — intentionally empty */}
           <div className="w-[80px]" />
         </div>
       </header>
 
-      {/* ── Home landing ───────────────────────────────────── */}
+      {/* ── Home landing ──────────────────────────────────── */}
       {homeMode && (
         <main className="flex-1 flex items-center justify-center overflow-y-auto">
           <div className="w-full max-w-[740px] px-8 py-12 flex flex-col items-center">
-
-            {/* Wordmark */}
             <RobuLogo size={72} />
             <h1 className="mt-6 text-4xl font-bold text-primary tracking-tight">Robu Terminal</h1>
             <p className="mt-3 text-base text-muted text-center">
               Institutional-grade valuation for every Indian stock
             </p>
-
-            {/* Search bar — bigger */}
             <div className="w-full mt-12 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
-
-            {/* Quick picks */}
             <div className="w-full mt-8">
               <p className="text-[11px] uppercase tracking-widest text-muted mb-3 font-medium">Popular</p>
               <div className="flex flex-wrap gap-2">
@@ -186,7 +180,6 @@ export default function Home() {
                 ))}
               </div>
             </div>
-
             <p className="mt-14 text-xs text-muted/40 text-center">
               Search any NSE or BSE listed company by name or symbol
             </p>
@@ -194,33 +187,60 @@ export default function Home() {
         </main>
       )}
 
-      {/* ── Stock analysis layout ───────────────────────────── */}
+      {/* ── Stock analysis layout ─────────────────────────── */}
       {!homeMode && (
         <div className="flex flex-1 overflow-hidden">
 
-          {/* LEFT SIDEBAR — quick picks only */}
-          <aside className="w-[180px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-y-auto">
-            <div className="p-3">
-              <p className="text-[10px] text-muted uppercase tracking-widest mb-2 font-medium">Quick Select</p>
-              <div className="flex flex-col gap-1">
-                {QUICK_PICKS.map((sym) => (
-                  <button
-                    key={sym}
-                    onClick={() => handleSelect(sym)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-mono transition-all ${
-                      selectedSymbol === sym
-                        ? 'bg-gold text-terminal font-semibold'
-                        : 'text-muted hover:bg-border/60 hover:text-primary'
-                    }`}
-                  >
-                    {sym}
-                  </button>
-                ))}
-              </div>
+          {/* ── LEFT NAV SIDEBAR ─────────────────────────── */}
+          <aside className="w-[168px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-hidden">
+
+            {/* Navigation */}
+            <div className="p-2 pt-3">
+              <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Analyse</p>
+              {NAV_ITEMS.map(item => (
+                <button
+                  key={item.view}
+                  onClick={() => setActiveView(item.view)}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all mb-0.5 ${
+                    activeView === item.view
+                      ? 'bg-gold/10 text-gold border border-gold/20'
+                      : 'text-muted hover:bg-border/50 hover:text-primary border border-transparent'
+                  }`}
+                >
+                  <span className="text-sm w-4 text-center flex-shrink-0">{item.icon}</span>
+                  <span className="text-[11px] font-medium leading-tight flex-1">{item.label}</span>
+                  {item.badge && (
+                    <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <div className="my-3 border-t border-border/60" />
+
+              {/* Quick picks */}
+              <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-2 pb-3">
+              {QUICK_PICKS.map((sym) => (
+                <button
+                  key={sym}
+                  onClick={() => handleSelect(sym)}
+                  className={`w-full text-left px-2.5 py-1.5 rounded text-[11px] font-mono transition-all mb-0.5 ${
+                    selectedSymbol === sym
+                      ? 'bg-gold text-terminal font-bold'
+                      : 'text-muted hover:bg-border/60 hover:text-primary'
+                  }`}
+                >
+                  {sym}
+                </button>
+              ))}
             </div>
           </aside>
 
-          {/* CENTER — main analysis */}
+          {/* ── CENTER MAIN CONTENT ───────────────────────── */}
           <main className="flex-1 overflow-y-auto min-w-0">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
@@ -241,12 +261,13 @@ export default function Home() {
               </div>
             ) : company ? (
               <div className="p-4 space-y-4">
+                {/* Company header — always visible */}
                 <CompanyHeader company={company} />
-                <KeyMetrics company={company} financials={financials} />
 
-                {financials.length > 0 && (
+                {/* ── VIEW: VALUATION ── */}
+                {activeView === 'valuation' && financials.length > 0 && (
                   <>
-                    {/* Valuation Assumptions */}
+                    {/* Assumptions panel */}
                     {(() => {
                       const sectorProfile = getSectorProfile(company.sector);
                       return (
@@ -325,17 +346,36 @@ export default function Home() {
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
                     <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
-                    <EarningsQuality financials={financials} />
                   </>
                 )}
 
-                {financials.length > 0 && <FinancialsTable financials={financials} />}
+                {activeView === 'valuation' && financials.length === 0 && (
+                  <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
+                )}
+
+                {/* ── VIEW: FINANCIALS ── */}
+                {activeView === 'financials' && (
+                  <>
+                    <KeyMetrics company={company} financials={financials} />
+                    {financials.length > 0 && (
+                      <>
+                        <FinancialsTable financials={financials} />
+                        <EarningsQuality financials={financials} />
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* ── VIEW: PEERS ── */}
+                {activeView === 'peers' && (
+                  <PeerCompare company={company} />
+                )}
               </div>
             ) : null}
           </main>
 
-          {/* RIGHT PANEL — AI + Industry */}
-          <aside className="w-[300px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
+          {/* ── RIGHT PANEL — AI + Historical (persistent) ── */}
+          <aside className="w-[290px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
             {company ? (
               <div className="p-3 space-y-3">
                 <AIOverview company={company} />
