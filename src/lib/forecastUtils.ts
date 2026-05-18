@@ -568,7 +568,8 @@ export function suggestAssumptions(
   let rationale: string;
 
   // Priority 1: Forward analyst estimate from Yahoo Finance
-  const fwdGrowth = (company.earningsGrowth ?? 0) * 100; // Yahoo returns as decimal e.g. 0.18
+  // Backend already converts to % (e.g. 18.0 for 18% growth) — do NOT multiply by 100 again
+  const fwdGrowth = company.earningsGrowth ?? 0;
   if (fwdGrowth > 2 && fwdGrowth < 60) {
     rawCompanyGrowth = fwdGrowth;
     source = 'analyst_guidance';

@@ -58,9 +58,12 @@ export default function Home() {
 
   // ── Core fetch logic (shared by load + prefetch) ─────────────────────────
   async function _fetchSymbol(symbol: string): Promise<{ company: Company; financials: FinancialYear[] }> {
+    // Try Screener.in-backed endpoint first; fall back to Yahoo if unavailable
     const [companyRes, financialsRes] = await Promise.all([
       fetch(`/api/company/${symbol}`, { cache: 'no-store' }),
-      fetch(`/api/financials-v2/${symbol}`, { cache: 'no-store' }), // Screener.in → BSE-accurate data
+      fetch(`/api/financials-v2/${symbol}`, { cache: 'no-store' })
+        .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`, { cache: 'no-store' }))
+        .catch(() => fetch(`/api/financials/${symbol}`, { cache: 'no-store' })),
     ]);
     if (!companyRes.ok) {
       const err = await companyRes.json().catch(() => ({}));
@@ -128,38 +131,33 @@ export default function Home() {
   //   5. Sets exit multiple from sector-appropriate default
   // → User sees pre-filled, intelligent numbers on load. Zero manual input needed.
   function _applyAssumptions(companyData: Company, fins: FinancialYear[]) {
-    const sectorProfile  = getSectorProfile(companyData.sector);
-    const industryCagr   = getIndustryCagr(companyData.sector);
-    const suggested      = suggestAssumptions(
-      companyData,
-      fins,
-      industryCagr,
-      sectorProfile.defaultExitMultiple,
-      5,
-    );
+    const sectorProfile = getSectorProfile(companyData.sector);
+    const industryCagr  = getIndustryCagr(companyData.sector);
 
-    // Run data validation — use clean winsorised financials for model inputs
+    // Run data validator first — winsorise outlier years before feeding to model
     const dq = validateFinancials(fins, companyData);
     setDataQuality(dq);
 
-    // Use cleaned financials for assumption suggestions (outliers already capped)
-    const cleanSuggested = suggestAssumptions(
+    // Use cleaned financials (outliers capped); fall back to raw if cleaner is empty
+    const cleanFins = dq.cleanedFinancials.length > 0 ? dq.cleanedFinancials : fins;
+
+    // Single call to suggestAssumptions — uses fade model + India sector CAGR
+    const suggested = suggestAssumptions(
       companyData,
-      dq.cleanedFinancials.length > 0 ? dq.cleanedFinancials : fins,
+      cleanFins,
       industryCagr,
       sectorProfile.defaultExitMultiple,
       5,
     );
 
     setAssumptions({
-      revenueGrowthRate:   cleanSuggested.revenueGrowthRate,
-      netMarginAssumption: cleanSuggested.netMarginAssumption,
+      revenueGrowthRate:   suggested.revenueGrowthRate,
+      netMarginAssumption: suggested.netMarginAssumption,
       exitPE:  Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
-      exitMultiple: cleanSuggested.exitMultiple,
+      exitMultiple: suggested.exitMultiple,
       years: 5,
     });
 
-    // Badge shown near the sliders: where did this number come from?
     const sourceLabel =
       suggested.source === 'analyst_guidance' ? '⚡ Analyst consensus' :
       suggested.source === 'historical_cagr'  ? '📈 Historical CAGR' :
