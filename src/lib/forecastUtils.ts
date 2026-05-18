@@ -14,6 +14,170 @@
 import { Company, FinancialYear } from './types';
 import { ValuationModel } from './sectorModelMap';
 
+// ─── Data Quality Validator ───────────────────────────────────────────────────
+// Runs before any model. Catches bad data from Yahoo Finance so the model
+// doesn't silently produce a garbage fair value.
+//
+// Returns:
+//   score        — 0-100 (100 = pristine, <50 = treat output with caution)
+//   issues       — list of specific problems found, shown to user
+//   cleanedData  — winsorised financials safe to pass to models
+//   dataSource   — 'yahoo' | 'screener' (so UI can show the source)
+
+export type DataQualityLevel = 'High' | 'Medium' | 'Low';
+
+export interface DataQualityIssue {
+  field: string;
+  severity: 'warning' | 'error';
+  message: string;
+  detail: string;
+}
+
+export interface DataQualityResult {
+  score: number;           // 0–100
+  level: DataQualityLevel;
+  issues: DataQualityIssue[];
+  cleanedFinancials: FinancialYear[]; // outliers winsorised, nulls handled
+  revenueUnitSuspect: boolean;        // true = revenue might be in wrong unit
+  epsReconciled: boolean;             // true = PAT/shares ≈ reported EPS
+}
+
+// Sector-specific net margin bounds — anything outside is a data error
+const MARGIN_BOUNDS: Record<string, [number, number]> = {
+  'Banking':           [-5,  30],
+  'Financial Services':[-5,  35],
+  'NBFC':              [-5,  35],
+  'Insurance':         [-5,  25],
+  'Information Technology': [5, 40],
+  'Technology':        [5,  40],
+  'FMCG':              [5,  30],
+  'Pharmaceuticals':   [3,  35],
+  'Healthcare':        [3,  30],
+  'Metals':            [-10, 25],
+  'Metals & Mining':   [-10, 25],
+  'Energy':            [-5,  20],
+  'Utilities':         [3,  25],
+  'Infrastructure':    [3,  25],
+  'Cement':            [3,  25],
+  'Automobiles':       [1,  20],
+  'Electronics':       [1,  20],
+  'Telecom':           [-5,  20],
+};
+
+export function validateFinancials(
+  financials: FinancialYear[],
+  company: Company,
+): DataQualityResult {
+  const issues: DataQualityIssue[] = [];
+  let score = 100;
+
+  if (financials.length === 0) {
+    return {
+      score: 0, level: 'Low',
+      issues: [{ field: 'financials', severity: 'error', message: 'No financial data', detail: 'Zero years of data returned from API' }],
+      cleanedFinancials: [],
+      revenueUnitSuspect: false,
+      epsReconciled: false,
+    };
+  }
+
+  const latest = financials[financials.length - 1];
+
+  // ── CHECK 1: Revenue magnitude via P/S ratio ──────────────────────────────
+  // marketCap is in ₹ Crore. Revenue should also be in ₹ Crore.
+  // Most companies trade at 0.2x–30x revenue (P/S).
+  // If P/S < 0.05 or > 200, revenue is almost certainly in the wrong unit.
+  let revenueUnitSuspect = false;
+  if (company.marketCap > 0 && latest.revenue > 0) {
+    const impliedPS = company.marketCap / latest.revenue;
+    if (impliedPS < 0.05 || impliedPS > 500) {
+      revenueUnitSuspect = true;
+      score -= 30;
+      issues.push({
+        field: 'revenue',
+        severity: 'error',
+        message: `Revenue unit suspect (P/S = ${impliedPS.toFixed(1)}x)`,
+        detail: `Market cap ₹${(company.marketCap/1000).toFixed(0)}K Cr ÷ revenue ₹${latest.revenue.toFixed(0)} Cr = ${impliedPS.toFixed(1)}x P/S. Normal range: 0.1x–100x. Revenue may be in wrong unit (absolute ₹ instead of ₹ Crore).`,
+      });
+    }
+  }
+
+  // ── CHECK 2: EPS reconciliation ───────────────────────────────────────────
+  // Our EPS from PAT/shares should match the reported EPS within 25%.
+  // If not, shares count is wrong — P/E model will be totally off.
+  let epsReconciled = true;
+  if (latest.pat > 0 && latest.shares > 0 && latest.eps > 0) {
+    const derivedEPS = latest.pat / latest.shares;
+    const gap = Math.abs(derivedEPS - latest.eps) / latest.eps;
+    if (gap > 0.30) {
+      epsReconciled = false;
+      score -= 20;
+      issues.push({
+        field: 'shares',
+        severity: 'warning',
+        message: `EPS mismatch: derived ₹${derivedEPS.toFixed(1)} vs reported ₹${latest.eps.toFixed(1)} (${(gap*100).toFixed(0)}% gap)`,
+        detail: `PAT ₹${latest.pat.toFixed(0)} Cr ÷ ${latest.shares.toFixed(1)} Cr shares = ₹${derivedEPS.toFixed(1)} EPS. Yahoo reports ₹${latest.eps.toFixed(1)}. Possible cause: shares in wrong unit (millions vs crores).`,
+      });
+    }
+  }
+
+  // ── CHECK 3: Net margin bounds ────────────────────────────────────────────
+  const bounds = MARGIN_BOUNDS[company.sector];
+  if (bounds) {
+    const [minM, maxM] = bounds;
+    financials.forEach(f => {
+      if (f.netMargin < minM - 5 || f.netMargin > maxM + 10) {
+        score -= 5;
+        issues.push({
+          field: 'netMargin',
+          severity: 'warning',
+          message: `${f.year}: net margin ${f.netMargin.toFixed(1)}% outside expected range (${minM}%–${maxM}%)`,
+          detail: `For ${company.sector}, net margin above ${maxM}% or below ${minM}% suggests a data error in PAT or revenue.`,
+        });
+      }
+    });
+  }
+
+  // ── CHECK 4: Growth outlier detection + winsorising ───────────────────────
+  // Cap any single year's growth at ±80% before it enters CAGR calculations.
+  // Flag it to the user so they know the raw data was unusual.
+  const cleanedFinancials = financials.map((f, i) => {
+    if (i === 0) return f;
+    const prev = financials[i - 1];
+    if (prev.revenue <= 0 || f.revenue <= 0) return f;
+    const rawGrowth = ((f.revenue / prev.revenue) - 1) * 100;
+    if (Math.abs(rawGrowth) > 100) {
+      score -= 8;
+      issues.push({
+        field: 'revenueGrowth',
+        severity: 'warning',
+        message: `${f.year}: ${rawGrowth > 0 ? '+' : ''}${rawGrowth.toFixed(0)}% revenue jump — likely acquisition or restatement`,
+        detail: `Revenue went from ₹${prev.revenue.toFixed(0)} Cr to ₹${f.revenue.toFixed(0)} Cr. This year excluded from CAGR calculation to prevent distortion.`,
+      });
+      // Winsorise: replace extreme growth year with a revenue that implies 80% growth
+      const cappedRevenue = prev.revenue * (rawGrowth > 0 ? 1.8 : 0.2);
+      return { ...f, revenueGrowth: rawGrowth > 0 ? 80 : -80, revenue: cappedRevenue };
+    }
+    return f;
+  });
+
+  // ── CHECK 5: Sufficient history ───────────────────────────────────────────
+  if (financials.length < 3) {
+    score -= 15;
+    issues.push({
+      field: 'history',
+      severity: 'warning',
+      message: `Only ${financials.length} year(s) of data — CAGR unreliable`,
+      detail: 'Fewer than 3 years makes historical growth rate calculations statistically meaningless. Treat model output as indicative only.',
+    });
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  const level: DataQualityLevel = score >= 75 ? 'High' : score >= 50 ? 'Medium' : 'Low';
+
+  return { score, level, issues, cleanedFinancials, revenueUnitSuspect, epsReconciled };
+}
+
 export interface ModelOutput {
   fairValue: number;
   model: string;

@@ -3,7 +3,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
-import { suggestAssumptions } from '@/lib/forecastUtils';
+import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
+import DataQualityBanner from '@/components/DataQualityBanner';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -45,7 +46,8 @@ export default function Home() {
   const [error, setError]           = useState<string | null>(null);
   const [homeMode, setHomeMode]     = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('valuation');
-  const [autoFillLabel, setAutoFillLabel] = useState<string | null>(null); // "Analyst · High confidence"
+  const [autoFillLabel, setAutoFillLabel] = useState<string | null>(null);
+  const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>({
     revenueGrowthRate: 15,
     netMarginAssumption: 20,
@@ -58,7 +60,7 @@ export default function Home() {
   async function _fetchSymbol(symbol: string): Promise<{ company: Company; financials: FinancialYear[] }> {
     const [companyRes, financialsRes] = await Promise.all([
       fetch(`/api/company/${symbol}`, { cache: 'no-store' }),
-      fetch(`/api/financials/${symbol}`, { cache: 'no-store' }),
+      fetch(`/api/financials-v2/${symbol}`, { cache: 'no-store' }), // Screener.in → BSE-accurate data
     ]);
     if (!companyRes.ok) {
       const err = await companyRes.json().catch(() => ({}));
@@ -136,11 +138,24 @@ export default function Home() {
       5,
     );
 
+    // Run data validation — use clean winsorised financials for model inputs
+    const dq = validateFinancials(fins, companyData);
+    setDataQuality(dq);
+
+    // Use cleaned financials for assumption suggestions (outliers already capped)
+    const cleanSuggested = suggestAssumptions(
+      companyData,
+      dq.cleanedFinancials.length > 0 ? dq.cleanedFinancials : fins,
+      industryCagr,
+      sectorProfile.defaultExitMultiple,
+      5,
+    );
+
     setAssumptions({
-      revenueGrowthRate:   suggested.revenueGrowthRate,
-      netMarginAssumption: suggested.netMarginAssumption,
+      revenueGrowthRate:   cleanSuggested.revenueGrowthRate,
+      netMarginAssumption: cleanSuggested.netMarginAssumption,
       exitPE:  Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
-      exitMultiple: suggested.exitMultiple,
+      exitMultiple: cleanSuggested.exitMultiple,
       years: 5,
     });
 
@@ -335,6 +350,9 @@ export default function Home() {
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
                   <>
+                    {/* Data quality banner — shown before anything else if issues exist */}
+                    {dataQuality && <DataQualityBanner quality={dataQuality} />}
+
                     {/* Assumptions panel */}
                     {(() => {
                       const sectorProfile = getSectorProfile(company.sector);
