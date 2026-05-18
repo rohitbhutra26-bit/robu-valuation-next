@@ -326,6 +326,138 @@ export function earningsQualityScore(financials: FinancialYear[]): {
   };
 }
 
+// ─── 10. Fade model ────────────────────────────────────────────────────────────
+// The most realistic growth assumption an analyst can make.
+//
+// Concept: every company eventually slows to its industry's speed.
+// A startup at 40% growth won't be at 40% forever — it "fades" to sector average.
+//
+// This function takes:
+//   companyGrowth = what the company has been doing / guided
+//   industryCagr  = India sector structural rate (from INDIA_SECTOR_CAGR table)
+//   years         = forecast horizon
+//
+// Returns a SINGLE equivalent CAGR that already has the fade baked in.
+// The user sees one number. The intelligence is invisible.
+//
+// Fade schedule (5-year example, companyGrowth=22%, industry=11%):
+//   Y1: 22%  Y2: 22%  Y3: 16.5%  Y4: 13.75%  Y5: 11%
+//   Equivalent CAGR ≈ 17.0%  (vs flat 22% = massively overestimates)
+export function fadedGrowthCAGR(
+  companyGrowth: number,
+  industryCagr: number,
+  years: number,
+): number {
+  if (years <= 0) return industryCagr;
+
+  // Build year-by-year growth schedule
+  const yearlyRates: number[] = [];
+  for (let y = 1; y <= years; y++) {
+    // Linear fade: year 1 = 100% company, year N = 100% industry
+    const t = (y - 1) / Math.max(years - 1, 1); // 0 → 1 over forecast period
+    const rate = companyGrowth * (1 - t) + industryCagr * t;
+    yearlyRates.push(rate);
+  }
+
+  // Compound the year-by-year rates into one equivalent CAGR
+  const totalMultiple = yearlyRates.reduce((acc, r) => acc * (1 + r / 100), 1);
+  const equivalentCAGR = (Math.pow(totalMultiple, 1 / years) - 1) * 100;
+
+  return Math.max(equivalentCAGR, 0);
+}
+
+// ─── 11. Auto-suggest assumptions ─────────────────────────────────────────────
+// This is the "less input, more intelligence" engine.
+// It reads company data + historical financials + India sector CAGR
+// and returns a fully pre-filled set of assumptions.
+//
+// The user opens a stock → sliders are already set correctly.
+// They only need to change them if they have a strong personal view.
+//
+// Priority order for growth rate:
+//   1. earningsGrowth from Yahoo Finance (forward analyst estimate) — most current
+//   2. Historical revenue CAGR from financials[] — actual track record
+//   3. India sector CAGR — floor / fallback
+//   Then: fade all of them toward India sector CAGR over the forecast period.
+export interface SuggestedAssumptions {
+  revenueGrowthRate: number;      // faded CAGR — THE smart number
+  rawCompanyGrowth: number;       // undimmed source before fade
+  industryCagr: number;           // sector long-run rate used
+  netMarginAssumption: number;    // from recent actual margins
+  exitMultiple: number;           // from sector profile default
+  source: 'analyst_guidance' | 'historical_cagr' | 'industry_fallback';
+  confidence: 'High' | 'Medium' | 'Low';
+  rationale: string;              // one line explaining the number
+}
+
+export function suggestAssumptions(
+  company: Company,
+  financials: FinancialYear[],
+  industryCagr: number,
+  sectorDefaultMultiple: number,
+  years: number = 5,
+): SuggestedAssumptions {
+  // ── Step 1: Find the best growth estimate ─────────────────────────────────
+  let rawCompanyGrowth: number;
+  let source: SuggestedAssumptions['source'];
+  let confidence: SuggestedAssumptions['confidence'];
+  let rationale: string;
+
+  // Priority 1: Forward analyst estimate from Yahoo Finance
+  const fwdGrowth = (company.earningsGrowth ?? 0) * 100; // Yahoo returns as decimal e.g. 0.18
+  if (fwdGrowth > 2 && fwdGrowth < 60) {
+    rawCompanyGrowth = fwdGrowth;
+    source = 'analyst_guidance';
+    confidence = 'High';
+    rationale = `Analyst consensus: ${fwdGrowth.toFixed(1)}% fwd growth, fading to ${industryCagr}% sector rate`;
+  } else {
+    // Priority 2: Historical revenue CAGR from financials
+    const revenueGrowths = financials
+      .slice(1)
+      .map((f, i) => {
+        if (f.revenueGrowth && Math.abs(f.revenueGrowth) < 80) return f.revenueGrowth;
+        if (financials[i].revenue > 0) return ((f.revenue / financials[i].revenue) - 1) * 100;
+        return null;
+      })
+      .filter((g): g is number => g !== null && g > -50 && g < 100);
+
+    if (revenueGrowths.length >= 2) {
+      // Use recent 3-year avg rather than full history (recency matters more)
+      const recent = revenueGrowths.slice(-3);
+      rawCompanyGrowth = recent.reduce((a, b) => a + b, 0) / recent.length;
+      source = 'historical_cagr';
+      confidence = rawCompanyGrowth > 5 ? 'Medium' : 'Low';
+      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}%, fading to ${industryCagr}% sector floor`;
+    } else {
+      // Fallback: use industry rate directly
+      rawCompanyGrowth = industryCagr;
+      source = 'industry_fallback';
+      confidence = 'Low';
+      rationale = `Insufficient history — using ${industryCagr}% India ${company.sector} sector CAGR`;
+    }
+  }
+
+  // ── Step 2: Fade toward industry CAGR ─────────────────────────────────────
+  const revenueGrowthRate = fadedGrowthCAGR(rawCompanyGrowth, industryCagr, years);
+
+  // ── Step 3: Net margin from recent actuals ─────────────────────────────────
+  const recentMargins = financials.slice(-3).map(f => f.netMargin).filter(m => m > 0 && m < 80);
+  const netMarginAssumption = recentMargins.length > 0
+    ? recentMargins.reduce((a, b) => a + b, 0) / recentMargins.length
+    : 10; // fallback 10%
+
+  return {
+    revenueGrowthRate: Math.round(revenueGrowthRate * 10) / 10,
+    rawCompanyGrowth:  Math.round(rawCompanyGrowth * 10) / 10,
+    industryCagr,
+    netMarginAssumption: Math.round(netMarginAssumption * 10) / 10,
+    exitMultiple: sectorDefaultMultiple,
+    source,
+    confidence,
+    rationale,
+  };
+}
+
 // ─── Generic dispatcher ───────────────────────────────────────────────────────
 export function runPrimaryModel(
   modelType: ValuationModel,

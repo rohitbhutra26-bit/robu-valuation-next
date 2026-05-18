@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { suggestAssumptions } from '@/lib/forecastUtils';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -44,6 +45,7 @@ export default function Home() {
   const [error, setError]           = useState<string | null>(null);
   const [homeMode, setHomeMode]     = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('valuation');
+  const [autoFillLabel, setAutoFillLabel] = useState<string | null>(null); // "Analyst · High confidence"
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>({
     revenueGrowthRate: 15,
     netMarginAssumption: 20,
@@ -115,23 +117,39 @@ export default function Home() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Apply assumptions from loaded data ────────────────────────────────────
+  // ── Apply assumptions — intelligent auto-fill ────────────────────────────
+  // Uses suggestAssumptions() which:
+  //   1. Reads analyst consensus growth from Yahoo Finance (earningsGrowth)
+  //   2. Falls back to historical revenue CAGR from financials[]
+  //   3. Fades that growth toward India sector CAGR over the forecast period
+  //   4. Sets net margin from recent 3yr average actuals
+  //   5. Sets exit multiple from sector-appropriate default
+  // → User sees pre-filled, intelligent numbers on load. Zero manual input needed.
   function _applyAssumptions(companyData: Company, fins: FinancialYear[]) {
-    if (fins.length >= 2) {
-      const latest = fins[fins.length - 1];
-      const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
-      const avgGrowth = growthValues.length
-        ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
-      const sectorProfile = getSectorProfile(companyData.sector);
-      const exitPE = Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100);
-      setAssumptions({
-        revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
-        netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
-        exitPE,
-        exitMultiple: sectorProfile.defaultExitMultiple,
-        years: 5,
-      });
-    }
+    const sectorProfile  = getSectorProfile(companyData.sector);
+    const industryCagr   = getIndustryCagr(companyData.sector);
+    const suggested      = suggestAssumptions(
+      companyData,
+      fins,
+      industryCagr,
+      sectorProfile.defaultExitMultiple,
+      5,
+    );
+
+    setAssumptions({
+      revenueGrowthRate:   suggested.revenueGrowthRate,
+      netMarginAssumption: suggested.netMarginAssumption,
+      exitPE:  Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
+      exitMultiple: suggested.exitMultiple,
+      years: 5,
+    });
+
+    // Badge shown near the sliders: where did this number come from?
+    const sourceLabel =
+      suggested.source === 'analyst_guidance' ? '⚡ Analyst consensus' :
+      suggested.source === 'historical_cagr'  ? '📈 Historical CAGR' :
+                                                '🏭 Sector baseline';
+    setAutoFillLabel(`${sourceLabel} · ${suggested.confidence} confidence · ${suggested.rationale}`);
   }
 
   // ── Prefetch on hover — fires 200ms after hover to avoid noise ────────────
@@ -322,8 +340,8 @@ export default function Home() {
                       const sectorProfile = getSectorProfile(company.sector);
                       return (
                         <div className="bg-card border border-border rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
                               <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                             </svg>
                             <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
@@ -331,12 +349,26 @@ export default function Home() {
                               {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
                             </span>
                           </div>
+                          {/* Auto-fill badge — shows where the numbers came from */}
+                          {autoFillLabel && (
+                            <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 rounded-lg bg-border/30 border border-border">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                              </svg>
+                              <p className="text-[10px] text-muted leading-tight flex-1">{autoFillLabel}</p>
+                              <button
+                                onClick={() => setAutoFillLabel(null)}
+                                className="text-[10px] text-muted/50 hover:text-muted ml-1 flex-shrink-0"
+                                title="Dismiss"
+                              >✕</button>
+                            </div>
+                          )}
                           <div className="grid grid-cols-4 gap-4">
                             <SliderInput
                               label="Revenue Growth" value={assumptions.revenueGrowthRate}
                               min={1} max={50} step={0.5} suffix="%" color="text-accent"
                               onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                              hint={`${latest?.year} actual: ${latest?.revenueGrowth.toFixed(1)}%`}
+                              hint={`Fades to ${getIndustryCagr(company.sector)}% India ${company.sector} CAGR`}
                             />
                             {sectorProfile.model !== 'pb' && (
                               <SliderInput

@@ -131,6 +131,58 @@ export function getSectorProfile(sector: string): SectorProfile {
   return SECTOR_PROFILES[sector] ?? DEFAULT_SECTOR_PROFILE;
 }
 
+// ─── India sector long-run CAGR table ────────────────────────────────────────
+// Source: NASSCOM (IT), CRISIL (FMCG/Pharma/Cement/Metals), IBEF (sector reports),
+//         RBI credit growth data (Banking), PLI scheme projections (Electronics).
+//
+// This is the "speed limit" — the rate at which the entire industry grows.
+// No individual company can sustainably grow faster than its industry forever.
+// These are 5–10yr structural growth rates, not cyclical spikes.
+//
+// Simple analogy: if all restaurants in India grow at 10%/yr on average,
+// a single restaurant chain growing at 30% will eventually slow to 10% as it matures.
+export const INDIA_SECTOR_CAGR: Record<string, number> = {
+  // ── Technology ──
+  'Information Technology':  11,   // NASSCOM: IT-BPM industry ~$350B by 2026, ~11% CAGR
+  'Technology':              11,
+  'Electronics':             25,   // PLI scheme + China+1: EMS/electronics fastest growing
+
+  // ── Consumer ──
+  'FMCG':                    9,    // CRISIL: volume + premiumisation, urban+rural
+  'Consumer':                10,
+  'Consumer Discretionary':  13,   // rising aspirational spending, premiumisation
+
+  // ── Healthcare ──
+  'Pharmaceuticals':         13,   // CRISIL: domestic formulations + exports + biosimilars
+  'Healthcare':              15,   // hospitals + diagnostics expanding rapidly
+
+  // ── Industrials / Infra ──
+  'Cement':                   9,   // tied to GDP + infra spend (NIP ₹111L Cr)
+  'Infrastructure':           14,  // NMP + roads + ports + smart cities
+  'Automobiles':              10,  // EV transition + rural demand
+
+  // ── Cyclicals ──
+  'Metals':                   6,   // China-linked; structural India infra demand but cyclical
+  'Metals & Mining':          6,
+  'Mining':                   5,
+  'Energy':                   8,   // O&G + green energy mix
+  'Utilities':                7,   // power demand growing ~6-8%/yr (CEA projections)
+
+  // ── Financial ──
+  'Banking':                 13,   // RBI credit growth target; retail + SME driving growth
+  'Financial Services':      16,   // financialisation of savings; MF + insurance penetration
+  'NBFC':                    16,
+  'Insurance':               18,   // massive underpenetration; IRDAI projections
+
+  // ── Other ──
+  'Telecom':                  8,   // ARPU growth + 5G; subscriber base mature
+  'Conglomerate':            10,   // weighted average across verticals
+};
+
+export function getIndustryCagr(sector: string): number {
+  return INDIA_SECTOR_CAGR[sector] ?? 10; // 10% = nominal GDP growth as fallback
+}
+
 // ─── Dynamic scenario deltas ──────────────────────────────────────────────────
 // Instead of fixed sector-wide deltas, use the company's own revenue sigma (σ).
 //
