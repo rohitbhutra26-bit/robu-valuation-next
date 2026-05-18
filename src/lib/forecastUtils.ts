@@ -99,16 +99,27 @@ export function pbModel(
   exitPB: number,
   years: number,
 ): ModelOutput {
-  const shares     = Math.max(company.shares ?? 1, 0.001);
-  // Current BVPS = Price ÷ P/B
-  const currentBVPS = company.pb > 0 ? company.currentPrice / company.pb : company.currentPrice * 0.4;
-  const futureBVPS  = currentBVPS * Math.pow(1 + bookGrowthRate / 100, years);
-  const fairValue   = futureBVPS * exitPB;
+  // Current BVPS: prefer balance sheet data if available, else derive from market P/B
+  const latest = financials[financials.length - 1];
+  const sharesRaw = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+
+  // Use balance sheet equity if available (equity ÷ shares = BVPS directly)
+  // Otherwise fall back to market-implied: currentPrice ÷ pb
+  // We cap the fallback so exit P/B changes actually move the needle
+  const currentBVPS = company.pb > 0
+    ? company.currentPrice / company.pb
+    : company.currentPrice * 0.35;
+
+  const futureBVPS = currentBVPS * Math.pow(1 + bookGrowthRate / 100, years);
+
+  // exitPB is the RE-RATING multiple — the premium the market will pay at exit.
+  // This is INDEPENDENT of current pb, so changing the slider has full effect.
+  const fairValue = futureBVPS * exitPB;
 
   return {
     fairValue,
     model: 'Price / Book',
-    desc: `BVPS ₹${currentBVPS.toFixed(0)} growing ${bookGrowthRate.toFixed(1)}%/yr × ${exitPB}x P/B over ${years}Y`,
+    desc: `BVPS ₹${currentBVPS.toFixed(0)} × (1+${bookGrowthRate.toFixed(1)}%)^${years}Y × ${exitPB}x exit P/B`,
   };
 }
 
@@ -162,8 +173,8 @@ export function pegModel(financials: FinancialYear[], company: Company): {
 }
 
 // ─── 6. Earnings Yield (cross-check) ─────────────────────────────────────────
-const RISK_FREE_RATE = 6.8;
-export { RISK_FREE_RATE };
+export const RISK_FREE_RATE = 6.8;
+const EQUITY_RISK_PREMIUM  = 5.0; // Damodaran India ERP estimate
 
 export function earningsYieldModel(financials: FinancialYear[], company: Company): {
   fairValue: number; model: string; desc: string; currentEY: number;
@@ -180,6 +191,138 @@ export function earningsYieldModel(financials: FinancialYear[], company: Company
     model: 'Earnings Yield',
     desc: `EPS ÷ ${(reqYield * 100).toFixed(1)}% required yield (G-Sec ${RISK_FREE_RATE}% + ERP ${ERP}%)`,
     currentEY,
+  };
+}
+
+// ─── 7. Gordon Growth P/B (institutional bank model) ─────────────────────────
+// Used by Goldman, JPMorgan, HSBC to value banks and NBFCs.
+//
+// Simple idea: a bank is worth more than its book value ONLY if its ROE > Cost of Equity.
+// How much more? Exactly this formula:
+//   Fair P/B = (ROE − g) / (Cost of Equity − g)
+//
+// Example — BAJFINANCE:
+//   ROE = 22%, sustainable growth g = 14%, CoE = 6.8% + 5% × 1.1 = 12.3%
+//   Fair P/B = (22 − 14) / (12.3 − 14) → g > CoE, clamp g to CoE − 1.5
+//   g_safe = 10.8%, Fair P/B = (22 − 10.8) / (12.3 − 10.8) = 11.2 / 1.5 = 7.5x
+//   (premium justified by exceptional ROE vs cost of capital)
+export function gordonGrowthPB(
+  company: Company,
+  sustainableGrowthRate: number, // same number as user's growth rate slider
+): {
+  fairPB: number;
+  fairValue: number;
+  desc: string;
+  isValid: boolean;
+  coe: number;
+} {
+  const roe  = company.roe > 0 ? company.roe  : 12;
+  const beta = company.beta && company.beta > 0 ? company.beta : 1.0;
+  const coe  = RISK_FREE_RATE + EQUITY_RISK_PREMIUM * Math.max(beta, 0.6);
+
+  // g must be < CoE or the Gordon formula blows up (bank growing faster than its cost of capital
+  // forever is mathematically impossible — we clamp it)
+  const g = Math.min(sustainableGrowthRate, coe - 1.5);
+
+  if (coe <= g || roe <= 0) {
+    return {
+      fairPB: 0, fairValue: 0, isValid: false, coe,
+      desc: 'g ≥ CoE — reduce growth assumption or model undefined',
+    };
+  }
+
+  const fairPB = Math.max((roe - g) / (coe - g), 0.3);
+  const currentBVPS = company.pb > 0
+    ? company.currentPrice / company.pb
+    : company.currentPrice * 0.35;
+  const fairValue = currentBVPS * fairPB;
+
+  return {
+    fairPB,
+    fairValue,
+    isValid: fairValue > 0,
+    coe,
+    desc: `(ROE ${roe.toFixed(1)}% − g ${g.toFixed(1)}%) ÷ (CoE ${coe.toFixed(1)}% − g) = ${fairPB.toFixed(2)}x P/B`,
+  };
+}
+
+// ─── 8. Revenue volatility (σ) ────────────────────────────────────────────────
+// Returns the standard deviation of historical revenue growth rates.
+// A company with σ = 3% (HDFC Bank) gets tight bear/bull spreads.
+// A company with σ = 18% (Tata Steel) gets wide bear/bull spreads.
+// This makes scenario deltas company-specific — not sector-template guesses.
+export function revenueVolatility(financials: FinancialYear[]): number {
+  const growthRates = financials
+    .slice(1)
+    .map((f, i) => {
+      // Prefer pre-computed growth field; fall back to derive it ourselves
+      if (f.revenueGrowth && Math.abs(f.revenueGrowth) < 100) return f.revenueGrowth;
+      if (financials[i].revenue > 0) return ((f.revenue / financials[i].revenue) - 1) * 100;
+      return null;
+    })
+    .filter((g): g is number => g !== null && Math.abs(g) < 100);
+
+  if (growthRates.length < 2) return 8; // fallback: 8% sigma
+
+  const mean     = growthRates.reduce((a, b) => a + b, 0) / growthRates.length;
+  const variance = growthRates.map(g => Math.pow(g - mean, 2)).reduce((a, b) => a + b, 0) / growthRates.length;
+  return Math.min(Math.sqrt(variance), 35); // cap at 35% so outlier years don't dominate
+}
+
+// ─── 9. Earnings quality score ────────────────────────────────────────────────
+// Gives a 0–100 quality score based on:
+//   - PAT consistency (how many years had positive profit?)
+//   - EBITDA margin stability (stable margins = predictable business)
+//   - Revenue growth recency (growing or decelerating lately?)
+//
+// The score maps to an exit-multiple adjustment:
+//   High Quality (80+) → exit multiple × 1.10  (market pays up for quality)
+//   Average   (60–79)  → exit multiple × 1.00  (no adjustment)
+//   Below avg (40–59)  → exit multiple × 0.95
+//   Low         (<40)  → exit multiple × 0.85  (distressed discount)
+//
+// Real-world analogy: Pidilite (high quality) deserves a higher P/E than Suzlon (low quality)
+// even if both are growing at the same rate, because Pidilite's earnings are more reliable.
+export function earningsQualityScore(financials: FinancialYear[]): {
+  score: number;
+  multiplier: number;
+  label: 'High Quality' | 'Average Quality' | 'Below Average' | 'Low Quality';
+  breakdown: string;
+} {
+  if (financials.length < 3) {
+    return { score: 50, multiplier: 1.0, label: 'Average Quality', breakdown: 'Insufficient history' };
+  }
+
+  // 1. Profitability consistency (0–40 pts)
+  const positiveYears = financials.filter(f => f.pat > 0).length;
+  const consistencyPts = Math.round((positiveYears / financials.length) * 40);
+
+  // 2. Margin stability: low variance in EBITDA margin = stable business (0–40 pts)
+  const margins = financials.map(f => f.ebitdaMargin).filter(m => m > 0 && m < 100);
+  let marginPts = 20; // neutral default if no margin data
+  if (margins.length >= 2) {
+    const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length;
+    const variance  = margins.map(m => Math.pow(m - avgMargin, 2)).reduce((a, b) => a + b, 0) / margins.length;
+    // σ² < 5 → full 40 pts; σ² 5-20 → 20-30 pts; > 20 → 0-20 pts
+    marginPts = Math.max(0, Math.min(40, Math.round(40 - variance * 1.5)));
+  }
+
+  // 3. Recent revenue momentum (0–20 pts)
+  const recentGrowths = financials.slice(-2).map(f => f.revenueGrowth ?? 0).filter(g => g !== 0);
+  const avgRecent = recentGrowths.length > 0 ? recentGrowths.reduce((a, b) => a + b, 0) / recentGrowths.length : 0;
+  const momentumPts = avgRecent > 15 ? 20 : avgRecent > 8 ? 14 : avgRecent > 3 ? 8 : avgRecent > 0 ? 4 : 0;
+
+  const score = Math.min(100, consistencyPts + marginPts + momentumPts);
+  const multiplier = score >= 80 ? 1.10 : score >= 60 ? 1.00 : score >= 40 ? 0.95 : 0.85;
+
+  const label: 'High Quality' | 'Average Quality' | 'Below Average' | 'Low Quality' =
+    score >= 80 ? 'High Quality' : score >= 60 ? 'Average Quality' : score >= 40 ? 'Below Average' : 'Low Quality';
+
+  return {
+    score,
+    multiplier,
+    label,
+    breakdown: `Consistency ${consistencyPts}/40 · Margin stability ${marginPts}/40 · Momentum ${momentumPts}/20`,
   };
 }
 

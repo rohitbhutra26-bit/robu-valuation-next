@@ -44,8 +44,8 @@ function peProfile(label: string, defaultPE: number): SectorProfile {
     exitMultipleMax: 100,
     exitMultipleStep: 1,
     multipleRationale: 'Market prices this sector on earnings — P/E is the standard lens',
-    bearGrowthDelta: -3,  bearMarginDelta: -2,  bearMultipleDelta: -5,
-    bullGrowthDelta:  4,  bullMarginDelta:  2,  bullMultipleDelta:  7,
+    bearGrowthDelta: -6,  bearMarginDelta: -3,  bearMultipleDelta: -7,
+    bullGrowthDelta:  7,  bullMarginDelta:  3,  bullMultipleDelta: 10,
   };
 }
 
@@ -59,8 +59,8 @@ function evEbitdaProfile(label: string, defaultMult: number, min: number, max: n
     exitMultipleMax: max,
     exitMultipleStep: 0.5,
     multipleRationale: 'Asset-heavy / cyclical sectors — EV/EBITDA removes D&A distortion',
-    bearGrowthDelta: -5,  bearMarginDelta: -3,  bearMultipleDelta: -1.5,
-    bullGrowthDelta:  6,  bullMarginDelta:  3,  bullMultipleDelta:  2.5,
+    bearGrowthDelta: -8,  bearMarginDelta: -4,  bearMultipleDelta: -2.0,
+    bullGrowthDelta:  9,  bullMarginDelta:  4,  bullMultipleDelta:  3.0,
   };
 }
 
@@ -74,8 +74,9 @@ function pbProfile(label: string, defaultPB: number, max: number): SectorProfile
     exitMultipleMax: max,
     exitMultipleStep: 0.1,
     multipleRationale: 'Financials valued on Book Value — ROE drives P/B premium',
-    bearGrowthDelta: -3,  bearMarginDelta: -2,  bearMultipleDelta: -0.4,
-    bullGrowthDelta:  4,  bullMarginDelta:  2,  bullMultipleDelta:  0.7,
+    // Wider deltas — bear/bull should feel meaningfully different
+    bearGrowthDelta: -6,  bearMarginDelta: -2,  bearMultipleDelta: -1.0,
+    bullGrowthDelta:  7,  bullMarginDelta:  2,  bullMultipleDelta:  1.5,
   };
 }
 
@@ -128,4 +129,47 @@ export const DEFAULT_SECTOR_PROFILE: SectorProfile = peProfile('Broad Market', 2
 
 export function getSectorProfile(sector: string): SectorProfile {
   return SECTOR_PROFILES[sector] ?? DEFAULT_SECTOR_PROFILE;
+}
+
+// ─── Dynamic scenario deltas ──────────────────────────────────────────────────
+// Instead of fixed sector-wide deltas, use the company's own revenue sigma (σ).
+//
+// Think of it like this:
+//   HDFC Bank's revenue almost never swings more than ±5% from expectations.
+//   Tata Steel's revenue can swing ±25% in a bad year (commodity cycle).
+//
+// So Bear/Bull spreads should be WIDER for Tata Steel and TIGHTER for HDFC Bank.
+// We use 1.5× the historical revenue sigma as the growth spread, and take
+// the MAX of that vs the pre-set sector floor (so we never go narrower than intended).
+export interface DynamicDeltas {
+  bearGrowthDelta: number;
+  bullGrowthDelta: number;
+  bearMarginDelta: number;
+  bullMarginDelta: number;
+  bearMultipleDelta: number;
+  bullMultipleDelta: number;
+  isCompanySpecific: boolean; // true = derived from actual history, false = sector defaults used
+}
+
+export function getDynamicDeltas(profile: SectorProfile, sigma: number): DynamicDeltas {
+  // sigma = standard deviation of the company's historical revenue growth (%)
+  // Minimum sigma floor = 5 so very stable companies still get some spread
+  const effectiveSigma = Math.max(sigma, 5);
+
+  // 1.5σ is approximately a ±85% confidence interval on the growth estimate
+  const growthSpread = Math.round(effectiveSigma * 1.5);
+
+  // Take whichever is wider: company-specific spread OR sector-template floor
+  const bearGrowth = -Math.max(growthSpread, Math.abs(profile.bearGrowthDelta));
+  const bullGrowth =  Math.max(growthSpread, Math.abs(profile.bullGrowthDelta));
+
+  return {
+    bearGrowthDelta:   bearGrowth,
+    bullGrowthDelta:   bullGrowth,
+    bearMarginDelta:   profile.bearMarginDelta,   // margins use sector template (we don't have per-company margin sigma yet)
+    bullMarginDelta:   profile.bullMarginDelta,
+    bearMultipleDelta: profile.bearMultipleDelta,
+    bullMultipleDelta: profile.bullMultipleDelta,
+    isCompanySpecific: sigma >= 3,                // if sigma < 3 we used the floor anyway
+  };
 }

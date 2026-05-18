@@ -8,6 +8,8 @@ import {
   pegModel,
   earningsYieldModel,
   impliedGrowthRate,
+  gordonGrowthPB,
+  earningsQualityScore,
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
 import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
@@ -74,6 +76,9 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
   const profile = getSectorProfile(company.sector);
   const model   = profile.model;
 
+  // ── Intelligence layer ────────────────────────────────────────────────────
+  const quality = earningsQualityScore(financials);
+
   // ── Primary model (sector-appropriate) ───────────────────────────────────
   const primaryResult = runPrimaryModel(
     model,
@@ -84,6 +89,11 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
     assumptions.exitMultiple,
     assumptions.years,
   );
+
+  // ── Gordon Growth P/B (for banks/NBFCs — institutionally the correct model) ──
+  const gordonResult = (model === 'pb')
+    ? gordonGrowthPB(company, assumptions.revenueGrowthRate)
+    : null;
 
   // ── Cross-check: always run PE for non-banking sectors, for reference ─────
   const bench = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
@@ -108,12 +118,20 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
     : null;
 
   // ── Composite fair value ─────────────────────────────────────────────────
-  const allFVs = [
-    primaryResult.fairValue,
-    pegResult.fairValue,
-    eyResult.fairValue,
-    sectorPECheck?.fairValue ?? 0,
-  ].filter(v => v > 0);
+  // For banks: weight the Gordon Growth model more heavily (it's the institutional standard)
+  // and use it instead of the PEG / sector-PE cross-checks (which don't apply to banks)
+  let allFVs: number[];
+  if (model === 'pb' && gordonResult?.isValid) {
+    // Banking composite: 50% Gordon Growth + 50% P/B model (PEG/EY not meaningful for banks)
+    allFVs = [primaryResult.fairValue, gordonResult.fairValue, gordonResult.fairValue].filter(v => v > 0);
+  } else {
+    allFVs = [
+      primaryResult.fairValue,
+      pegResult.fairValue,
+      eyResult.fairValue,
+      sectorPECheck?.fairValue ?? 0,
+    ].filter(v => v > 0);
+  }
 
   const compositeFV   = allFVs.length > 0 ? allFVs.reduce((a, b) => a + b, 0) / allFVs.length : 0;
   const compositeUp   = compositeFV > 0 ? (compositeFV / company.currentPrice - 1) * 100 : 0;
@@ -157,7 +175,19 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
             <p className="text-[11px] text-muted mt-0.5 leading-tight">{profile.multipleRationale}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+          {/* Earnings quality badge */}
+          <span
+            title={quality.breakdown}
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono cursor-default ${
+              quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
+              quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
+              quality.score >= 40 ? 'text-amber-400 bg-amber-400/10 border-amber-400/25' :
+                                    'text-loss bg-loss/10 border-loss/25'
+            }`}
+          >
+            {quality.label}
+          </span>
           <span className="text-[10px] font-bold text-gold bg-gold/10 border border-gold/20 px-2 py-0.5 rounded font-mono">
             {modelBadge}
           </span>
@@ -172,7 +202,11 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
         <div>
           <p className="text-xs text-muted mb-1">
             Composite Fair Value
-            <span className="text-muted/60 ml-1">(avg of {allFVs.length} methods)</span>
+            <span className="text-muted/60 ml-1">
+              {model === 'pb' && gordonResult?.isValid
+                ? '(P/B + Gordon Growth blend)'
+                : `(avg of ${allFVs.length} methods)`}
+            </span>
           </p>
           <p className="text-2xl font-bold font-mono text-gold">
             {compositeFV > 0
@@ -210,13 +244,23 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           primary={true}
         />
 
-        {/* PEG Ratio cross-check */}
-        <MethodCard
-          method={pegResult.model}
-          desc={pegResult.desc}
-          fairValue={pegResult.fairValue}
-          currentPrice={company.currentPrice}
-        />
+        {/* Banking: show Gordon Growth P/B (institutional model) instead of PEG */}
+        {model === 'pb' && gordonResult?.isValid ? (
+          <MethodCard
+            method="Gordon Growth P/B"
+            desc={gordonResult.desc}
+            fairValue={gordonResult.fairValue}
+            currentPrice={company.currentPrice}
+            primary={false}
+          />
+        ) : (
+          <MethodCard
+            method={pegResult.model}
+            desc={pegResult.desc}
+            fairValue={pegResult.fairValue}
+            currentPrice={company.currentPrice}
+          />
+        )}
 
         {/* For non-PE sectors, show the PE cross-check; otherwise show sector PE */}
         {peCheck ? (
@@ -243,6 +287,46 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           currentPrice={company.currentPrice}
         />
       </div>
+
+      {/* ── Earnings quality signal ── */}
+      <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold text-primary mb-0.5">Earnings Quality Signal</p>
+          <p className="text-[11px] text-muted leading-relaxed" title={quality.breakdown}>
+            {quality.breakdown}
+          </p>
+        </div>
+        <div className="flex-shrink-0 text-center">
+          <p className={`text-2xl font-bold font-mono ${
+            quality.score >= 80 ? 'text-gain' :
+            quality.score >= 60 ? 'text-gold' :
+            quality.score >= 40 ? 'text-amber-400' : 'text-loss'
+          }`}>{quality.score}</p>
+          <p className="text-[10px] text-muted">/ 100</p>
+          <p className={`text-[10px] font-bold mt-0.5 ${
+            quality.score >= 80 ? 'text-gain' :
+            quality.score >= 60 ? 'text-gold' :
+            quality.score >= 40 ? 'text-amber-400' : 'text-loss'
+          }`}>{quality.label}</p>
+        </div>
+      </div>
+
+      {/* ── Gordon Growth insight (banks only) ── */}
+      {model === 'pb' && gordonResult && (
+        <div className="bg-border/20 rounded-xl p-3">
+          <p className="text-xs font-semibold text-primary mb-1">Gordon Growth Model — Why banks need a different formula</p>
+          <p className="text-[11px] text-muted leading-relaxed">
+            Banks are valued on <span className="text-gold">book value</span>, not earnings.
+            The Gordon Growth formula says: a bank deserves to trade above book value
+            ONLY if its <span className="text-gold">ROE ({company.roe.toFixed(1)}%)</span> beats its
+            {' '}<span className="text-accent">cost of equity ({gordonResult.coe.toFixed(1)}%)</span>.
+            The bigger the gap, the higher the fair P/B.
+            {gordonResult.isValid
+              ? ` At current ROE, the math supports ~${gordonResult.fairPB.toFixed(1)}x P/B — vs today's ${company.pb.toFixed(1)}x.`
+              : ' Lower your growth assumption to bring g below cost of equity.'}
+          </p>
+        </div>
+      )}
 
       {/* ── Key signals ── */}
       <div className="grid grid-cols-4 gap-3">
@@ -281,9 +365,13 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           {model === 'ev_ebitda' && '; removes D&A distortion in asset-heavy businesses'}
           {model === 'ev_sales' && '; revenue multiple for pre-profit / high-growth companies'}
         </p>
-        <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, fair P/E ≈ 20x (PEG = 1)</p>
+        {model === 'pb'
+          ? <p><span className="text-primary font-medium">Gordon Growth P/B</span> — institutional bank model: Fair P/B = (ROE − g) / (CoE − g); used by Goldman, JPMorgan</p>
+          : <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, fair P/E ≈ 20x (PEG = 1); penalises stocks growing slower than their P/E implies</p>
+        }
         <p><span className="text-primary font-medium">Earnings Yield</span> — compares stock earnings vs Indian G-Sec rate ({RISK_FREE_RATE}%)</p>
-        <p><span className="text-primary font-medium">Composite</span> — straight average of all valid methods; reduces single-model bias</p>
+        <p><span className="text-primary font-medium">Earnings Quality</span> — scores 0-100: profit consistency + margin stability + revenue momentum → adjusts exit multiple</p>
+        <p><span className="text-primary font-medium">Composite</span> — {model === 'pb' ? '50% Gordon Growth + 50% P/B — banks weighted toward institutional model' : 'avg of all valid methods; reduces single-model bias'}</p>
       </div>
     </div>
   );

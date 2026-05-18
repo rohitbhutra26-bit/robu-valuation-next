@@ -3,8 +3,8 @@
 import { ValuationAssumptions, ScenarioResult } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
-import { runPrimaryModel } from '@/lib/forecastUtils';
+import { getSectorProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
+import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
 
 interface ScenarioCardsProps {
   financials: FinancialYear[];
@@ -28,8 +28,20 @@ interface Scenario {
 export default function ScenarioCards({ financials, assumptions, currentPrice, company }: ScenarioCardsProps) {
   if (!financials.length) return null;
 
-  const profile = getSectorProfile(company.sector);
-  const years   = assumptions.years;
+  const profile  = getSectorProfile(company.sector);
+  const years    = assumptions.years;
+
+  // ── Intelligence upgrade: company-specific volatility-driven deltas ───────
+  // sigma = std deviation of this company's historical revenue growth.
+  // A bank with σ=3% gets tight spreads; a steel co with σ=22% gets wide ones.
+  const sigma    = revenueVolatility(financials);
+  const deltas   = getDynamicDeltas(profile, sigma);
+
+  // ── Earnings quality: high-quality earners get a slight multiple premium ──
+  const quality  = earningsQualityScore(financials);
+  // Apply quality multiplier to exit multiple in Bear and Bull only
+  // (Base stays exactly as user set it, Bear/Bull get quality-adjusted)
+  const qualAdjMultiple = assumptions.exitMultiple * quality.multiplier;
 
   // ── Build three scenario configs ─────────────────────────────────────────
   const configs: Omit<Scenario, 'fairValue' | 'upside' | 'cagr'>[] = [
@@ -37,25 +49,25 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
       name: 'Bear',
       probability: 25,
       color: '#EF4444',
-      growthRate:      Math.max(assumptions.revenueGrowthRate + profile.bearGrowthDelta,  1),
-      marginAssumption:Math.max(assumptions.netMarginAssumption + profile.bearMarginDelta, 1),
-      exitMultiple:    Math.max(assumptions.exitMultiple + profile.bearMultipleDelta,       profile.exitMultipleMin),
+      growthRate:       Math.max(assumptions.revenueGrowthRate + deltas.bearGrowthDelta,   1),
+      marginAssumption: Math.max(assumptions.netMarginAssumption + deltas.bearMarginDelta, 1),
+      exitMultiple:     Math.max(qualAdjMultiple + deltas.bearMultipleDelta, profile.exitMultipleMin),
     },
     {
       name: 'Base',
       probability: 50,
       color: '#34d399',
-      growthRate:      assumptions.revenueGrowthRate,
-      marginAssumption:assumptions.netMarginAssumption,
-      exitMultiple:    assumptions.exitMultiple,
+      growthRate:       assumptions.revenueGrowthRate,
+      marginAssumption: assumptions.netMarginAssumption,
+      exitMultiple:     assumptions.exitMultiple,
     },
     {
       name: 'Bull',
       probability: 25,
       color: '#10B981',
-      growthRate:      assumptions.revenueGrowthRate + profile.bullGrowthDelta,
-      marginAssumption:assumptions.netMarginAssumption + profile.bullMarginDelta,
-      exitMultiple:    Math.min(assumptions.exitMultiple + profile.bullMultipleDelta, profile.exitMultipleMax),
+      growthRate:       assumptions.revenueGrowthRate + deltas.bullGrowthDelta,
+      marginAssumption: assumptions.netMarginAssumption + deltas.bullMarginDelta,
+      exitMultiple:     Math.min(qualAdjMultiple + deltas.bullMultipleDelta, profile.exitMultipleMax),
     },
   ];
 
@@ -88,15 +100,32 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     <div className="bg-card border border-border rounded-xl p-4">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-start justify-between mb-4 gap-2">
         <div>
           <h3 className="text-sm font-semibold text-primary">Scenario Analysis</h3>
           <p className="text-[11px] text-muted mt-0.5">
             Model: <span className="text-gold font-medium">{profile.exitMultipleLabel}</span>
-            {' · '}probabilities set by analyst
+            {' · '}
+            {deltas.isCompanySpecific
+              ? <span title={`Historical revenue σ = ${sigma.toFixed(1)}%`}>spread from σ={sigma.toFixed(1)}%</span>
+              : 'sector-template spread'}
           </p>
+          {/* Earnings quality badge */}
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${
+              quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
+              quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
+              quality.score >= 40 ? 'text-amber-400 bg-amber-400/10 border-amber-400/25' :
+                                    'text-loss bg-loss/10 border-loss/25'
+            }`}>
+              {quality.label} · {quality.score}/100
+            </span>
+            <span className="text-[10px] text-muted/60" title={quality.breakdown}>
+              exit ×{quality.multiplier.toFixed(2)}
+            </span>
+          </div>
         </div>
-        <div className="text-right">
+        <div className="text-right flex-shrink-0">
           <p className="text-[11px] text-muted">Weighted Expected Value</p>
           <p className={`text-base font-bold font-mono ${weightedUpside >= 0 ? 'text-gain' : 'text-loss'}`}>
             ₹{weightedFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
