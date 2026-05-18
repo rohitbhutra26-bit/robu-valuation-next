@@ -11,6 +11,7 @@ import ValuationEngine from './ValuationEngine';
 import EarningsQuality from './EarningsQuality';
 import WhatMustHappen from './WhatMustHappen';
 import HistoricalValuationChart from './HistoricalValuationChart';
+import ForecastChart from './ForecastChart';
 
 type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials';
 
@@ -434,6 +435,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         </div>
       </div>
 
+      {/* Forecast chart — historical + projected bars */}
+      <ForecastChart financials={financials} assumptions={assumptions} />
+
       {/* Scenario cards — now sector-aware with probability weights */}
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
 
@@ -442,51 +446,6 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
 
       {/* What Must Happen */}
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
-    </div>
-  );
-}
-
-function MobileScenarios({ financials, assumptions, currentPrice }: { financials: FinancialYear[]; assumptions: ValuationAssumptions; currentPrice: number }) {
-  const latest = financials[financials.length - 1];
-  const shares = Math.max(latest.shares ?? 1, 0.001);
-
-  function compute(growth: number, margin: number, pe: number) {
-    const futRev = latest.revenue * Math.pow(1 + growth / 100, assumptions.years);
-    const futPAT = futRev * (margin / 100);
-    const fv = (futPAT / shares) * pe;
-    const upside = (fv / currentPrice - 1) * 100;
-    const cagr = (Math.pow(fv / currentPrice, 1 / assumptions.years) - 1) * 100;
-    return { fv, upside, cagr };
-  }
-
-  const scenarios = [
-    { name: 'Bear', color: '#EF4444', g: assumptions.revenueGrowthRate - 2, m: assumptions.netMarginAssumption - 2, pe: assumptions.exitPE - 5 },
-    { name: 'Base', color: '#F59E0B', g: assumptions.revenueGrowthRate, m: assumptions.netMarginAssumption, pe: assumptions.exitPE },
-    { name: 'Bull', color: '#10B981', g: assumptions.revenueGrowthRate + 3, m: assumptions.netMarginAssumption + 2, pe: assumptions.exitPE + 5 },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {scenarios.map((s) => {
-        const { fv, upside, cagr } = compute(Math.max(s.g, 1), Math.max(s.m, 1), Math.max(s.pe, 5));
-        const isPos = upside >= 0;
-        return (
-          <div key={s.name} className="rounded-xl p-4 border flex items-center justify-between"
-            style={{ backgroundColor: `${s.color}08`, borderColor: `${s.color}25` }}>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="text-sm font-bold" style={{ color: s.color }}>{s.name} Case</span>
-              </div>
-              <p className="text-xs text-muted">CAGR <span className="font-mono font-semibold" style={{ color: s.color }}>{cagr.toFixed(1)}%</span> p.a.</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-bold font-mono text-primary">₹{fv.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
-              <p className="text-sm font-semibold font-mono" style={{ color: s.color }}>{isPos ? '+' : ''}{upside.toFixed(1)}%</p>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }

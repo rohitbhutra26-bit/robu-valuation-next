@@ -1,62 +1,66 @@
 'use client';
 
-import { FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { getSectorProfile } from '@/lib/sectorModelMap';
+import { runPrimaryModel } from '@/lib/forecastUtils';
 
 interface SensitivityMatrixProps {
   financials: FinancialYear[];
   assumptions: ValuationAssumptions;
   currentPrice: number;
-}
-
-function computeFairValue(
-  latestRevenue: number,
-  shares: number,
-  growthRate: number,
-  netMargin: number,
-  exitPE: number,
-  years: number
-): number {
-  const futureRevenue = latestRevenue * Math.pow(1 + growthRate / 100, years);
-  const futurePAT = futureRevenue * (netMargin / 100);
-  const futurePATPerShare = futurePAT / shares;
-  return futurePATPerShare * exitPE;
+  company: Company;
 }
 
 function getCellColor(fairValue: number, currentPrice: number): string {
   const upside = (fairValue / currentPrice - 1) * 100;
-  if (upside >= 30) return 'bg-gain/20 text-gain border-gain/20';
-  if (upside >= 10) return 'bg-gain/10 text-gain/80 border-gain/10';
+  if (upside >= 30)  return 'bg-gain/20 text-gain border-gain/20';
+  if (upside >= 10)  return 'bg-gain/10 text-gain/80 border-gain/10';
   if (upside >= -10) return 'bg-gold/10 text-gold border-gold/10';
   if (upside >= -25) return 'bg-loss/10 text-loss/80 border-loss/10';
   return 'bg-loss/20 text-loss border-loss/20';
 }
 
 export default function SensitivityMatrix({
-  financials,
-  assumptions,
-  currentPrice,
+  financials, assumptions, currentPrice, company,
 }: SensitivityMatrixProps) {
   if (!financials.length) return null;
-  const latest = financials[financials.length - 1];
-  const safeShares = Math.max(latest.shares ?? 1, 0.001);
-  const g = assumptions.revenueGrowthRate;
-  const pe = assumptions.exitPE;
-  const margin = assumptions.netMarginAssumption;
-  const years = assumptions.years;
 
-  // Rows: Revenue Growth from g-4% to g+4% in 2% steps → 5 values
-  const growthSteps = [g - 4, g - 2, g, g + 2, g + 4].map((v) => Math.max(v, 1));
-  // Cols: Exit PE from pe-10 to pe+10 in 5x steps → 5 values
-  const peSteps = [pe - 10, pe - 5, pe, pe + 5, pe + 10].map((v) => Math.max(v, 5));
+  const profile = getSectorProfile(company.sector);
+  const g       = assumptions.revenueGrowthRate;
+  const mult    = assumptions.exitMultiple;
+  const margin  = assumptions.netMarginAssumption;
+  const years   = assumptions.years;
+
+  // ── Growth steps: ±4% around base, 2% increments ──────────────────────────
+  const growthSteps = [g - 4, g - 2, g, g + 2, g + 4].map(v => Math.max(v, 1));
+
+  // ── Multiple steps: dynamic based on model ─────────────────────────────────
+  // Step size scales with the magnitude of the multiple
+  const multStep =
+    profile.model === 'pb'       ? 0.3  :
+    profile.model === 'ev_ebitda'? 1.5  :
+    profile.model === 'ev_sales' ? 0.5  :
+    5;                                     // PE
+
+  const multSteps = [-2, -1, 0, 1, 2]
+    .map(d => Math.max(mult + d * multStep, profile.exitMultipleMin));
+
+  const multDecimals = profile.model === 'pb' ? 1 : 0;
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-primary">Sensitivity Matrix</h3>
-        <span className="text-xs text-muted">Fair Value vs Current ₹{currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+        <span className="text-xs text-muted font-mono">
+          Current ₹{currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+        </span>
       </div>
+
       <p className="text-xs text-muted mb-3">
-        Revenue Growth % (rows) × Exit P/E Multiple (cols) — Net Margin fixed at {margin.toFixed(1)}%
+        Revenue Growth % (rows) × {profile.exitMultipleLabel} (cols)
+        {profile.model !== 'pb' && profile.model !== 'ev_ebitda' && ` — Net Margin fixed at ${margin.toFixed(1)}%`}
+        {profile.model === 'ev_ebitda' && ' — EBITDA margin taken from latest actuals'}
+        {profile.model === 'pb' && ' — P/B model, margin not applicable'}
       </p>
 
       <div className="overflow-x-auto">
@@ -64,54 +68,59 @@ export default function SensitivityMatrix({
           <thead>
             <tr>
               <th className="text-left pb-2 pr-2 text-muted font-medium w-16 whitespace-nowrap">
-                Growth ↓ / PE →
+                Growth ↓ / {profile.exitMultipleLabel.replace('Exit ', '')} →
               </th>
-              {peSteps.map((p) => (
+              {multSteps.map(m => (
                 <th
-                  key={p}
+                  key={m}
                   className={`pb-2 px-1 text-center font-medium whitespace-nowrap ${
-                    p === pe ? 'text-gold' : 'text-muted'
+                    m === mult ? 'text-gold' : 'text-muted'
                   }`}
                 >
-                  {p.toFixed(0)}x{p === pe ? ' *' : ''}
+                  {m.toFixed(multDecimals)}x{m === mult ? ' ✦' : ''}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {growthSteps.map((gr) => (
+            {growthSteps.map(gr => (
               <tr key={gr}>
                 <td className={`py-1 pr-2 font-mono font-medium whitespace-nowrap ${
                   gr === g ? 'text-gold' : 'text-muted'
                 }`}>
-                  {gr.toFixed(1)}%{gr === g ? ' *' : ''}
+                  {gr.toFixed(1)}%{gr === g ? ' ✦' : ''}
                 </td>
-                {peSteps.map((p) => {
-                  const fv = computeFairValue(
-                    latest.revenue,
-                    safeShares,
+                {multSteps.map(m => {
+                  const result = runPrimaryModel(
+                    profile.model,
+                    financials,
+                    company,
                     gr,
                     margin,
-                    p,
-                    years
+                    m,
+                    years,
                   );
-                  const upside = ((fv / currentPrice) - 1) * 100;
-                  const cellClass = getCellColor(fv, currentPrice);
+                  const fv     = Math.max(result.fairValue, 0);
+                  const upside = fv > 0 ? ((fv / currentPrice) - 1) * 100 : -100;
+                  const cls    = getCellColor(fv, currentPrice);
+
                   return (
                     <td
-                      key={p}
-                      className={`py-1 px-1 text-center font-mono text-xs rounded border ${cellClass} ${
-                        gr === g && p === pe ? 'ring-1 ring-gold ring-offset-1 ring-offset-card' : ''
+                      key={m}
+                      className={`py-1 px-1 text-center font-mono text-xs rounded border ${cls} ${
+                        gr === g && m === mult
+                          ? 'ring-1 ring-gold ring-offset-1 ring-offset-card'
+                          : ''
                       }`}
                       title={`Fair Value: ₹${fv.toFixed(0)} | Upside: ${upside.toFixed(1)}%`}
                     >
                       <div className="font-semibold">
-                        ₹{fv >= 1000
-                          ? `${(fv / 1000).toFixed(1)}K`
-                          : fv.toFixed(0)}
+                        {fv >= 1000
+                          ? `₹${(fv / 1000).toFixed(1)}K`
+                          : fv > 0 ? `₹${fv.toFixed(0)}` : '—'}
                       </div>
-                      <div className="text-xs opacity-75">
-                        {upside >= 0 ? '+' : ''}{upside.toFixed(0)}%
+                      <div className="opacity-75 text-[10px]">
+                        {fv > 0 ? `${upside >= 0 ? '+' : ''}${upside.toFixed(0)}%` : '—'}
                       </div>
                     </td>
                   );
@@ -123,18 +132,16 @@ export default function SensitivityMatrix({
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-gain/20 border border-gain/20" />
-          <span className="text-muted">+30%+ upside</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-gold/10 border border-gold/10" />
-          <span className="text-muted">±10% range</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-loss/20 border border-loss/20" />
-          <span className="text-muted">-25%+ downside</span>
-        </div>
+        {[
+          { cls: 'bg-gain/20 border-gain/20', label: '+30%+ upside' },
+          { cls: 'bg-gold/10 border-gold/10', label: '±10% range' },
+          { cls: 'bg-loss/20 border-loss/20', label: '-25%+ downside' },
+        ].map(({ cls, label }) => (
+          <div key={label} className="flex items-center gap-1.5">
+            <div className={`w-3 h-3 rounded border ${cls}`} />
+            <span className="text-muted">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

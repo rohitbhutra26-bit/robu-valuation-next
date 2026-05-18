@@ -15,6 +15,7 @@ import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
+import ForecastChart from '@/components/ForecastChart';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
@@ -319,8 +320,9 @@ export default function Home() {
                       );
                     })()}
 
+                    <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
-                    <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} />
+                    <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
                     <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
                     <EarningsQuality financials={financials} />

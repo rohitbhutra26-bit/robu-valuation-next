@@ -1,153 +1,198 @@
 'use client';
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+/**
+ * ForecastChart.tsx
+ *
+ * Grouped bar chart — Revenue (blue) + PAT (green) per year.
+ * Historical years from `financials`. Projected years computed live from `assumptions`.
+ * Amber dashed divider shows exactly where history ends and projection begins.
+ * Growth % labels float above each bar so users instantly see if the projection
+ * is a continuation or a step-change from historical performance.
+ */
+
+import { useMemo } from 'react';
 import { FinancialYear, ValuationAssumptions } from '@/lib/types';
 
-interface ForecastChartProps {
+interface ForecastPoint {
+  year: string;
+  revenue: number;
+  pat: number;
+  revenueGrowth: number;
+  isProjected: boolean;
+}
+
+interface Props {
   financials: FinancialYear[];
   assumptions: ValuationAssumptions;
 }
 
-const CustomTooltip = ({ active, payload, label }: {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string }>;
-  label?: string;
-}) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-xl">
-        <p className="text-xs text-gold font-semibold mb-2">{label}</p>
-        {payload.map((p, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-            <span className="text-muted">{p.name}:</span>
-            <span className="text-primary font-mono">₹{p.value.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr</span>
-          </div>
-        ))}
-      </div>
-    );
+// ─── Build data ───────────────────────────────────────────────────────────────
+function buildForecast(fin: FinancialYear[], a: ValuationAssumptions): ForecastPoint[] {
+  const hist: ForecastPoint[] = fin.map(f => ({
+    year: f.year,
+    revenue: f.revenue,
+    pat: f.pat,
+    revenueGrowth: f.revenueGrowth,
+    isProjected: false,
+  }));
+
+  const latest  = fin[fin.length - 1];
+  const rawYY   = parseInt(latest.year.replace('FY', '').replace('P', '')) || 24;
+  const baseYear = rawYY > 50 ? 1900 + rawYY : 2000 + rawYY;
+  const nProj   = Math.min(a.years, 5);
+
+  for (let i = 1; i <= nProj; i++) {
+    const rev = latest.revenue * Math.pow(1 + a.revenueGrowthRate / 100, i);
+    hist.push({
+      year: `FY${String(baseYear + i).slice(2)}P`,
+      revenue: rev,
+      pat: rev * (a.netMarginAssumption / 100),
+      revenueGrowth: a.revenueGrowthRate,
+      isProjected: true,
+    });
   }
-  return null;
-};
+  return hist;
+}
 
-export default function ForecastChart({ financials, assumptions }: ForecastChartProps) {
-  const latest = financials[financials.length - 1];
-  const growthRate = assumptions.revenueGrowthRate / 100;
-  const margin = assumptions.netMarginAssumption / 100;
+function fmtY(n: number): string {
+  if (n >= 100000) return `${(n / 100000).toFixed(1)}L`;
+  if (n >= 1000)   return `${(n / 1000).toFixed(0)}K`;
+  return `${n.toFixed(0)}`;
+}
 
-  const projectedRevenue = latest.revenue * Math.pow(1 + growthRate, assumptions.years);
-  const projectedPAT = projectedRevenue * margin;
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function ForecastChart({ financials, assumptions }: Props) {
+  const points = useMemo(() => buildForecast(financials, assumptions), [financials, assumptions]);
+  if (!points.length) return null;
 
-  const latestFYNum = parseInt(latest.year.replace('FY', '')) || 24;
-  const projectedYear = `FY${latestFYNum + assumptions.years}E`;
+  const W      = 640;
+  const H      = 210;
+  const PAD    = { t: 28, r: 12, b: 36, l: 44 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
 
-  const data = [
-    {
-      year: `${latest.year} (Actual)`,
-      Revenue: latest.revenue,
-      PAT: latest.pat,
-      type: 'historical',
-    },
-    {
-      year: projectedYear,
-      Revenue: Math.round(projectedRevenue),
-      PAT: Math.round(projectedPAT),
-      type: 'projected',
-    },
-  ];
+  const N      = points.length;
+  const colW   = innerW / N;
+  const barW   = Math.max((colW * 0.82) / 2 - 1.5, 5);
+  const gap    = 3;
+  const firstP = points.findIndex(p => p.isProjected);
+  const maxVal = Math.max(...points.map(p => p.revenue)) * 1.15;
+
+  function sy(v: number) { return (v / maxVal) * innerH; }
+  function baseY()       { return PAD.t + innerH; }
+  function revX(i: number) { return PAD.l + i * colW + (colW - barW * 2 - gap) / 2; }
+  function patX(i: number) { return revX(i) + barW + gap; }
+
+  const yTicks = [0.25, 0.5, 0.75, 1].map(f => Math.round(maxVal * f));
+  const REV = '#60A5FA';
+  const PAT = '#34D399';
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-primary">Revenue &amp; PAT Forecast</h3>
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-gold/10 border border-gold/30 rounded text-xs text-gold">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="m22 7-8.5 8.5-5-5L1 17" />
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+            <rect x="3" y="12" width="4" height="9" rx="1"/>
+            <rect x="10" y="7" width="4" height="14" rx="1"/>
+            <rect x="17" y="3" width="4" height="18" rx="1"/>
           </svg>
-          {assumptions.years}Y Projection
+          <h3 className="text-sm font-semibold text-primary">Revenue & Profit Forecast</h3>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2 rounded-sm inline-block" style={{ backgroundColor: REV }} />
+            Revenue
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2 rounded-sm inline-block" style={{ backgroundColor: PAT }} />
+            PAT
+          </span>
+          <span className="text-[10px] font-mono bg-border/50 px-1.5 py-0.5 rounded">P = Projected</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-border/30 rounded-lg p-3">
-          <p className="text-xs text-muted mb-1">Projected Revenue</p>
-          <p className="text-base font-bold font-mono text-accent">
-            ₹{(projectedRevenue / 1000).toFixed(0)}K Cr
-          </p>
-          <p className="text-xs text-muted mt-0.5">
-            {((projectedRevenue / latest.revenue - 1) * 100).toFixed(0)}% growth
-          </p>
-        </div>
-        <div className="bg-border/30 rounded-lg p-3">
-          <p className="text-xs text-muted mb-1">Projected PAT</p>
-          <p className="text-base font-bold font-mono text-gain">
-            ₹{(projectedPAT / 1000).toFixed(0)}K Cr
-          </p>
-          <p className="text-xs text-muted mt-0.5">
-            {((projectedPAT / latest.pat - 1) * 100).toFixed(0)}% growth
-          </p>
-        </div>
-      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
 
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: '#6B7280', fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fill: '#6B7280', fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
-            width={45}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend wrapperStyle={{ fontSize: '11px', color: '#6B7280', paddingTop: '8px' }} />
-          <Bar dataKey="Revenue" radius={[3, 3, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={`rev-${index}`}
-                fill={entry.type === 'historical' ? '#3B82F6' : '#60A5FA'}
-                opacity={entry.type === 'projected' ? 0.7 : 1}
-              />
-            ))}
-          </Bar>
-          <Bar dataKey="PAT" radius={[3, 3, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={`pat-${index}`}
-                fill={entry.type === 'historical' ? '#10B981' : '#34D399'}
-                opacity={entry.type === 'projected' ? 0.7 : 1}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+        {/* Grid + Y labels */}
+        {yTicks.map(v => {
+          const y = PAD.t + innerH - sy(v);
+          return (
+            <g key={v}>
+              <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="#1F2937" strokeWidth="0.8" />
+              <text x={PAD.l - 5} y={y + 3.5} textAnchor="end" fontSize="8.5" fill="#6B7280"
+                fontFamily="JetBrains Mono, monospace">{fmtY(v)}</text>
+            </g>
+          );
+        })}
 
-      <div className="mt-2 flex items-center gap-3 text-xs text-muted">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm bg-accent/80" />
-          <span>Actual</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm bg-accent/40" />
-          <span>Projected (Base)</span>
-        </div>
-      </div>
+        {/* Base axis */}
+        <line x1={PAD.l} y1={baseY()} x2={W - PAD.r} y2={baseY()} stroke="#374151" strokeWidth="1" />
+
+        {/* Unit label */}
+        <text x={PAD.l - 6} y={PAD.t - 6} textAnchor="end" fontSize="8" fill="#6B7280"
+          fontFamily="JetBrains Mono, monospace">₹ Cr</text>
+
+        {/* Historical / Projected divider */}
+        {firstP > 0 && (
+          <>
+            <line
+              x1={PAD.l + firstP * colW - 4} y1={PAD.t - 16}
+              x2={PAD.l + firstP * colW - 4} y2={baseY() + 4}
+              stroke="#F59E0B" strokeWidth="1" strokeDasharray="4 3" strokeOpacity="0.55"
+            />
+            <text x={PAD.l + 4} y={PAD.t - 6} fontSize="8" fill="#6B7280">Historical</text>
+            <text x={PAD.l + firstP * colW + 2} y={PAD.t - 6} fontSize="8" fill="#F59E0B" fillOpacity="0.8">
+              Projected →
+            </text>
+          </>
+        )}
+
+        {/* Bars */}
+        {points.map((pt, i) => {
+          const isP  = pt.isProjected;
+          const revH = sy(pt.revenue);
+          const patH = sy(pt.pat);
+          const rx   = revX(i);
+          const px   = patX(i);
+          const cx   = PAD.l + i * colW + colW / 2;
+
+          return (
+            <g key={pt.year}>
+              {/* Revenue */}
+              <rect x={rx} y={baseY() - revH} width={barW} height={revH}
+                fill={REV} fillOpacity={isP ? 0.38 : 0.9} rx="2" />
+
+              {/* PAT */}
+              <rect x={px} y={baseY() - patH} width={barW} height={patH}
+                fill={PAT} fillOpacity={isP ? 0.38 : 0.9} rx="2" />
+
+              {/* Growth % above revenue bar */}
+              {pt.revenueGrowth !== 0 && revH > 4 && (
+                <text x={rx + barW / 2} y={baseY() - revH - 3}
+                  textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono, monospace"
+                  fill={isP ? '#F59E0B' : '#9CA3AF'} fillOpacity={isP ? 0.9 : 0.85}>
+                  {pt.revenueGrowth > 0 ? '+' : ''}{pt.revenueGrowth.toFixed(0)}%
+                </text>
+              )}
+
+              {/* X label */}
+              <text x={cx} y={baseY() + 13} textAnchor="middle" fontSize="9"
+                fontFamily="JetBrains Mono, monospace"
+                fill={isP ? '#F59E0B' : '#9CA3AF'} fillOpacity={isP ? 0.85 : 1}>
+                {pt.year}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      <p className="text-[11px] text-muted text-center mt-1">
+        Projected at{' '}
+        <span className="text-accent font-mono font-semibold">{assumptions.revenueGrowthRate}%</span>
+        {' '}revenue growth ·{' '}
+        <span className="text-gain font-mono font-semibold">{assumptions.netMarginAssumption}%</span>
+        {' '}net margin — adjusts live with sliders above
+      </p>
     </div>
   );
 }
