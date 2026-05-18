@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile } from '@/lib/sectorModelMap';
+
+// ── Session-level cache — survives re-renders, cleared on page refresh ────────
+// Like a hedge fund's in-memory data store — once fetched, instant on re-visit
+const _sessionCache = new Map<string, { company: Company; financials: FinancialYear[] }>();
+// Track in-flight prefetch promises to avoid duplicate network calls
+const _inflight = new Map<string, Promise<void>>();
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
 import KeyMetrics from '@/components/KeyMetrics';
@@ -46,59 +52,106 @@ export default function Home() {
     years: 5,
   });
 
-  // ── Load company ──────────────────────────────────────────────────────────
+  // ── Core fetch logic (shared by load + prefetch) ─────────────────────────
+  async function _fetchSymbol(symbol: string): Promise<{ company: Company; financials: FinancialYear[] }> {
+    const [companyRes, financialsRes] = await Promise.all([
+      fetch(`/api/company/${symbol}`, { cache: 'no-store' }),
+      fetch(`/api/financials/${symbol}`, { cache: 'no-store' }),
+    ]);
+    if (!companyRes.ok) {
+      const err = await companyRes.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to load ${symbol}`);
+    }
+    const companyData: Company = await companyRes.json();
+    let fins: FinancialYear[] = [];
+    if (financialsRes.ok) {
+      fins = await financialsRes.json();
+      const sharesInCr = companyData.shares && companyData.shares > 0 ? companyData.shares : 1;
+      fins = fins.map(f => ({ ...f, shares: f.shares && f.shares > 0 ? f.shares : sharesInCr }));
+    }
+    return { company: companyData, financials: fins };
+  }
+
+  // ── Load company — checks session cache first ─────────────────────────────
   const loadCompany = useCallback(async (symbol: string) => {
     setIsLoading(true);
     setError(null);
-    setCompany(null);
-    setFinancials([]);
     setActiveView('valuation');
 
+    // Cache hit → instant render, no spinner
+    if (_sessionCache.has(symbol)) {
+      const cached = _sessionCache.get(symbol)!;
+      setCompany(cached.company);
+      setFinancials(cached.financials);
+      _applyAssumptions(cached.company, cached.financials);
+      setIsLoading(false);
+      return;
+    }
+
+    setCompany(null);
+    setFinancials([]);
+
     try {
-      const [companyRes, financialsRes] = await Promise.all([
-        fetch(`/api/company/${symbol}`, { cache: 'no-store' }),
-        fetch(`/api/financials/${symbol}`, { cache: 'no-store' }),
-      ]);
-
-      if (!companyRes.ok) {
-        const err = await companyRes.json().catch(() => ({}));
-        throw new Error(err.error || `Failed to load ${symbol}`);
+      // If a prefetch is already in-flight for this symbol, wait for it
+      if (_inflight.has(symbol)) await _inflight.get(symbol);
+      // Then try cache again (prefetch may have just populated it)
+      if (_sessionCache.has(symbol)) {
+        const cached = _sessionCache.get(symbol)!;
+        setCompany(cached.company);
+        setFinancials(cached.financials);
+        _applyAssumptions(cached.company, cached.financials);
+        setIsLoading(false);
+        return;
       }
-
-      const companyData: Company = await companyRes.json();
-      setCompany(companyData);
-
-      let fins: FinancialYear[] = [];
-      if (financialsRes.ok) {
-        fins = await financialsRes.json();
-        const sharesInCr = companyData.shares && companyData.shares > 0 ? companyData.shares : 1;
-        fins = fins.map(f => ({ ...f, shares: f.shares && f.shares > 0 ? f.shares : sharesInCr }));
-      }
-      setFinancials(fins);
-
-      if (fins.length >= 2) {
-        const latest = fins[fins.length - 1];
-        const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
-        const avgGrowth = growthValues.length
-          ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
-        const sectorProfile = getSectorProfile(companyData.sector);
-        const exitPE = Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100);
-        setAssumptions({
-          revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
-          netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
-          exitPE,
-          exitMultiple: sectorProfile.defaultExitMultiple,
-          years: 5,
-        });
-      }
+      const result = await _fetchSymbol(symbol);
+      _sessionCache.set(symbol, result);
+      setCompany(result.company);
+      setFinancials(result.financials);
+      _applyAssumptions(result.company, result.financials);
     } catch (err: any) {
       setError(err.message || 'Failed to load company data');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Apply assumptions from loaded data ────────────────────────────────────
+  function _applyAssumptions(companyData: Company, fins: FinancialYear[]) {
+    if (fins.length >= 2) {
+      const latest = fins[fins.length - 1];
+      const growthValues = fins.slice(1).map(f => f.revenueGrowth).filter(g => g !== 0);
+      const avgGrowth = growthValues.length
+        ? growthValues.reduce((a, b) => a + b, 0) / growthValues.length : 15;
+      const sectorProfile = getSectorProfile(companyData.sector);
+      const exitPE = Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100);
+      setAssumptions({
+        revenueGrowthRate: Math.min(Math.max(Math.round(avgGrowth), 3), 40),
+        netMarginAssumption: Math.min(Math.max(Math.round(latest.netMargin), 1), 50),
+        exitPE,
+        exitMultiple: sectorProfile.defaultExitMultiple,
+        years: 5,
+      });
+    }
+  }
+
+  // ── Prefetch on hover — fires 200ms after hover to avoid noise ────────────
+  const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function handlePrefetch(symbol: string) {
+    if (_sessionCache.has(symbol) || _inflight.has(symbol)) return;
+    prefetchTimer.current = setTimeout(() => {
+      const p = _fetchSymbol(symbol)
+        .then(result => { _sessionCache.set(symbol, result); })
+        .catch(() => {})
+        .finally(() => { _inflight.delete(symbol); });
+      _inflight.set(symbol, p);
+    }, 200);
+  }
+  function cancelPrefetch() {
+    if (prefetchTimer.current) clearTimeout(prefetchTimer.current);
+  }
 
   function handleSelect(symbol: string) {
+    cancelPrefetch();
     setSelectedSymbol(symbol);
     setHomeMode(false);
     loadCompany(symbol);
@@ -228,6 +281,8 @@ export default function Home() {
                 <button
                   key={sym}
                   onClick={() => handleSelect(sym)}
+                  onMouseEnter={() => handlePrefetch(sym)}
+                  onMouseLeave={cancelPrefetch}
                   className={`w-full text-left px-2.5 py-1.5 rounded text-[11px] font-mono transition-all mb-0.5 ${
                     selectedSymbol === sym
                       ? 'bg-gold text-terminal font-bold'
@@ -243,12 +298,7 @@ export default function Home() {
           {/* ── CENTER MAIN CONTENT ───────────────────────── */}
           <main className="flex-1 overflow-y-auto min-w-0">
             {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-sm text-muted">Loading {selectedSymbol}…</p>
-                </div>
-              </div>
+              <SkeletonView symbol={selectedSymbol} />
             ) : error ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center max-w-sm">
@@ -398,6 +448,76 @@ export default function Home() {
   );
 }
 
+/* ── SkeletonView — shown while loading, feels much faster than a spinner ── */
+function SkeletonView({ symbol }: { symbol: string }) {
+  return (
+    <div className="p-4 space-y-4 animate-pulse">
+      {/* Company header skeleton */}
+      <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-border/60" />
+          <div className="space-y-2">
+            <div className="h-4 w-32 rounded bg-border/60" />
+            <div className="h-3 w-20 rounded bg-border/40" />
+          </div>
+        </div>
+        <div className="text-right space-y-2">
+          <div className="h-6 w-24 rounded bg-border/60 ml-auto" />
+          <div className="h-3 w-16 rounded bg-border/40 ml-auto" />
+        </div>
+      </div>
+
+      {/* Key metrics row skeleton */}
+      <div className="grid grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-card border border-border rounded-xl p-3 space-y-2">
+            <div className="h-3 w-12 rounded bg-border/40" />
+            <div className="h-5 w-16 rounded bg-border/60" />
+          </div>
+        ))}
+      </div>
+
+      {/* Assumptions panel skeleton */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="h-4 w-44 rounded bg-border/60 mb-4" />
+        <div className="grid grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-3 w-20 rounded bg-border/40" />
+              <div className="h-1 w-full rounded bg-border/60" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart skeleton */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="h-4 w-48 rounded bg-border/60 mb-4" />
+        <div className="h-[180px] w-full rounded bg-border/30 flex items-end gap-2 px-2 pb-2">
+          {[60,80,55,90,70,85,65,95].map((h, i) => (
+            <div key={i} className="flex-1 rounded-t bg-border/50" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Scenario cards skeleton */}
+      <div className="grid grid-cols-3 gap-3">
+        {['Bear','Base','Bull'].map(s => (
+          <div key={s} className="bg-card border border-border rounded-xl p-4 space-y-2">
+            <div className="h-3 w-16 rounded bg-border/40" />
+            <div className="h-6 w-24 rounded bg-border/60" />
+            <div className="h-3 w-12 rounded bg-border/40" />
+          </div>
+        ))}
+      </div>
+
+      <p className="text-center text-xs text-muted/40 pt-2 font-mono">
+        loading {symbol}…
+      </p>
+    </div>
+  );
+}
+
 /* ── SliderInput ─────────────────────────────────────────────────────────── */
 function SliderInput({
   label, value, min, max, step, suffix, color, onChange, hint,
@@ -424,7 +544,7 @@ function SliderInput({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${pct}%, #1E1E1E ${pct}%, #1E1E1E 100%)` }}
+        style={{ background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)` }}
       />
       {hint && <p className="text-xs text-muted mt-1 font-mono">{hint}</p>}
     </div>

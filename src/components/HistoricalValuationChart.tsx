@@ -133,9 +133,9 @@ function LineChart({
 
         {/* Min/Max lines */}
         <line x1={PAD.l} y1={yMin_px} x2={PAD.l + innerW} y2={yMin_px}
-          stroke="#374151" strokeWidth="0.6" strokeDasharray="2 4" />
+          stroke="#0f2d18" strokeWidth="0.6" strokeDasharray="2 4" />
         <line x1={PAD.l} y1={yMax_px} x2={PAD.l + innerW} y2={yMax_px}
-          stroke="#374151" strokeWidth="0.6" strokeDasharray="2 4" />
+          stroke="#0f2d18" strokeWidth="0.6" strokeDasharray="2 4" />
 
         {/* Y-axis labels */}
         {[stats.min, stats.median, stats.max].map((v, i) => (
@@ -145,7 +145,7 @@ function LineChart({
             y={yOf(v) + 3}
             textAnchor="end"
             fontSize="8"
-            fill="#6B7280"
+            fill="#6ee7b7"
             fontFamily="JetBrains Mono, monospace"
           >
             {v.toFixed(0)}
@@ -174,7 +174,7 @@ function LineChart({
             y={H - 4}
             textAnchor="middle"
             fontSize="8"
-            fill="#6B7280"
+            fill="#6ee7b7"
             fontFamily="JetBrains Mono, monospace"
           >
             {validPairs[idx]?.d.slice(0, 7) || ''}
@@ -239,7 +239,7 @@ export default function HistoricalValuationChart({ company }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
           <h3 className="text-sm font-semibold text-primary">Historical Valuation</h3>
@@ -285,7 +285,7 @@ export default function HistoricalValuationChart({ company }: Props) {
               stats={data.stats.pe}
               currentVal={company.pe}
               label="P/E Ratio"
-              color="#F59E0B"
+              color="#34d399"
             />
           )}
           {activeMetric === 'pb' && (

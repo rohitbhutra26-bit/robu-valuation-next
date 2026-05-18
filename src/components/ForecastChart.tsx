@@ -84,14 +84,14 @@ export default function ForecastChart({ financials, assumptions }: Props) {
   function patX(i: number) { return revX(i) + barW + gap; }
 
   const yTicks = [0.25, 0.5, 0.75, 1].map(f => Math.round(maxVal * f));
-  const REV = '#60A5FA';
-  const PAT = '#34D399';
+  const REV = '#22d3ee';
+  const PAT = '#4ade80';
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
             <rect x="3" y="12" width="4" height="9" rx="1"/>
             <rect x="10" y="7" width="4" height="14" rx="1"/>
             <rect x="17" y="3" width="4" height="18" rx="1"/>
@@ -118,18 +118,18 @@ export default function ForecastChart({ financials, assumptions }: Props) {
           const y = PAD.t + innerH - sy(v);
           return (
             <g key={v}>
-              <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="#1F2937" strokeWidth="0.8" />
-              <text x={PAD.l - 5} y={y + 3.5} textAnchor="end" fontSize="8.5" fill="#6B7280"
+              <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="#0a1f0f" strokeWidth="0.8" />
+              <text x={PAD.l - 5} y={y + 3.5} textAnchor="end" fontSize="8.5" fill="#4a9a6f"
                 fontFamily="JetBrains Mono, monospace">{fmtY(v)}</text>
             </g>
           );
         })}
 
         {/* Base axis */}
-        <line x1={PAD.l} y1={baseY()} x2={W - PAD.r} y2={baseY()} stroke="#374151" strokeWidth="1" />
+        <line x1={PAD.l} y1={baseY()} x2={W - PAD.r} y2={baseY()} stroke="#0f2d18" strokeWidth="1" />
 
         {/* Unit label */}
-        <text x={PAD.l - 6} y={PAD.t - 6} textAnchor="end" fontSize="8" fill="#6B7280"
+        <text x={PAD.l - 6} y={PAD.t - 6} textAnchor="end" fontSize="8" fill="#4a9a6f"
           fontFamily="JetBrains Mono, monospace">₹ Cr</text>
 
         {/* Historical / Projected divider */}
@@ -138,10 +138,10 @@ export default function ForecastChart({ financials, assumptions }: Props) {
             <line
               x1={PAD.l + firstP * colW - 4} y1={PAD.t - 16}
               x2={PAD.l + firstP * colW - 4} y2={baseY() + 4}
-              stroke="#F59E0B" strokeWidth="1" strokeDasharray="4 3" strokeOpacity="0.55"
+              stroke="#34d399" strokeWidth="1" strokeDasharray="4 3" strokeOpacity="0.55"
             />
-            <text x={PAD.l + 4} y={PAD.t - 6} fontSize="8" fill="#6B7280">Historical</text>
-            <text x={PAD.l + firstP * colW + 2} y={PAD.t - 6} fontSize="8" fill="#F59E0B" fillOpacity="0.8">
+            <text x={PAD.l + 4} y={PAD.t - 6} fontSize="8" fill="#4a9a6f">Historical</text>
+            <text x={PAD.l + firstP * colW + 2} y={PAD.t - 6} fontSize="8" fill="#34d399" fillOpacity="0.8">
               Projected →
             </text>
           </>
@@ -170,7 +170,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               {pt.revenueGrowth !== 0 && revH > 4 && (
                 <text x={rx + barW / 2} y={baseY() - revH - 3}
                   textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono, monospace"
-                  fill={isP ? '#F59E0B' : '#9CA3AF'} fillOpacity={isP ? 0.9 : 0.85}>
+                  fill={isP ? '#34d399' : '#6ee7b7'} fillOpacity={isP ? 0.9 : 0.85}>
                   {pt.revenueGrowth > 0 ? '+' : ''}{pt.revenueGrowth.toFixed(0)}%
                 </text>
               )}
@@ -178,7 +178,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               {/* X label */}
               <text x={cx} y={baseY() + 13} textAnchor="middle" fontSize="9"
                 fontFamily="JetBrains Mono, monospace"
-                fill={isP ? '#F59E0B' : '#9CA3AF'} fillOpacity={isP ? 0.85 : 1}>
+                fill={isP ? '#34d399' : '#6ee7b7'} fillOpacity={isP ? 0.85 : 1}>
                 {pt.year}
               </text>
             </g>

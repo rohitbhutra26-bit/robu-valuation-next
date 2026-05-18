@@ -44,7 +44,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     {
       name: 'Base',
       probability: 50,
-      color: '#F59E0B',
+      color: '#34d399',
       growthRate:      assumptions.revenueGrowthRate,
       marginAssumption:assumptions.netMarginAssumption,
       exitMultiple:    assumptions.exitMultiple,

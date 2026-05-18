@@ -28,27 +28,34 @@ interface Props {
 }
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
-// Solid-fill design — no gradient IDs, no rendering conflicts across instances
+// Geometric block construction — Zeltra style.
+// R is 4 shapes: stem | top bar | bowl-right | diagonal slash leg.
+// Every stroke is the same bold weight. Diagonal leg = Zeltra signature move.
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Rounded-square container */}
-      <rect width="40" height="40" rx="9" fill="#141414"/>
-      {/* Amber border — makes icon visible against any dark bg */}
-      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#F59E0B" strokeWidth="1.5" strokeOpacity="0.45" fill="none"/>
+      {/* App icon background */}
+      <rect width="40" height="40" rx="9" fill="#030a05"/>
+      {/* Border */}
+      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#34d399" strokeWidth="1" strokeOpacity="0.35" fill="none"/>
 
-      {/* ── Left stem ── */}
-      <rect x="8" y="7" width="5.5" height="26" rx="1.5" fill="#F59E0B"/>
+      {/* ── R: 4 geometric blocks ── */}
 
-      {/* ── Bowl of R — outer D shape with inner cutout via evenodd ── */}
-      <path
-        fillRule="evenodd"
-        d="M13.5 7 C29 7 29 25 13.5 25 Z  M13.5 11.5 C24 11.5 24 20.5 13.5 20.5 Z"
-        fill="#F59E0B"
-      />
+      {/* 1. STEM — left vertical, full height */}
+      <rect x="7" y="7" width="7" height="26" rx="2" fill="#34d399"/>
 
-      {/* ── Diagonal leg ── */}
-      <path d="M14 24.5L28 33" stroke="#F59E0B" strokeWidth="5" strokeLinecap="round"/>
+      {/* 2. TOP BAR — horizontal, spans full bowl width */}
+      <rect x="7" y="7" width="21" height="7" rx="2" fill="#34d399"/>
+
+      {/* 3. BOWL RIGHT — right vertical, top half only */}
+      <rect x="22" y="7" width="6" height="14" rx="2" fill="#34d399"/>
+
+      {/* 4. MID BAR — closes the bowl, anchors the diagonal */}
+      <rect x="7" y="14" width="21" height="7" rx="2" fill="#34d399"/>
+
+      {/* 5. DIAGONAL LEG — Zeltra-style bold slash parallelogram */}
+      {/* Runs from bowl mid-right → bottom-right corner, same stroke width as blocks */}
+      <path d="M14 21 L21 21 L31 33 L24 33 Z" fill="#34d399"/>
     </svg>
   );
 }
@@ -63,7 +70,7 @@ function fmt(n: number) {
 // ─── Nav Icons ────────────────────────────────────────────────────────────────
 function IconSearch({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#F59E0B' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <circle cx="11" cy="11" r="7" />
       <path d="m21 21-4.35-4.35" strokeLinecap="round" />
     </svg>
@@ -71,7 +78,7 @@ function IconSearch({ on }: { on: boolean }) {
 }
 function IconChart({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#F59E0B' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M3 3v18h18" strokeLinecap="round" />
       <path d="m19 9-5 5-4-4-3 3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -79,17 +86,17 @@ function IconChart({ on }: { on: boolean }) {
 }
 function IconSliders({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#F59E0B' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
-      <circle cx="9" cy="6" r="2" fill={on ? '#F59E0B' : 'none'} />
-      <circle cx="15" cy="12" r="2" fill={on ? '#F59E0B' : 'none'} />
-      <circle cx="9" cy="18" r="2" fill={on ? '#F59E0B' : 'none'} />
+      <circle cx="9" cy="6" r="2" fill={on ? '#34d399' : 'none'} />
+      <circle cx="15" cy="12" r="2" fill={on ? '#34d399' : 'none'} />
+      <circle cx="9" cy="18" r="2" fill={on ? '#34d399' : 'none'} />
     </svg>
   );
 }
 function IconAI({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#F59E0B' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M12 2l1.4 4.3L18 7.5l-4.6 2.7L12 14l-1.4-3.8L6 7.5l4.6-1.2L12 2z" strokeLinejoin="round" />
       <path d="M5 17l.7 2 2 .7-2 .7L5 22l-.7-2-2-.7 2-.7L5 17z" strokeLinejoin="round" />
     </svg>
@@ -97,7 +104,7 @@ function IconAI({ on }: { on: boolean }) {
 }
 function IconTable({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#F59E0B' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M3 9h18M3 15h18M9 3v18" strokeLinecap="round" />
     </svg>
@@ -359,7 +366,7 @@ function MobileSlider({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${pct}%, #1E1E1E ${pct}%, #1E1E1E 100%)` }}
+        style={{ background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)` }}
       />
       {hint && <p className="text-xs text-muted mt-1.5 font-mono">{hint}</p>}
     </div>
@@ -382,7 +389,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       {/* Assumptions card — now sector-aware */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
           <h3 className="text-sm font-semibold text-primary">Assumptions</h3>
           <span className="ml-auto text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
             {sectorProfile.sectorLabel}

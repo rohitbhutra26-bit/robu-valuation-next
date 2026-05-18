@@ -149,7 +149,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
           </svg>
           <div>

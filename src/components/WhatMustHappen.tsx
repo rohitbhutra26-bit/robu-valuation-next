@@ -14,7 +14,7 @@ interface Props {
 // ─── Feasibility config ───────────────────────────────────────────────────────
 const FEASIBILITY: Record<Feasibility, { label: string; color: string; bg: string; border: string; dot: string }> = {
   achievable:  { label: 'Achievable',  color: 'text-gain', bg: 'bg-gain/10',  border: 'border-gain/30',  dot: '#10B981' },
-  ambitious:   { label: 'Ambitious',   color: 'text-gold', bg: 'bg-gold/10',  border: 'border-gold/30',  dot: '#F59E0B' },
+  ambitious:   { label: 'Ambitious',   color: 'text-gold', bg: 'bg-gold/10',  border: 'border-gold/30',  dot: '#34d399' },
   difficult:   { label: 'Difficult',   color: 'text-loss', bg: 'bg-loss/10',  border: 'border-loss/30',  dot: '#EF4444' },
   unrealistic: { label: 'Unrealistic', color: 'text-loss', bg: 'bg-loss/20',  border: 'border-loss/40',  dot: '#EF4444' },
 };
@@ -141,7 +141,7 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 8v4l3 3" strokeLinecap="round"/>
             </svg>
