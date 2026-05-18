@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
@@ -39,6 +40,9 @@ const NAV_ITEMS: { view: ActiveView; icon: string; label: string; badge?: string
 ];
 
 export default function Home() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
   const [company, setCompany]       = useState<Company | null>(null);
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState('');
@@ -56,11 +60,26 @@ export default function Home() {
     years: 5,
   });
 
+  // ── URL persistence: restore stock from ?symbol= on page load ────────────
+  // When user refreshes, we read the URL param and re-load the same stock.
+  // Think of it like a bookmark — the URL always reflects where you are.
+  useEffect(() => {
+    const sym = searchParams.get('symbol');
+    if (sym) {
+      const clean = sym.toUpperCase();
+      setSelectedSymbol(clean);
+      setHomeMode(false);
+      loadCompany(clean);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Core fetch logic (shared by load + prefetch) ─────────────────────────
   async function _fetchSymbol(symbol: string): Promise<{ company: Company; financials: FinancialYear[] }> {
-    // Try Screener.in-backed endpoint first; fall back to Yahoo if unavailable
+    // Try Screener.in-backed endpoints first; fall back to Yahoo if unavailable
     const [companyRes, financialsRes] = await Promise.all([
-      fetch(`/api/company/${symbol}`, { cache: 'no-store' }),
+      fetch(`/api/company-v2/${symbol}`, { cache: 'no-store' })
+        .then(r => r.ok ? r : fetch(`/api/company/${symbol}`, { cache: 'no-store' }))
+        .catch(() => fetch(`/api/company/${symbol}`, { cache: 'no-store' })),
       fetch(`/api/financials-v2/${symbol}`, { cache: 'no-store' })
         .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`, { cache: 'no-store' }))
         .catch(() => fetch(`/api/financials/${symbol}`, { cache: 'no-store' })),
@@ -183,9 +202,12 @@ export default function Home() {
 
   function handleSelect(symbol: string) {
     cancelPrefetch();
-    setSelectedSymbol(symbol);
+    const clean = symbol.toUpperCase();
+    setSelectedSymbol(clean);
     setHomeMode(false);
-    loadCompany(symbol);
+    // Push symbol to URL so page refresh restores the same stock
+    router.replace(`?symbol=${clean}`, { scroll: false });
+    loadCompany(clean);
   }
 
   function goHome() {
@@ -195,6 +217,8 @@ export default function Home() {
     setError(null);
     setSelectedSymbol('');
     setActiveView('valuation');
+    // Clear the URL param when going back to home
+    router.replace('/', { scroll: false });
   }
 
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
@@ -301,29 +325,34 @@ export default function Home() {
                 </button>
               ))}
 
-              <div className="my-3 border-t border-border/60" />
-
-              {/* Quick picks */}
-              <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
+              {/* Quick picks — only shown when no stock is loaded */}
+              {!company && (
+                <>
+                  <div className="my-3 border-t border-border/60" />
+                  <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
+                </>
+              )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 pb-3">
-              {QUICK_PICKS.map((sym) => (
-                <button
-                  key={sym}
-                  onClick={() => handleSelect(sym)}
-                  onMouseEnter={() => handlePrefetch(sym)}
-                  onMouseLeave={cancelPrefetch}
-                  className={`w-full text-left px-2.5 py-1.5 rounded text-[11px] font-mono transition-all mb-0.5 ${
-                    selectedSymbol === sym
-                      ? 'bg-gold text-terminal font-bold'
-                      : 'text-muted hover:bg-border/60 hover:text-primary'
-                  }`}
-                >
-                  {sym}
-                </button>
-              ))}
-            </div>
+            {!company && (
+              <div className="flex-1 overflow-y-auto px-2 pb-3">
+                {QUICK_PICKS.map((sym) => (
+                  <button
+                    key={sym}
+                    onClick={() => handleSelect(sym)}
+                    onMouseEnter={() => handlePrefetch(sym)}
+                    onMouseLeave={cancelPrefetch}
+                    className={`w-full text-left px-2.5 py-1.5 rounded text-[11px] font-mono transition-all mb-0.5 ${
+                      selectedSymbol === sym
+                        ? 'bg-gold text-terminal font-bold'
+                        : 'text-muted hover:bg-border/60 hover:text-primary'
+                    }`}
+                  >
+                    {sym}
+                  </button>
+                ))}
+              </div>
+            )}
           </aside>
 
           {/* ── CENTER MAIN CONTENT ───────────────────────── */}

@@ -182,7 +182,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono cursor-default ${
               quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
               quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
-              quality.score >= 40 ? 'text-amber-400 bg-amber-400/10 border-amber-400/25' :
+              quality.score >= 40 ? 'text-yellow-300 bg-yellow-300/10 border-yellow-300/25' :
                                     'text-loss bg-loss/10 border-loss/25'
             }`}
           >
@@ -300,13 +300,13 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           <p className={`text-2xl font-bold font-mono ${
             quality.score >= 80 ? 'text-gain' :
             quality.score >= 60 ? 'text-gold' :
-            quality.score >= 40 ? 'text-amber-400' : 'text-loss'
+            quality.score >= 40 ? 'text-yellow-300' : 'text-loss'
           }`}>{quality.score}</p>
           <p className="text-[10px] text-muted">/ 100</p>
           <p className={`text-[10px] font-bold mt-0.5 ${
             quality.score >= 80 ? 'text-gain' :
             quality.score >= 60 ? 'text-gold' :
-            quality.score >= 40 ? 'text-amber-400' : 'text-loss'
+            quality.score >= 40 ? 'text-yellow-300' : 'text-loss'
           }`}>{quality.label}</p>
         </div>
       </div>

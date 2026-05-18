@@ -17,7 +17,7 @@ export default function AIOverview({ company }: AIOverviewProps) {
   return (
     <div className="bg-card border border-border rounded-xl p-4 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gold to-amber-600 flex items-center justify-center flex-shrink-0">
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-700 to-emerald-400 flex items-center justify-center flex-shrink-0">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
             <path d="M12 2a10 10 0 1 0 10 10" />
             <path d="M12 6v6l4 2" />

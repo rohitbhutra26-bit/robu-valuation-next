@@ -15,15 +15,15 @@ export default function DataQualityBanner({ quality }: Props) {
 
   const borderColor =
     quality.level === 'High'   ? '#34d399' :
-    quality.level === 'Medium' ? '#f59e0b' : '#f87171';
+    quality.level === 'Medium' ? '#fde047' : '#f87171';
 
   const textColor =
     quality.level === 'High'   ? 'text-gain' :
-    quality.level === 'Medium' ? 'text-amber-400' : 'text-loss';
+    quality.level === 'Medium' ? 'text-yellow-300' : 'text-loss';
 
   const bgColor =
     quality.level === 'High'   ? 'bg-gain/5' :
-    quality.level === 'Medium' ? 'bg-amber-400/5' : 'bg-loss/5';
+    quality.level === 'Medium' ? 'bg-yellow-300/5' : 'bg-loss/5';
 
   const icon =
     quality.level === 'High'   ? '✓' :
@@ -76,7 +76,7 @@ export default function DataQualityBanner({ quality }: Props) {
           {quality.issues.map((issue, i) => (
             <div key={i} className="flex gap-2">
               <span className={`text-[10px] font-bold flex-shrink-0 mt-0.5 ${
-                issue.severity === 'error' ? 'text-loss' : 'text-amber-400'
+                issue.severity === 'error' ? 'text-loss' : 'text-yellow-300'
               }`}>
                 {issue.severity === 'error' ? '✗' : '⚠'}
               </span>

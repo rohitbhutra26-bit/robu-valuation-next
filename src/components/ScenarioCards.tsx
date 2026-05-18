@@ -115,7 +115,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${
               quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
               quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
-              quality.score >= 40 ? 'text-amber-400 bg-amber-400/10 border-amber-400/25' :
+              quality.score >= 40 ? 'text-yellow-300 bg-yellow-300/10 border-yellow-300/25' :
                                     'text-loss bg-loss/10 border-loss/25'
             }`}>
               {quality.label} · {quality.score}/100
