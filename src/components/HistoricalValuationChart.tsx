@@ -237,18 +237,17 @@ export default function HistoricalValuationChart({ company }: Props) {
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-          <h3 className="text-sm font-semibold text-primary">Historical Valuation</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-primary">Is it cheap vs its own history?</h3>
+          <p className="text-[10px] text-muted mt-0.5">5-year valuation range</p>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-shrink-0">
           {(['pe', 'pb'] as const).map(m => (
             <button
               key={m}
               onClick={() => setActiveMetric(m)}
+              title={m === 'pe' ? 'Price ÷ Earnings — how much you pay for ₹1 of profit' : 'Price ÷ Book — how much you pay for ₹1 of net assets'}
               className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all ${
                 activeMetric === m
                   ? 'bg-gold text-terminal'
@@ -272,7 +271,7 @@ export default function HistoricalValuationChart({ company }: Props) {
       {error && (
         <div className="py-6 text-center">
           <p className="text-xs text-loss">{error}</p>
-          <p className="text-[11px] text-muted mt-1">Historical data requires Render to be deployed with latest code</p>
+          <p className="text-[11px] text-muted mt-1">Historical data unavailable — check that the data server is running</p>
         </div>
       )}
 
@@ -300,15 +299,14 @@ export default function HistoricalValuationChart({ company }: Props) {
           )}
 
           {/* Context blurb */}
-          <div className="text-[11px] text-muted border-t border-border pt-3 space-y-1 leading-relaxed">
+          <div className="text-[11px] text-muted border-t border-border pt-3 space-y-1.5 leading-relaxed">
             <p>
-              <span className="text-primary font-medium">Shaded band</span>
-              {' '}= 25th–75th percentile range (middle half of historical values).
-              Trading inside the band is considered normal for this stock.
+              <span className="text-primary font-medium">Shaded zone</span>
+              {' '}= the "normal" range for this stock over 5 years. If the line is inside the zone, it's trading normally.
             </p>
             <p>
-              <span className="text-primary font-medium">Percentile bar</span>
-              {' '}= where today's multiple sits vs the full 5-year range. Below 25th = historically cheap. Above 75th = historically expensive.
+              <span className="text-primary font-medium">Bar at the bottom</span>
+              {' '}= where today's price sits vs history. Left (green) = cheap by its own standards. Right (red) = expensive vs its own history.
             </p>
           </div>
         </>

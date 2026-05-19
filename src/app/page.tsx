@@ -20,6 +20,7 @@ import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
 import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
+import VerdictCard from '@/components/VerdictCard';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -32,10 +33,10 @@ const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJ
 type ActiveView = 'valuation' | 'financials' | 'peers';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
-const NAV_ITEMS: { view: ActiveView; icon: string; label: string; badge?: string }[] = [
-  { view: 'valuation',  icon: '◈',  label: 'Valuation'  },
-  { view: 'financials', icon: '📋', label: 'Financials'  },
-  { view: 'peers',      icon: '👥', label: 'Peer Compare', badge: 'NEW' },
+const NAV_ITEMS: { view: ActiveView; icon: string; label: string; desc: string; badge?: string }[] = [
+  { view: 'valuation',  icon: '◈',  label: 'Valuation',   desc: "What's it worth?"         },
+  { view: 'financials', icon: '📋', label: 'Financials',  desc: 'Revenue, profit & history' },
+  { view: 'peers',      icon: '👥', label: 'Peer Compare', desc: 'vs other companies', badge: 'NEW' },
 ];
 
 export default function Home() {
@@ -266,13 +267,32 @@ export default function Home() {
             <RobuLogo size={72} />
             <h1 className="mt-6 text-4xl font-bold text-primary tracking-tight">Robu Terminal</h1>
             <p className="mt-3 text-base text-muted text-center">
-              Institutional-grade valuation for every Indian stock
+              Search any Indian stock and instantly find out if it's cheap, fair, or expensive
             </p>
-            <div className="w-full mt-12 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
+
+            {/* Search box */}
+            <div className="w-full mt-10 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
+
+            {/* Feature tiles — "how it works" at a glance */}
+            <div className="w-full mt-8 grid grid-cols-3 gap-3">
+              {[
+                { icon: '📊', title: 'Value it',        body: 'Is the stock cheap or expensive right now?' },
+                { icon: '👥', title: 'Compare peers',   body: 'How does it stack up vs its rivals?' },
+                { icon: '🤖', title: 'AI analysis',     body: 'Plain-English bull & bear case in seconds' },
+              ].map(tile => (
+                <div key={tile.title} className="bg-card border border-border rounded-xl p-4 text-center">
+                  <div className="text-2xl mb-2">{tile.icon}</div>
+                  <p className="text-xs font-semibold text-primary mb-1">{tile.title}</p>
+                  <p className="text-[11px] text-muted leading-snug">{tile.body}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick picks */}
             <div className="w-full mt-8">
-              <p className="text-[11px] uppercase tracking-widest text-muted mb-3 font-medium">Popular</p>
+              <p className="text-[11px] uppercase tracking-widest text-muted mb-3 font-medium">Popular stocks to try</p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_PICKS.map((sym) => (
                   <button
@@ -285,7 +305,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <p className="mt-14 text-xs text-muted/40 text-center">
+            <p className="mt-10 text-xs text-muted/40 text-center">
               Search any NSE or BSE listed company by name or symbol
             </p>
           </div>
@@ -306,19 +326,26 @@ export default function Home() {
                 <button
                   key={item.view}
                   onClick={() => setActiveView(item.view)}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all mb-0.5 ${
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-all mb-0.5 ${
                     activeView === item.view
                       ? 'bg-gold/10 text-gold border border-gold/20'
                       : 'text-muted hover:bg-border/50 hover:text-primary border border-transparent'
                   }`}
                 >
                   <span className="text-sm w-4 text-center flex-shrink-0">{item.icon}</span>
-                  <span className="text-[11px] font-medium leading-tight flex-1">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
-                      {item.badge}
-                    </span>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[11px] font-medium leading-tight">{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-[9px] leading-tight mt-0.5 ${activeView === item.view ? 'text-gold/60' : 'text-muted/50'}`}>
+                      {item.desc}
+                    </p>
+                  </div>
                 </button>
               ))}
 
@@ -374,6 +401,9 @@ export default function Home() {
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
                   <>
+                    {/* Verdict — one-line plain-English answer at the very top */}
+                    <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+
                     {/* Data quality banner — shown before anything else if issues exist */}
                     {dataQuality && <DataQualityBanner quality={dataQuality} />}
 
@@ -386,7 +416,7 @@ export default function Home() {
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
                               <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                             </svg>
-                            <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
+                            <h3 className="text-sm font-semibold text-primary">Your Assumptions — adjust to see your target price</h3>
                             <span className="ml-auto text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
                               {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
                             </span>
@@ -593,6 +623,16 @@ function SkeletonView({ symbol }: { symbol: string }) {
 }
 
 /* ── SliderInput ─────────────────────────────────────────────────────────── */
+const SLIDER_TOOLTIPS: Record<string, string> = {
+  'Revenue Growth':      'How fast do you expect sales to grow each year? Higher = more optimistic',
+  'Net Margin':          'Of every ₹100 the company earns, how much stays as profit?',
+  'Book Value Growth':   'How fast is the company growing its own net worth per share?',
+  'Exit P/E':            'At what price-to-earnings multiple will you sell in the future?',
+  'Exit P/B':            'At what price-to-book multiple will you sell in the future?',
+  'Exit EV/EBITDA':      'A valuation multiple used for comparing companies with different debt levels',
+  'Horizon':             'How many years into the future are you projecting?',
+};
+
 function SliderInput({
   label, value, min, max, step, suffix, color, onChange, hint,
 }: {
@@ -601,11 +641,22 @@ function SliderInput({
   onChange: (v: number) => void; hint?: string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
+  const tooltip = SLIDER_TOOLTIPS[label];
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-xs text-muted">{label}</p>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p className="text-xs text-muted truncate">{label}</p>
+          {tooltip && (
+            <span
+              title={tooltip}
+              className="flex-shrink-0 w-3.5 h-3.5 rounded-full bg-border text-muted/70 text-[8px] font-bold flex items-center justify-center cursor-help hover:bg-gold/20 hover:text-gold transition-colors"
+            >
+              ?
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           <input
             type="number" min={min} max={max} step={step} value={value}
             onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max)); }}
@@ -620,7 +671,7 @@ function SliderInput({
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
         style={{ background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)` }}
       />
-      {hint && <p className="text-xs text-muted mt-1 font-mono">{hint}</p>}
+      {hint && <p className="text-[10px] text-muted/70 mt-1 font-mono leading-snug">{hint}</p>}
     </div>
   );
 }

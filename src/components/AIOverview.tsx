@@ -8,35 +8,42 @@ interface AIOverviewProps {
   financials?: FinancialYear[];
 }
 
+// Maps analyst-speak verdict → plain English
+const VERDICT_PLAIN: Record<string, { label: string; emoji: string; color: string; bg: string; border: string }> = {
+  'Strong Buy': { label: 'Great opportunity',    emoji: '🚀', color: 'text-gain', bg: 'bg-gain/10', border: 'border-gain/25' },
+  'Buy':        { label: 'Looks attractive',     emoji: '👍', color: 'text-gain', bg: 'bg-gain/10', border: 'border-gain/25' },
+  'Accumulate': { label: 'Worth watching',       emoji: '👀', color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/25' },
+  'Hold':       { label: 'Hold what you have',   emoji: '⏸️', color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/25' },
+  'Reduce':     { label: 'Consider trimming',    emoji: '⚠️', color: 'text-loss', bg: 'bg-loss/10', border: 'border-loss/25' },
+  'Avoid':      { label: 'Risky right now',      emoji: '🛑', color: 'text-loss', bg: 'bg-loss/10', border: 'border-loss/25' },
+};
+
 export default function AIOverview({ company, financials = [] }: AIOverviewProps) {
   const insight = generateInsight(company, financials);
+  const plain   = VERDICT_PLAIN[insight.verdict] ?? VERDICT_PLAIN['Hold'];
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3">
 
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-700 to-emerald-400 flex items-center justify-center flex-shrink-0">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4l3 3"/>
-          </svg>
+        <div className="w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0 text-sm">
+          🤖
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-primary leading-none">Research Insight</h3>
-          <p className="text-[10px] text-muted mt-0.5">Computed from live metrics</p>
+          <h3 className="text-sm font-semibold text-primary leading-none">AI Analysis</h3>
+          <p className="text-[10px] text-muted mt-0.5">Computed from live data · not financial advice</p>
         </div>
-        {/* Verdict badge */}
-        <span className={`text-[11px] font-bold px-2 py-0.5 rounded border font-mono flex-shrink-0 ${
-          insight.verdict === 'Strong Buy' ? 'text-gain bg-gain/10 border-gain/25' :
-          insight.verdict === 'Buy'        ? 'text-gain bg-gain/10 border-gain/25' :
-          insight.verdict === 'Accumulate' ? 'text-gold bg-gold/10 border-gold/25' :
-          insight.verdict === 'Hold'       ? 'text-gold bg-gold/10 border-gold/25' :
-          insight.verdict === 'Reduce'     ? 'text-loss bg-loss/10 border-loss/25' :
-                                             'text-loss bg-loss/10 border-loss/25'
-        }`}>
-          {insight.verdict}
-        </span>
+      </div>
+
+      {/* ── Verdict pill ── */}
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${plain.bg} ${plain.border}`}>
+        <span className="text-base leading-none">{plain.emoji}</span>
+        <div className="flex-1 min-w-0">
+          <p className={`text-xs font-bold ${plain.color}`}>{plain.label}</p>
+          <p className="text-[10px] text-muted/70 mt-0.5">Analyst rating: {insight.verdict}</p>
+        </div>
+        <span className="text-[10px] text-muted/50 font-mono flex-shrink-0">{insight.confidence} confidence</span>
       </div>
 
       {/* ── Summary ── */}
@@ -48,28 +55,25 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
       <div className="space-y-2">
         <div className="bg-gain/5 border border-gain/20 rounded-lg p-2.5">
           <div className="flex items-center gap-1.5 mb-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-gain flex-shrink-0" />
-            <span className="text-[10px] font-bold text-gain uppercase tracking-wide">Bull Case</span>
+            <span className="text-sm">🐂</span>
+            <span className="text-[10px] font-bold text-gain">If things go well…</span>
           </div>
           <p className="text-[11px] text-muted leading-relaxed">{insight.bull}</p>
         </div>
 
         <div className="bg-loss/5 border border-loss/20 rounded-lg p-2.5">
           <div className="flex items-center gap-1.5 mb-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-loss flex-shrink-0" />
-            <span className="text-[10px] font-bold text-loss uppercase tracking-wide">Bear Case</span>
+            <span className="text-sm">🐻</span>
+            <span className="text-[10px] font-bold text-loss">If things go badly…</span>
           </div>
           <p className="text-[11px] text-muted leading-relaxed">{insight.bear}</p>
         </div>
       </div>
 
       {/* ── Footer ── */}
-      <div className="flex items-center justify-between pt-1 border-t border-border">
-        <span className="text-[10px] text-muted/50">
-          {insight.confidence} confidence · based on {financials.length}yr data
-        </span>
-        <span className="text-[10px] text-muted/40">Not financial advice</span>
-      </div>
+      <p className="text-[10px] text-muted/40 text-center">
+        Based on {financials.length} years of data · always do your own research
+      </p>
     </div>
   );
 }

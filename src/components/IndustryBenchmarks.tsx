@@ -44,6 +44,17 @@ export const BENCHMARKS: Record<string, {
 
 export const DEFAULT_BENCHMARK = { label: 'Broad Market', pe: 22, pb: 3.5, roe: 15, revenueGrowth: 12, netMargin: 12, epsGrowth: 12, debtToEquity: 1.0 };
 
+// Plain-English labels for each metric row
+const ROW_PLAIN: Record<string, { label: string; tooltip: string }> = {
+  'P/E Ratio':   { label: 'Valuation (P/E)',      tooltip: 'How much you pay per ₹1 of profit — lower usually means cheaper' },
+  'P/B Ratio':   { label: 'Price vs Assets (P/B)', tooltip: 'How much you pay per ₹1 of the company\'s net assets — lower = cheaper' },
+  'ROE':         { label: 'Profit on equity',      tooltip: 'How much profit the company makes for every ₹100 it owns — higher is better' },
+  'Net Margin':  { label: 'Profit %',              tooltip: 'Of every ₹100 earned, how much they keep as profit — higher is better' },
+  'Rev CAGR':    { label: 'Sales growth/yr',       tooltip: 'Average annual growth in revenue — higher is better' },
+  'EPS CAGR':    { label: 'Earnings growth/yr',    tooltip: 'Average annual growth in earnings per share — higher is better' },
+  'D/E Ratio':   { label: 'Debt level (D/E)',      tooltip: 'How much debt vs equity — lower is safer' },
+};
+
 function CompareRow({
   label,
   company,
@@ -63,17 +74,39 @@ function CompareRow({
   const isNeutral = Math.abs(pct) < 10;
 
   const color = isNeutral ? 'text-gold' : isBetter ? 'text-gain' : 'text-loss';
-  const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
+  const badge = isNeutral
+    ? { text: 'In line', cls: 'bg-gold/10 text-gold border-gold/20' }
+    : isBetter
+    ? { text: 'Better',  cls: 'bg-gain/10 text-gain border-gain/20' }
+    : { text: 'Weaker',  cls: 'bg-loss/10 text-loss border-loss/20' };
+
+  const plain = ROW_PLAIN[label];
 
   return (
-    <div className="grid grid-cols-4 items-center py-1.5 border-b border-border/50 last:border-0">
-      <span className="text-xs text-muted col-span-1">{label}</span>
-      <span className="text-xs font-mono text-primary text-right">{format(company)}</span>
-      <span className="text-xs font-mono text-muted text-right">{format(industry)}</span>
-      <div className={`flex items-center justify-end gap-1 text-xs font-mono font-semibold ${color}`}>
-        <span>{arrow}</span>
-        <span>{Math.abs(pct).toFixed(0)}%</span>
+    <div className="flex items-center py-2 border-b border-border/50 last:border-0 gap-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <span className="text-[11px] text-primary font-medium truncate">
+            {plain ? plain.label : label}
+          </span>
+          {plain && (
+            <span
+              title={plain.tooltip}
+              className="flex-shrink-0 w-3 h-3 rounded-full bg-border text-muted/70 text-[7px] font-bold flex items-center justify-center cursor-help"
+            >
+              ?
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] font-mono text-primary">{format(company)}</span>
+          <span className="text-[9px] text-muted/50">vs sector</span>
+          <span className="text-[10px] font-mono text-muted">{format(industry)}</span>
+        </div>
       </div>
+      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border flex-shrink-0 ${badge.cls}`}>
+        {badge.text}
+      </span>
     </div>
   );
 }
@@ -111,20 +144,14 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="text-sm font-semibold text-primary">Industry Comparison</h3>
-        <span className="text-xs px-2 py-0.5 bg-gold/10 border border-gold/20 rounded text-gold font-mono">
+      <div className="flex items-center justify-between mb-1 gap-2">
+        <div>
+          <h3 className="text-sm font-semibold text-primary">How does it compare?</h3>
+          <p className="text-[10px] text-muted mt-0.5">vs {bench.label} sector average</p>
+        </div>
+        <span className="text-[10px] px-2 py-0.5 bg-gold/10 border border-gold/20 rounded text-gold font-mono flex-shrink-0">
           {bench.label}
         </span>
-      </div>
-      <p className="text-xs text-muted mb-3">Company vs {bench.label} sector median</p>
-
-      {/* Column headers */}
-      <div className="grid grid-cols-4 mb-1">
-        <span className="text-xs text-muted uppercase tracking-wide"></span>
-        <span className="text-xs text-muted uppercase tracking-wide text-right">{company.symbol}</span>
-        <span className="text-xs text-muted uppercase tracking-wide text-right">Sector</span>
-        <span className="text-xs text-muted uppercase tracking-wide text-right">vs</span>
       </div>
 
       <CompareRow
@@ -179,26 +206,30 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
         higherIsBetter={false}
       />
 
-      {/* PE premium/discount summary */}
-      <div className="mt-3 pt-3 border-t border-border">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-muted">Sector Median P/E</span>
-          <span className="text-xs font-mono text-primary">{bench.pe}x</span>
+      {/* Plain-English verdict */}
+      <div className="mt-3 pt-3 border-t border-border space-y-2">
+        <div className="flex justify-between items-center text-[10px]">
+          <span className="text-muted">Sector typical P/E</span>
+          <span className="font-mono text-primary">{bench.pe}x</span>
         </div>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs text-muted">Suggested Growth Range</span>
-          <span className="text-xs font-mono text-gold">
-            {(bench.revenueGrowth - 3).toFixed(0)}–{(bench.revenueGrowth + 5).toFixed(0)}%
+        <div className="flex justify-between items-center text-[10px]">
+          <span className="text-muted">Sector typical sales growth</span>
+          <span className="font-mono text-gold">
+            {(bench.revenueGrowth - 3).toFixed(0)}–{(bench.revenueGrowth + 5).toFixed(0)}% /yr
           </span>
         </div>
-        <div className={`text-xs rounded-lg px-3 py-2 ${pePremium > 20 ? 'bg-loss/10 text-loss' : pePremium < -20 ? 'bg-gain/10 text-gain' : 'bg-gold/10 text-gold'}`}>
+        <div className={`text-[11px] rounded-lg px-3 py-2.5 leading-snug ${
+          pePremium > 20  ? 'bg-loss/10 text-loss border border-loss/20' :
+          pePremium < -20 ? 'bg-gain/10 text-gain border border-gain/20' :
+                            'bg-gold/10 text-gold border border-gold/20'
+        }`}>
           {company.pe > 0 ? (
             pePremium > 20
-              ? `Trading at ${pePremium.toFixed(0)}% premium to sector — priced for high growth`
+              ? `📈 Priced ${pePremium.toFixed(0)}% above sector average — investors expect high growth`
               : pePremium < -20
-              ? `Trading at ${Math.abs(pePremium).toFixed(0)}% discount to sector — potential value`
-              : `Trading near sector average P/E — fairly valued`
-          ) : 'P/E not available'}
+              ? `💰 Priced ${Math.abs(pePremium).toFixed(0)}% below sector average — could be a bargain`
+              : `✓ Trading near the sector average — fairly priced vs peers`
+          ) : 'P/E data not available for this stock'}
         </div>
       </div>
     </div>
