@@ -81,7 +81,7 @@ export default function Home() {
         .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`, { cache: 'no-store' }))
         .catch(() => fetch(`/api/financials/${symbol}`, { cache: 'no-store' })),
     ]);
-    if (!selectedSymbolRes.ok) {
+    if (!companyRes.ok) {
       const err = await companyRes.json().catch(() => ({}));
       throw new Error(err.error || `Failed to load ${symbol}`);
     }
