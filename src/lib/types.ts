@@ -8,6 +8,8 @@ export interface FinancialYear {
   ebitdaMargin: number;
   revenueGrowth: number;
   shares: number;
+  ocf?: number;        // Operating Cash Flow — from Screener.in (not available in Yahoo)
+  source?: string;     // 'screener' | 'yahoo' — which data source this year came from
 }
 
 export interface Company {
