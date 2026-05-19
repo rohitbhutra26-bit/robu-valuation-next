@@ -81,7 +81,7 @@ export default function Home() {
         .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`, { cache: 'no-store' }))
         .catch(() => fetch(`/api/financials/${symbol}`, { cache: 'no-store' })),
     ]);
-    if (!companyRes.ok) {
+    if (!selectedSymbolRes.ok) {
       const err = await companyRes.json().catch(() => ({}));
       throw new Error(err.error || `Failed to load ${symbol}`);
     }
@@ -323,7 +323,7 @@ export default function Home() {
               ))}
 
               {/* Quick picks — only shown when no stock is loaded */}
-              {!company && (
+              {!selectedSymbol && (
                 <>
                   <div className="my-3 border-t border-border/60" />
                   <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
@@ -331,7 +331,7 @@ export default function Home() {
               )}
             </div>
 
-            {!company && (
+            {!selectedSymbol && (
               <div className="flex-1 overflow-y-auto px-2 pb-3">
                 {QUICK_PICKS.map((sym) => (
                   <button
