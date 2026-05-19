@@ -502,7 +502,7 @@ export default function Home() {
           <aside className="w-[290px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
             {company ? (
               <div className="p-3 space-y-3">
-                <AIOverview company={company} />
+                <AIOverview company={company} financials={financials} />
                 <HistoricalValuationChart company={company} />
                 <IndustryBenchmarks company={company} financials={financials} />
               </div>
