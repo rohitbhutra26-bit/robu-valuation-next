@@ -125,7 +125,7 @@ function BottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="bg-card/95 backdrop-blur-xl border-t border-border flex">
@@ -510,7 +510,7 @@ export default function MobileLayout({
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-terminal md:hidden">
+    <div className="flex flex-col min-h-screen bg-terminal lg:hidden">
       <MobileHeader company={company} activeTab={activeTab} />
 
       <main className="flex-1 overflow-y-auto">

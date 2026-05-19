@@ -11,7 +11,7 @@ export async function GET(
   try {
     const res = await fetch(
       `${DATA_SERVER}/company/${encodeURIComponent(symbol)}`,
-      { cache: 'no-store' }
+      { next: { revalidate: 300 } }
     );
     if (res.ok) {
       const data = await res.json();

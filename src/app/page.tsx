@@ -236,7 +236,7 @@ export default function Home() {
     />
 
     {/* ═══════════════════ DESKTOP ══════════════════ */}
-    <div className="hidden md:flex h-screen bg-terminal flex-col overflow-hidden">
+    <div className="hidden lg:flex h-screen bg-terminal flex-col overflow-hidden">
 
       {/* ── Header ────────────────────────────────────────── */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex-shrink-0">
@@ -405,7 +405,7 @@ export default function Home() {
                               >✕</button>
                             </div>
                           )}
-                          <div className="grid grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                             <SliderInput
                               label="Revenue Growth" value={assumptions.revenueGrowthRate}
                               min={1} max={50} step={0.5} suffix="%" color="text-accent"
@@ -522,70 +522,70 @@ export default function Home() {
   );
 }
 
-/* ── SkeletonView — shown while loading, feels much faster than a spinner ── */
+/* ── SkeletonView — responsive loading skeleton ── */
 function SkeletonView({ symbol }: { symbol: string }) {
   return (
-    <div className="p-4 space-y-4 animate-pulse">
-      {/* Company header skeleton */}
+    <div className="p-3 sm:p-4 space-y-3 animate-pulse">
+      {/* Company header */}
       <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-border/60" />
+          <div className="w-10 h-10 rounded-lg bg-border/60 flex-shrink-0" />
           <div className="space-y-2">
-            <div className="h-4 w-32 rounded bg-border/60" />
-            <div className="h-3 w-20 rounded bg-border/40" />
+            <div className="h-4 w-28 sm:w-36 rounded bg-border/60" />
+            <div className="h-3 w-16 sm:w-24 rounded bg-border/40" />
           </div>
         </div>
         <div className="text-right space-y-2">
-          <div className="h-6 w-24 rounded bg-border/60 ml-auto" />
-          <div className="h-3 w-16 rounded bg-border/40 ml-auto" />
+          <div className="h-6 w-20 sm:w-28 rounded bg-border/60 ml-auto" />
+          <div className="h-3 w-14 rounded bg-border/40 ml-auto" />
         </div>
       </div>
 
-      {/* Key metrics row skeleton */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Key metrics — 2 col on small, 4 col on wider */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="bg-card border border-border rounded-xl p-3 space-y-2">
             <div className="h-3 w-12 rounded bg-border/40" />
-            <div className="h-5 w-16 rounded bg-border/60" />
+            <div className="h-5 w-14 rounded bg-border/60" />
           </div>
         ))}
       </div>
 
-      {/* Assumptions panel skeleton */}
+      {/* Assumptions — 1 col on small, 2 col on sm, 4 col on wider */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <div className="h-4 w-44 rounded bg-border/60 mb-4" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="h-4 w-40 rounded bg-border/60 mb-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="space-y-2">
               <div className="h-3 w-20 rounded bg-border/40" />
-              <div className="h-1 w-full rounded bg-border/60" />
+              <div className="h-1.5 w-full rounded bg-border/60" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Chart skeleton */}
+      {/* Chart */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <div className="h-4 w-48 rounded bg-border/60 mb-4" />
-        <div className="h-[180px] w-full rounded bg-border/30 flex items-end gap-2 px-2 pb-2">
+        <div className="h-4 w-44 rounded bg-border/60 mb-4" />
+        <div className="h-36 sm:h-44 w-full rounded bg-border/30 flex items-end gap-1.5 sm:gap-2 px-2 pb-2">
           {[60,80,55,90,70,85,65,95].map((h, i) => (
             <div key={i} className="flex-1 rounded-t bg-border/50" style={{ height: `${h}%` }} />
           ))}
         </div>
       </div>
 
-      {/* Scenario cards skeleton */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Scenario cards */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {['Bear','Base','Bull'].map(s => (
-          <div key={s} className="bg-card border border-border rounded-xl p-4 space-y-2">
-            <div className="h-3 w-16 rounded bg-border/40" />
-            <div className="h-6 w-24 rounded bg-border/60" />
+          <div key={s} className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-2">
             <div className="h-3 w-12 rounded bg-border/40" />
+            <div className="h-5 sm:h-6 w-16 sm:w-24 rounded bg-border/60" />
+            <div className="h-3 w-10 rounded bg-border/40" />
           </div>
         ))}
       </div>
 
-      <p className="text-center text-xs text-muted/40 pt-2 font-mono">
+      <p className="text-center text-xs text-muted/40 pt-1 font-mono">
         loading {symbol}…
       </p>
     </div>

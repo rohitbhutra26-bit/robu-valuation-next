@@ -11,7 +11,7 @@ export async function GET(
   try {
     const res = await fetch(
       `${DATA_SERVER}/financials/${encodeURIComponent(symbol)}`,
-      { cache: 'no-store' }
+      { next: { revalidate: 900 } }
     );
     if (res.ok) {
       return NextResponse.json(await res.json());
