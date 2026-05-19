@@ -16,7 +16,12 @@ export async function GET(
       { next: { revalidate: 300 } }   // 5-min cache — live price + fundamentals
     );
     if (res.ok) {
-      return NextResponse.json(await res.json());
+      const data = await res.json();
+      // Normalise field name: backend returns changePct, components expect changePercent
+      return NextResponse.json({
+        ...data,
+        changePercent: data.changePercent ?? data.changePct ?? 0,
+      });
     }
     const err = await res.json().catch(() => ({}));
     return NextResponse.json(
