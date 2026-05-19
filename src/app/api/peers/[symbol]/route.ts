@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DATA_SERVER = process.env.NEXT_PUBLIC_DATA_SERVER_URL || 'https://robu-data-server.onrender.com';
+const DATA_SERVER = process.env.DATA_SERVER_URL || process.env.NEXT_PUBLIC_DATA_SERVER_URL || 'http://localhost:8000';
 
 export const revalidate = 900;
 

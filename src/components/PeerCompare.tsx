@@ -96,7 +96,7 @@ export default function PeerCompare({ company }: { company: Company }) {
     return (
       <div className="bg-card border border-border rounded-xl p-6">
         <p className="text-sm text-loss">{error || 'No peer data available'}</p>
-        <p className="text-xs text-muted mt-1">Requires Render backend to be deployed with latest code.</p>
+        <p className="text-xs text-muted mt-1">Check that the data server is running and DATA_SERVER_URL is set correctly.</p>
       </div>
     );
   }
