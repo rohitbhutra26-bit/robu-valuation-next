@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
@@ -40,9 +39,6 @@ const NAV_ITEMS: { view: ActiveView; icon: string; label: string; badge?: string
 ];
 
 export default function Home() {
-  const router       = useRouter();
-  const searchParams = useSearchParams();
-
   const [company, setCompany]       = useState<Company | null>(null);
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState('');
@@ -61,10 +57,11 @@ export default function Home() {
   });
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
-  // When user refreshes, we read the URL param and re-load the same stock.
-  // Think of it like a bookmark — the URL always reflects where you are.
+  // Read directly from window.location — no useSearchParams/Suspense needed.
+  // On refresh: URL has ?symbol=RELIANCE → we auto-load that stock.
   useEffect(() => {
-    const sym = searchParams.get('symbol');
+    const params = new URLSearchParams(window.location.search);
+    const sym = params.get('symbol');
     if (sym) {
       const clean = sym.toUpperCase();
       setSelectedSymbol(clean);
@@ -206,7 +203,7 @@ export default function Home() {
     setSelectedSymbol(clean);
     setHomeMode(false);
     // Push symbol to URL so page refresh restores the same stock
-    router.replace(`?symbol=${clean}`, { scroll: false });
+    window.history.replaceState(null, '', `?symbol=${clean}`);
     loadCompany(clean);
   }
 
@@ -218,7 +215,7 @@ export default function Home() {
     setSelectedSymbol('');
     setActiveView('valuation');
     // Clear the URL param when going back to home
-    router.replace('/', { scroll: false });
+    window.history.replaceState(null, '', '/');
   }
 
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
