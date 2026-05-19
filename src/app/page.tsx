@@ -5,12 +5,6 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
 import DataQualityBanner from '@/components/DataQualityBanner';
-
-// ── Session-level cache — survives re-renders, cleared on page refresh ────────
-// Like a hedge fund's in-memory data store — once fetched, instant on re-visit
-const _sessionCache = new Map<string, { company: Company; financials: FinancialYear[] }>();
-// Track in-flight prefetch promises to avoid duplicate network calls
-const _inflight = new Map<string, Promise<void>>();
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
 import KeyMetrics from '@/components/KeyMetrics';
@@ -26,6 +20,12 @@ import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
 import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
+
+// ── Session-level cache — survives re-renders, cleared on page refresh ────────
+// Like a hedge fund's in-memory data store — once fetched, instant on re-visit
+const _sessionCache = new Map<string, { company: Company; financials: FinancialYear[] }>();
+// Track in-flight prefetch promises to avoid duplicate network calls
+const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
