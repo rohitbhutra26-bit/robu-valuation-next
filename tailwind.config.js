@@ -8,18 +8,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        terminal: '#000000',
-        card: '#0F0F0F',
-        border: '#1E1E1E',
-        gold: '#F59E0B',
-        gain: '#10B981',
-        loss: '#EF4444',
-        primary: '#F9FAFB',
-        muted: '#A1A9B8',
-        accent: '#60A5FA',
+        terminal: '#030a05',
+        card: '#071410',
+        border: '#0f2416',
+        gold: '#34d399',
+        gain: '#4ade80',
+        loss: '#f87171',
+        primary: '#ecfdf5',
+        muted: '#6ee7b7',
+        accent: '#22d3ee',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Space Grotesk', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
     },

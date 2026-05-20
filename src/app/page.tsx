@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
@@ -21,6 +21,7 @@ import ForecastChart from '@/components/ForecastChart';
 import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon } from '@/lib/icons';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -33,10 +34,10 @@ const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJ
 type ActiveView = 'valuation' | 'financials' | 'peers';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
-const NAV_ITEMS: { view: ActiveView; icon: string; label: string; desc: string; badge?: string }[] = [
-  { view: 'valuation',  icon: '◈',  label: 'Valuation',   desc: "What's it worth?"         },
-  { view: 'financials', icon: '📋', label: 'Financials',  desc: 'Revenue, profit & history' },
-  { view: 'peers',      icon: '👥', label: 'Peer Compare', desc: 'vs other companies', badge: 'NEW' },
+const NAV_ITEMS: { view: ActiveView; Icon: React.FC<{ size: number; className?: string }>; label: string; desc: string; badge?: string }[] = [
+  { view: 'valuation',  Icon: Calculator, label: 'Valuation',    desc: "What's it worth?"          },
+  { view: 'financials', Icon: Table2,     label: 'Financials',   desc: 'Revenue, profit & history'  },
+  { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies', badge: 'NEW' },
 ];
 
 export default function Home() {
@@ -277,13 +278,15 @@ export default function Home() {
 
             {/* Feature tiles — "how it works" at a glance */}
             <div className="w-full mt-8 grid grid-cols-3 gap-3">
-              {[
-                { icon: '📊', title: 'Value it',        body: 'Is the stock cheap or expensive right now?' },
-                { icon: '👥', title: 'Compare peers',   body: 'How does it stack up vs its rivals?' },
-                { icon: '🤖', title: 'AI analysis',     body: 'Plain-English bull & bear case in seconds' },
-              ].map(tile => (
+              {([
+                { Icon: BarChart3,  color: 'text-accent',  bg: 'bg-accent/10',  title: 'Value it',       body: 'Is the stock cheap or expensive?' },
+                { Icon: Users,      color: 'text-gold',    bg: 'bg-gold/10',    title: 'Compare peers',  body: 'How does it stack up vs rivals?' },
+                { Icon: Sparkles,   color: 'text-gain',    bg: 'bg-gain/10',    title: 'AI analysis',    body: 'Plain-English bull & bear case' },
+              ] as const).map(tile => (
                 <div key={tile.title} className="bg-card border border-border rounded-xl p-4 text-center">
-                  <div className="text-2xl mb-2">{tile.icon}</div>
+                  <div className={`w-9 h-9 rounded-xl ${tile.bg} flex items-center justify-center mx-auto mb-3`}>
+                    <tile.Icon size={18} className={tile.color} />
+                  </div>
                   <p className="text-xs font-semibold text-primary mb-1">{tile.title}</p>
                   <p className="text-[11px] text-muted leading-snug">{tile.body}</p>
                 </div>
@@ -322,32 +325,35 @@ export default function Home() {
             {/* Navigation */}
             <div className="p-2 pt-3">
               <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Analyse</p>
-              {NAV_ITEMS.map(item => (
-                <button
-                  key={item.view}
-                  onClick={() => setActiveView(item.view)}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-all mb-0.5 ${
-                    activeView === item.view
-                      ? 'bg-gold/10 text-gold border border-gold/20'
-                      : 'text-muted hover:bg-border/50 hover:text-primary border border-transparent'
-                  }`}
-                >
-                  <span className="text-sm w-4 text-center flex-shrink-0">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px] font-medium leading-tight">{item.label}</span>
-                      {item.badge && (
-                        <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
-                          {item.badge}
-                        </span>
-                      )}
+              {NAV_ITEMS.map(item => {
+                const isActive = activeView === item.view;
+                return (
+                  <button
+                    key={item.view}
+                    onClick={() => setActiveView(item.view)}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-all mb-0.5 ${
+                      isActive
+                        ? 'bg-gold/10 border border-gold/20'
+                        : 'hover:bg-border/50 border border-transparent'
+                    }`}
+                  >
+                    <item.Icon size={14} className={`flex-shrink-0 ${isActive ? 'text-gold' : 'text-muted'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[11px] font-medium leading-tight ${isActive ? 'text-gold' : 'text-muted'}`}>{item.label}</span>
+                        {item.badge && (
+                          <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-[9px] leading-tight mt-0.5 ${isActive ? 'text-gold/60' : 'text-muted/50'}`}>
+                        {item.desc}
+                      </p>
                     </div>
-                    <p className={`text-[9px] leading-tight mt-0.5 ${activeView === item.view ? 'text-gold/60' : 'text-muted/50'}`}>
-                      {item.desc}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
 
               {/* Quick picks — only shown when no stock is loaded */}
               {!selectedSymbol && (
@@ -413,9 +419,7 @@ export default function Home() {
                       return (
                         <div className="bg-card border border-border rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
-                              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                            </svg>
+                            <SlidersHorizontal size={14} className="text-accent flex-shrink-0" />
                             <h3 className="text-sm font-semibold text-primary">Your Assumptions — adjust to see your target price</h3>
                             <span className="ml-auto text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
                               {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
@@ -424,15 +428,15 @@ export default function Home() {
                           {/* Auto-fill badge — shows where the numbers came from */}
                           {autoFillLabel && (
                             <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 rounded-lg bg-border/30 border border-border">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.5">
-                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                              </svg>
+                              <Zap size={10} className="text-accent flex-shrink-0" />
                               <p className="text-[10px] text-muted leading-tight flex-1">{autoFillLabel}</p>
                               <button
                                 onClick={() => setAutoFillLabel(null)}
-                                className="text-[10px] text-muted/50 hover:text-muted ml-1 flex-shrink-0"
+                                className="text-muted/50 hover:text-muted ml-1 flex-shrink-0"
                                 title="Dismiss"
-                              >✕</button>
+                              >
+                                <XIcon size={10} />
+                              </button>
                             </div>
                           )}
                           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

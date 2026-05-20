@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { Activity } from '@/lib/icons';
 import { Company } from '@/lib/types';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 
@@ -238,9 +239,14 @@ export default function HistoricalValuationChart({ company }: Props) {
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-primary">Is it cheap vs its own history?</h3>
-          <p className="text-[10px] text-muted mt-0.5">5-year valuation range</p>
+        <div className="flex items-start gap-2">
+          <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Activity size={14} className="text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-primary">Is it cheap vs its own history?</h3>
+            <p className="text-[10px] text-muted mt-0.5">5-year valuation range</p>
+          </div>
         </div>
         <div className="flex gap-1 flex-shrink-0">
           {(['pe', 'pb'] as const).map(m => (

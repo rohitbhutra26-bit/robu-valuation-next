@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 
@@ -51,11 +52,11 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   const isExpensive   = upside < -30;
 
   const verdict =
-    isStrongBuy   ? { label: 'Looks very undervalued',  sub: 'Strong potential upside based on your assumptions', color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', icon: '↑↑' } :
-    isUndervalued ? { label: 'Looks undervalued',       sub: 'Stock may be trading below fair value',             color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', icon: '↑'  } :
-    isFair        ? { label: 'Fairly priced',           sub: 'Trading close to estimated fair value',             color: 'text-gold', bg: 'bg-gold/5', border: 'border-gold/20', dot: '#f59e0b', icon: '→'  } :
-    isExpensive   ? { label: 'Looks very expensive',    sub: 'Significant downside to estimated fair value',      color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', icon: '↓↓' } :
-                    { label: 'Looks overvalued',         sub: 'May be trading above fair value',                  color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', icon: '↓'  };
+    isStrongBuy   ? { label: 'Looks very undervalued',  sub: 'Strong potential upside based on your assumptions', color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', Icon: ChevronsUp   } :
+    isUndervalued ? { label: 'Looks undervalued',       sub: 'Stock may be trading below fair value',             color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', Icon: ChevronUp    } :
+    isFair        ? { label: 'Fairly priced',           sub: 'Trading close to estimated fair value',             color: 'text-gold', bg: 'bg-gold/5', border: 'border-gold/20', dot: '#f59e0b', Icon: Minus        } :
+    isExpensive   ? { label: 'Looks very expensive',    sub: 'Significant downside to estimated fair value',      color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', Icon: ChevronsDown } :
+                    { label: 'Looks overvalued',         sub: 'May be trading above fair value',                  color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', Icon: ChevronDown  };
 
   const upsideLabel = upside >= 0
     ? `+${upside.toFixed(1)}% upside`
@@ -66,10 +67,10 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
 
       {/* Icon circle */}
       <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-base font-bold ${verdict.color}`}
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${verdict.color}`}
         style={{ background: `${verdict.dot}18`, border: `1.5px solid ${verdict.dot}40` }}
       >
-        {verdict.icon}
+        <verdict.Icon size={20} className={verdict.color} />
       </div>
 
       {/* Text */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Company, FinancialYear } from '@/lib/types';
+import { BarChart3, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
 
 interface IndustryBenchmarksProps {
   company: Company;
@@ -145,9 +146,14 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
   return (
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-1 gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-primary">How does it compare?</h3>
-          <p className="text-[10px] text-muted mt-0.5">vs {bench.label} sector average</p>
+        <div className="flex items-start gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <BarChart3 size={14} className="text-gold" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-primary">How does it compare?</h3>
+            <p className="text-[10px] text-muted mt-0.5">vs {bench.label} sector average</p>
+          </div>
         </div>
         <span className="text-[10px] px-2 py-0.5 bg-gold/10 border border-gold/20 rounded text-gold font-mono flex-shrink-0">
           {bench.label}
@@ -218,17 +224,24 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
             {(bench.revenueGrowth - 3).toFixed(0)}–{(bench.revenueGrowth + 5).toFixed(0)}% /yr
           </span>
         </div>
-        <div className={`text-[11px] rounded-lg px-3 py-2.5 leading-snug ${
+        <div className={`flex items-center gap-2 text-[11px] rounded-lg px-3 py-2.5 leading-snug ${
           pePremium > 20  ? 'bg-loss/10 text-loss border border-loss/20' :
           pePremium < -20 ? 'bg-gain/10 text-gain border border-gain/20' :
                             'bg-gold/10 text-gold border border-gold/20'
         }`}>
           {company.pe > 0 ? (
-            pePremium > 20
-              ? `📈 Priced ${pePremium.toFixed(0)}% above sector average — investors expect high growth`
-              : pePremium < -20
-              ? `💰 Priced ${Math.abs(pePremium).toFixed(0)}% below sector average — could be a bargain`
-              : `✓ Trading near the sector average — fairly priced vs peers`
+            <>
+              {pePremium > 20  && <TrendingUp  size={12} className="flex-shrink-0" />}
+              {pePremium < -20 && <TrendingDown size={12} className="flex-shrink-0" />}
+              {pePremium >= -20 && pePremium <= 20 && <Minus size={12} className="flex-shrink-0" />}
+              <span>
+                {pePremium > 20
+                  ? `Priced ${pePremium.toFixed(0)}% above sector average — investors expect high growth`
+                  : pePremium < -20
+                  ? `Priced ${Math.abs(pePremium).toFixed(0)}% below sector average — could be a bargain`
+                  : `Trading near the sector average — fairly priced vs peers`}
+              </span>
+            </>
           ) : 'P/E data not available for this stock'}
         </div>
       </div>
