@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Company } from '@/lib/types';
+import { Sparkles } from '@/lib/icons';
 
 interface Peer {
   symbol: string;
@@ -20,6 +21,7 @@ interface Peer {
 
 interface PeerData {
   sector: string;
+  source?: 'ai' | 'legacy' | 'self-only';
   peers: Peer[];
 }
 
@@ -96,19 +98,22 @@ export default function PeerCompare({ company }: { company: Company }) {
     return (
       <div className="bg-card border border-border rounded-xl p-6">
         <p className="text-sm text-loss">{error || 'No peer data available'}</p>
-        <p className="text-xs text-muted mt-1">Check that the data server is running and DATA_SERVER_URL is set correctly.</p>
+        <p className="text-xs text-muted mt-1">Peer data could not be loaded. Check that the data server is running.</p>
       </div>
     );
   }
 
   const peers = data.peers;
-  if (!peers.length) {
+  if (!peers.length || (peers.length === 1 && peers[0].isSelf)) {
     return (
       <div className="bg-card border border-border rounded-xl p-6">
-        <p className="text-sm text-muted">No peer data found for sector: {data.sector || company.sector}</p>
+        <p className="text-sm text-muted">No comparable peers found for {company.name}.</p>
+        <p className="text-xs text-muted/60 mt-1">This may be a unique business with no listed Indian peers.</p>
       </div>
     );
   }
+
+  const isAISource = data.source === 'ai';
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
@@ -120,10 +125,17 @@ export default function PeerCompare({ company }: { company: Company }) {
             {data.sector || company.sector} · {peers.length} companies
           </p>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-muted">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gain inline-block" /> Best quartile</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gold inline-block" /> Mid range</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-loss inline-block" /> Worst quartile</span>
+        <div className="flex items-center gap-2">
+          {isAISource && (
+            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono">
+              <Sparkles size={9} /> AI peers
+            </span>
+          )}
+          <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gain inline-block" /> Best</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gold inline-block" /> Mid</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-loss inline-block" /> Worst</span>
+          </div>
         </div>
       </div>
 
@@ -195,7 +207,8 @@ export default function PeerCompare({ company }: { company: Company }) {
 
       {/* Legend */}
       <p className="text-[10px] text-muted mt-3 text-center">
-        Green = top quartile · Amber = mid · Red = bottom quartile · YOU = {company.symbol} · Data from Yahoo Finance
+        Green = top quartile · Amber = mid · Red = bottom quartile · YOU = {company.symbol}
+        {isAISource ? ' · Peers identified by Gemini AI' : ' · Data from Yahoo Finance'}
       </p>
     </div>
   );
