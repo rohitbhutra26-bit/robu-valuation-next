@@ -682,7 +682,7 @@ function SliderInput({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)` }}
+        style={{ background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1e3050 ${pct}%, #1e3050 100%)` }}
       />
       {hint && <p className="text-[10px] text-muted/70 mt-1 font-mono leading-snug">{hint}</p>}
     </div>

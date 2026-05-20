@@ -8,15 +8,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        terminal: '#030a05',
-        card: '#071410',
-        border: '#0f2416',
-        gold: '#34d399',
-        gain: '#4ade80',
-        loss: '#f87171',
-        primary: '#ecfdf5',
-        muted: '#6ee7b7',
-        accent: '#22d3ee',
+        terminal: '#060c18',   // deep navy page bg
+        card:     '#0c1628',   // card surface
+        border:   '#1e3050',   // subtle navy border
+        gold:     '#3b82f6',   // Bloomberg blue — primary accent
+        gain:     '#4ade80',   // green for profit/upside (universal)
+        loss:     '#f87171',   // red for loss/downside (universal)
+        primary:  '#e8f1ff',   // near-white with blue tint
+        muted:    '#6b8cae',   // slate-blue secondary text
+        accent:   '#60a5fa',   // lighter blue for badges/highlights
       },
       fontFamily: {
         sans: ['Space Grotesk', 'sans-serif'],

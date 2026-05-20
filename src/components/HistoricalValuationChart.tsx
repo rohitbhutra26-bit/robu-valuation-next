@@ -146,7 +146,7 @@ function LineChart({
             y={yOf(v) + 3}
             textAnchor="end"
             fontSize="8"
-            fill="#6ee7b7"
+            fill="#6b8cae"
             fontFamily="JetBrains Mono, monospace"
           >
             {v.toFixed(0)}
@@ -175,7 +175,7 @@ function LineChart({
             y={H - 4}
             textAnchor="middle"
             fontSize="8"
-            fill="#6ee7b7"
+            fill="#6b8cae"
             fontFamily="JetBrains Mono, monospace"
           >
             {validPairs[idx]?.d.slice(0, 7) || ''}
@@ -290,7 +290,7 @@ export default function HistoricalValuationChart({ company }: Props) {
               stats={data.stats.pe}
               currentVal={company.pe}
               label="P/E Ratio"
-              color="#34d399"
+              color="#3b82f6"
             />
           )}
           {activeMetric === 'pb' && (

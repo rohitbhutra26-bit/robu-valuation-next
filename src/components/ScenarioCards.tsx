@@ -56,7 +56,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     {
       name: 'Base',
       probability: 50,
-      color: '#34d399',
+      color: '#3b82f6',
       growthRate:       assumptions.revenueGrowthRate,
       marginAssumption: assumptions.netMarginAssumption,
       exitMultiple:     assumptions.exitMultiple,
@@ -64,7 +64,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     {
       name: 'Bull',
       probability: 25,
-      color: '#10B981',
+      color: '#4ade80',
       growthRate:       assumptions.revenueGrowthRate + deltas.bullGrowthDelta,
       marginAssumption: assumptions.netMarginAssumption + deltas.bullMarginDelta,
       exitMultiple:     Math.min(qualAdjMultiple + deltas.bullMultipleDelta, profile.exitMultipleMax),

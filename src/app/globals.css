@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --color-terminal: #030a05;
-  --color-card: #071410;
-  --color-border: #0f2416;
-  --color-gold: #34d399;
-  --color-gain: #4ade80;
-  --color-loss: #f87171;
-  --color-primary: #ecfdf5;
-  --color-muted: #6ee7b7;
-  --color-accent: #22d3ee;
+  --color-terminal: #060c18;
+  --color-card:     #0c1628;
+  --color-border:   #1e3050;
+  --color-gold:     #3b82f6;
+  --color-gain:     #4ade80;
+  --color-loss:     #f87171;
+  --color-primary:  #e8f1ff;
+  --color-muted:    #6b8cae;
+  --color-accent:   #60a5fa;
 }
 
 * {
@@ -23,8 +23,8 @@
 html,
 body {
   height: 100%;
-  background-color: #030a05;
-  color: #ecfdf5;
+  background-color: #060c18;
+  color: #e8f1ff;
   font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -54,12 +54,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0f2416;
+  background: #1e3050;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1a3d27;
+  background: #2a4570;
 }
 
 /* Range input styling */
@@ -72,7 +72,7 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  background: #0f2416;
+  background: #1e3050;
   height: 4px;
   border-radius: 2px;
 }
@@ -81,7 +81,7 @@ input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   margin-top: -6px;
-  background-color: #34d399;
+  background-color: #3b82f6;
   height: 16px;
   width: 16px;
   border-radius: 50%;
@@ -92,7 +92,7 @@ input[type='range']:focus {
 }
 
 input[type='range']:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
+  box-shadow: none;
 }
 
 /* Table styles */
@@ -111,9 +111,9 @@ table {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Gold gradient text */
+/* Blue gradient text */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #34d399, #4ade80);
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

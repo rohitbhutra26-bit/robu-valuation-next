@@ -55,16 +55,16 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
       </div>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#0f2416" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e3050" vertical={false} />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#6ee7b7', fontSize: 11 }}
+            tick={{ fill: '#6b8cae', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fill: '#6ee7b7', fontSize: 11 }}
+            tick={{ fill: '#6b8cae', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
@@ -73,7 +73,7 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fill: '#6ee7b7', fontSize: 11 }}
+            tick={{ fill: '#6b8cae', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
@@ -81,17 +81,17 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ fontSize: '11px', color: '#6ee7b7', paddingTop: '8px' }}
+            wrapperStyle={{ fontSize: '11px', color: '#6b8cae', paddingTop: '8px' }}
           />
-          <Bar yAxisId="left" dataKey="Revenue" fill="#22d3ee" radius={[3, 3, 0, 0]} opacity={0.8} />
+          <Bar yAxisId="left" dataKey="Revenue" fill="#3b82f6" radius={[3, 3, 0, 0]} opacity={0.8} />
           <Bar yAxisId="left" dataKey="EBITDA" fill="#8B5CF6" radius={[3, 3, 0, 0]} opacity={0.8} />
           <Line
             yAxisId="right"
             type="monotone"
             dataKey="PAT"
-            stroke="#34d399"
+            stroke="#4ade80"
             strokeWidth={2}
-            dot={{ fill: '#34d399', r: 4 }}
+            dot={{ fill: '#4ade80', r: 4 }}
             activeDot={{ r: 6 }}
           />
         </ComposedChart>
