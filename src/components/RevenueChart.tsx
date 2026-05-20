@@ -55,16 +55,16 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
       </div>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e3050" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1f3558" vertical={false} />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#6b8cae', fontSize: 11 }}
+            tick={{ fill: '#93b4d4', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fill: '#6b8cae', fontSize: 11 }}
+            tick={{ fill: '#93b4d4', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
@@ -73,7 +73,7 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fill: '#6b8cae', fontSize: 11 }}
+            tick={{ fill: '#93b4d4', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
@@ -81,7 +81,7 @@ export default function RevenueChart({ financials }: RevenueChartProps) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ fontSize: '11px', color: '#6b8cae', paddingTop: '8px' }}
+            wrapperStyle={{ fontSize: '11px', color: '#93b4d4', paddingTop: '8px' }}
           />
           <Bar yAxisId="left" dataKey="Revenue" fill="#3b82f6" radius={[3, 3, 0, 0]} opacity={0.8} />
           <Bar yAxisId="left" dataKey="EBITDA" fill="#8B5CF6" radius={[3, 3, 0, 0]} opacity={0.8} />

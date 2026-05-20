@@ -37,7 +37,7 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="9" fill="#060c18"/>
+      <rect width="40" height="40" rx="9" fill="#07111f"/>
       <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#3b82f6" strokeWidth="1" strokeOpacity="0.35" fill="none"/>
       <rect x="7" y="7" width="7" height="26" rx="2" fill="#3b82f6"/>
       <rect x="7" y="7" width="21" height="7" rx="2" fill="#3b82f6"/>
@@ -354,7 +354,7 @@ function MobileSlider({
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1e3050 ${pct}%, #1e3050 100%)` }}
+        style={{ background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1f3558 ${pct}%, #1f3558 100%)` }}
       />
       {hint && <p className="text-xs text-muted/70 mt-1.5 font-mono leading-snug">{hint}</p>}
     </div>

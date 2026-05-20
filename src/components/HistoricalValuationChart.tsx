@@ -146,7 +146,7 @@ function LineChart({
             y={yOf(v) + 3}
             textAnchor="end"
             fontSize="8"
-            fill="#6b8cae"
+            fill="#93b4d4"
             fontFamily="JetBrains Mono, monospace"
           >
             {v.toFixed(0)}
@@ -175,7 +175,7 @@ function LineChart({
             y={H - 4}
             textAnchor="middle"
             fontSize="8"
-            fill="#6b8cae"
+            fill="#93b4d4"
             fontFamily="JetBrains Mono, monospace"
           >
             {validPairs[idx]?.d.slice(0, 7) || ''}

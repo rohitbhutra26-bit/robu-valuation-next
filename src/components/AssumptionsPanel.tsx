@@ -67,7 +67,7 @@ function SliderRow({
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full h-1 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1e3050 ${pct}%, #1e3050 100%)`,
+            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1f3558 ${pct}%, #1f3558 100%)`,
           }}
         />
         <div className="flex justify-between mt-1">

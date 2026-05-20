@@ -117,18 +117,18 @@ export default function ForecastChart({ financials, assumptions }: Props) {
           const y = PAD.t + innerH - sy(v);
           return (
             <g key={v}>
-              <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="#1e3050" strokeWidth="0.8" />
-              <text x={PAD.l - 5} y={y + 3.5} textAnchor="end" fontSize="8.5" fill="#6b8cae"
+              <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="#1f3558" strokeWidth="0.8" />
+              <text x={PAD.l - 5} y={y + 3.5} textAnchor="end" fontSize="8.5" fill="#93b4d4"
                 fontFamily="JetBrains Mono, monospace">{fmtY(v)}</text>
             </g>
           );
         })}
 
         {/* Base axis */}
-        <line x1={PAD.l} y1={baseY()} x2={W - PAD.r} y2={baseY()} stroke="#1e3050" strokeWidth="1" />
+        <line x1={PAD.l} y1={baseY()} x2={W - PAD.r} y2={baseY()} stroke="#1f3558" strokeWidth="1" />
 
         {/* Unit label */}
-        <text x={PAD.l - 6} y={PAD.t - 6} textAnchor="end" fontSize="8" fill="#6b8cae"
+        <text x={PAD.l - 6} y={PAD.t - 6} textAnchor="end" fontSize="8" fill="#93b4d4"
           fontFamily="JetBrains Mono, monospace">₹ Cr</text>
 
         {/* Historical / Projected divider */}
@@ -139,7 +139,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               x2={PAD.l + firstP * colW - 4} y2={baseY() + 4}
               stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 3" strokeOpacity="0.55"
             />
-            <text x={PAD.l + 4} y={PAD.t - 6} fontSize="8" fill="#6b8cae">Historical</text>
+            <text x={PAD.l + 4} y={PAD.t - 6} fontSize="8" fill="#93b4d4">Historical</text>
             <text x={PAD.l + firstP * colW + 2} y={PAD.t - 6} fontSize="8" fill="#3b82f6" fillOpacity="0.8">
               Projected →
             </text>
@@ -169,7 +169,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               {pt.revenueGrowth !== 0 && revH > 4 && (
                 <text x={rx + barW / 2} y={baseY() - revH - 3}
                   textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono, monospace"
-                  fill={isP ? '#3b82f6' : '#6b8cae'} fillOpacity={isP ? 0.9 : 0.85}>
+                  fill={isP ? '#3b82f6' : '#93b4d4'} fillOpacity={isP ? 0.9 : 0.85}>
                   {pt.revenueGrowth > 0 ? '+' : ''}{pt.revenueGrowth.toFixed(0)}%
                 </text>
               )}
@@ -177,7 +177,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               {/* X label */}
               <text x={cx} y={baseY() + 13} textAnchor="middle" fontSize="9"
                 fontFamily="JetBrains Mono, monospace"
-                fill={isP ? '#3b82f6' : '#6b8cae'} fillOpacity={isP ? 0.85 : 1}>
+                fill={isP ? '#3b82f6' : '#93b4d4'} fillOpacity={isP ? 0.85 : 1}>
                 {pt.year}
               </text>
             </g>

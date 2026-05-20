@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --color-terminal: #060c18;
-  --color-card:     #0c1628;
-  --color-border:   #1e3050;
-  --color-gold:     #3b82f6;
+  --color-terminal: #07111f;
+  --color-card:     #0e1e32;
+  --color-border:   #1f3558;
+  --color-gold:     #60a5fa;
   --color-gain:     #4ade80;
   --color-loss:     #f87171;
-  --color-primary:  #e8f1ff;
-  --color-muted:    #6b8cae;
-  --color-accent:   #60a5fa;
+  --color-primary:  #f0f6ff;
+  --color-muted:    #93b4d4;
+  --color-accent:   #7dd3fc;
 }
 
 * {
@@ -23,8 +23,8 @@
 html,
 body {
   height: 100%;
-  background-color: #060c18;
-  color: #e8f1ff;
+  background-color: #07111f;
+  color: #f0f6ff;
   font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -54,12 +54,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e3050;
+  background: #1f3558;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a4570;
+  background: #2e4d7a;
 }
 
 /* Range input styling */
@@ -72,7 +72,7 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  background: #1e3050;
+  background: #1f3558;
   height: 4px;
   border-radius: 2px;
 }
