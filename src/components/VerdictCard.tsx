@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
@@ -11,27 +12,33 @@ interface Props {
 }
 
 export default function VerdictCard({ company, financials, assumptions }: Props) {
-  if (!financials.length || !company.currentPrice) return null;
+  const fairValue = useMemo(() => {
+    if (!financials.length || !company.currentPrice) return 0;
+    try {
+      const profile = getSectorProfile(company.sector);
+      const result = runPrimaryModel(
+        profile.model,
+        financials,
+        company,
+        assumptions.revenueGrowthRate,
+        assumptions.netMarginAssumption,
+        assumptions.exitMultiple,
+        assumptions.years,
+      );
+      return Math.max(result.fairValue, 0);
+    } catch {
+      return 0;
+    }
+  }, [
+    company,
+    financials,
+    assumptions.revenueGrowthRate,
+    assumptions.netMarginAssumption,
+    assumptions.exitMultiple,
+    assumptions.years,
+  ]);
 
-  const profile = getSectorProfile(company.sector);
-
-  let fairValue = 0;
-  try {
-    const result = runPrimaryModel(
-      profile.model,
-      financials,
-      company,
-      assumptions.revenueGrowthRate,
-      assumptions.netMarginAssumption,
-      assumptions.exitMultiple,
-      assumptions.years,
-    );
-    fairValue = Math.max(result.fairValue, 0);
-  } catch {
-    return null;
-  }
-
-  if (!fairValue) return null;
+  if (!fairValue || !company.currentPrice) return null;
 
   const current = company.currentPrice;
   const upside = ((fairValue - current) / current) * 100;

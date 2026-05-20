@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Company, FinancialYear } from '@/lib/types';
 import { generateInsight } from '@/lib/aiInsight';
 
@@ -19,7 +20,7 @@ const VERDICT_PLAIN: Record<string, { label: string; emoji: string; color: strin
 };
 
 export default function AIOverview({ company, financials = [] }: AIOverviewProps) {
-  const insight = generateInsight(company, financials);
+  const insight = useMemo(() => generateInsight(company, financials), [company, financials]);
   const plain   = VERDICT_PLAIN[insight.verdict] ?? VERDICT_PLAIN['Hold'];
 
   return (

@@ -524,12 +524,21 @@ export default function Home() {
                 {activeView === 'peers' && (
                   <PeerCompare company={company} />
                 )}
+
+                {/* ── At lg (1024–1279px): inline AI panel below main content since right panel is hidden ── */}
+                {company && (
+                  <div className="xl:hidden space-y-4 pt-2">
+                    <AIOverview company={company} financials={financials} />
+                    <HistoricalValuationChart company={company} />
+                    <IndustryBenchmarks company={company} financials={financials} />
+                  </div>
+                )}
               </div>
             ) : null}
           </main>
 
-          {/* ── RIGHT PANEL — AI + Historical (persistent) ── */}
-          <aside className="w-[290px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto">
+          {/* ── RIGHT PANEL — AI + Historical (only at xl: 1280px+) ── */}
+          <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto flex-col">
             {company ? (
               <div className="p-3 space-y-3">
                 <AIOverview company={company} financials={financials} />

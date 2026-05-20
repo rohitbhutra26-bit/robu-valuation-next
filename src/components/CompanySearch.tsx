@@ -101,7 +101,7 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => query && setIsOpen(true)}
-          placeholder="Search company, symbol..."
+          placeholder='Try "Reliance", "TCS", or any NSE/BSE symbol…'
           className="w-full bg-card border border-border rounded-lg pl-9 pr-9 py-2.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"
         />
         {isLoading && (
@@ -124,7 +124,8 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
       {isOpen && results.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-xl z-50 fade-in"
+          className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg overflow-hidden z-50 fade-in"
+          style={{ maxHeight: '280px', overflowY: 'auto' }}
         >
           {results.map((r, i) => {
             const isBSE = r.exchange === 'BSE';

@@ -1,19 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-terminal: #000000;
-  --color-card: #0F0F0F;
-  --color-border: #1E1E1E;
-  --color-gold: #F59E0B;
-  --color-gain: #10B981;
-  --color-loss: #EF4444;
-  --color-primary: #F9FAFB;
-  --color-muted: #A1A9B8;
-  --color-accent: #60A5FA;
+  --color-terminal: #030a05;
+  --color-card: #071410;
+  --color-border: #0f2416;
+  --color-gold: #34d399;
+  --color-gain: #4ade80;
+  --color-loss: #f87171;
+  --color-primary: #ecfdf5;
+  --color-muted: #6ee7b7;
+  --color-accent: #22d3ee;
 }
 
 * {
@@ -25,11 +23,24 @@
 html,
 body {
   height: 100%;
-  background-color: #000000;
-  color: #F9FAFB;
-  font-family: 'Inter', sans-serif;
+  background-color: #030a05;
+  color: #ecfdf5;
+  font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+}
+
+/* Remove 300ms tap delay on all interactive elements (Android fix) */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Prevent text selection flash on tap on mobile */
+button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 /* Custom scrollbar */
@@ -43,12 +54,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A2A2A;
+  background: #0f2416;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A3A3A;
+  background: #1a3d27;
 }
 
 /* Range input styling */
@@ -61,7 +72,7 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  background: #1E1E1E;
+  background: #0f2416;
   height: 4px;
   border-radius: 2px;
 }
@@ -70,7 +81,7 @@ input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   margin-top: -6px;
-  background-color: #F59E0B;
+  background-color: #34d399;
   height: 16px;
   width: 16px;
   border-radius: 50%;
@@ -81,7 +92,7 @@ input[type='range']:focus {
 }
 
 input[type='range']:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.3);
 }
 
 /* Table styles */
@@ -102,7 +113,7 @@ table {
 
 /* Gold gradient text */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+  background: linear-gradient(135deg, #34d399, #4ade80);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

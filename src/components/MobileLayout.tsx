@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
@@ -12,8 +12,11 @@ import EarningsQuality from './EarningsQuality';
 import WhatMustHappen from './WhatMustHappen';
 import HistoricalValuationChart from './HistoricalValuationChart';
 import ForecastChart from './ForecastChart';
+import IndustryBenchmarks from './IndustryBenchmarks';
+import PeerCompare from './PeerCompare';
+import VerdictCard from './VerdictCard';
 
-type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials';
+type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials' | 'peers';
 
 interface Props {
   company: Company | null;
@@ -28,33 +31,15 @@ interface Props {
 }
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
-// Geometric block construction — Zeltra style.
-// R is 4 shapes: stem | top bar | bowl-right | diagonal slash leg.
-// Every stroke is the same bold weight. Diagonal leg = Zeltra signature move.
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* App icon background */}
       <rect width="40" height="40" rx="9" fill="#030a05"/>
-      {/* Border */}
       <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#34d399" strokeWidth="1" strokeOpacity="0.35" fill="none"/>
-
-      {/* ── R: 4 geometric blocks ── */}
-
-      {/* 1. STEM — left vertical, full height */}
       <rect x="7" y="7" width="7" height="26" rx="2" fill="#34d399"/>
-
-      {/* 2. TOP BAR — horizontal, spans full bowl width */}
       <rect x="7" y="7" width="21" height="7" rx="2" fill="#34d399"/>
-
-      {/* 3. BOWL RIGHT — right vertical, top half only */}
       <rect x="22" y="7" width="6" height="14" rx="2" fill="#34d399"/>
-
-      {/* 4. MID BAR — closes the bowl, anchors the diagonal */}
       <rect x="7" y="14" width="21" height="7" rx="2" fill="#34d399"/>
-
-      {/* 5. DIAGONAL LEG — Zeltra-style bold slash parallelogram */}
-      {/* Runs from bowl mid-right → bottom-right corner, same stroke width as blocks */}
       <path d="M14 21 L21 21 L31 33 L24 33 Z" fill="#34d399"/>
     </svg>
   );
@@ -70,7 +55,7 @@ function fmt(n: number) {
 // ─── Nav Icons ────────────────────────────────────────────────────────────────
 function IconSearch({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <circle cx="11" cy="11" r="7" />
       <path d="m21 21-4.35-4.35" strokeLinecap="round" />
     </svg>
@@ -78,7 +63,7 @@ function IconSearch({ on }: { on: boolean }) {
 }
 function IconChart({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M3 3v18h18" strokeLinecap="round" />
       <path d="m19 9-5 5-4-4-3 3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -86,7 +71,7 @@ function IconChart({ on }: { on: boolean }) {
 }
 function IconSliders({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
       <circle cx="9" cy="6" r="2" fill={on ? '#34d399' : 'none'} />
       <circle cx="15" cy="12" r="2" fill={on ? '#34d399' : 'none'} />
@@ -96,7 +81,7 @@ function IconSliders({ on }: { on: boolean }) {
 }
 function IconAI({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <path d="M12 2l1.4 4.3L18 7.5l-4.6 2.7L12 14l-1.4-3.8L6 7.5l4.6-1.2L12 2z" strokeLinejoin="round" />
       <path d="M5 17l.7 2 2 .7-2 .7L5 22l-.7-2-2-.7 2-.7L5 17z" strokeLinejoin="round" />
     </svg>
@@ -104,9 +89,19 @@ function IconAI({ on }: { on: boolean }) {
 }
 function IconTable({ on }: { on: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M3 9h18M3 15h18M9 3v18" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconPeers({ on }: { on: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
+      <circle cx="9" cy="7" r="3" />
+      <circle cx="17" cy="7" r="3" />
+      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" strokeLinecap="round" />
+      <path d="M21 21v-2a4 4 0 0 0-2-3.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -116,11 +111,12 @@ function BottomNav({
   active, onChange, hasCompany,
 }: { active: MobileTab; onChange: (t: MobileTab) => void; hasCompany: boolean }) {
   const tabs: { id: MobileTab; label: string; Icon: React.FC<{ on: boolean }>; needsCompany?: boolean }[] = [
-    { id: 'search', label: 'Search', Icon: IconSearch },
-    { id: 'overview', label: 'Stock', Icon: IconChart, needsCompany: true },
-    { id: 'valuation', label: 'Value', Icon: IconSliders, needsCompany: true },
-    { id: 'ai', label: 'AI', Icon: IconAI, needsCompany: true },
-    { id: 'financials', label: 'Data', Icon: IconTable, needsCompany: true },
+    { id: 'search',     label: 'Search',   Icon: IconSearch },
+    { id: 'overview',   label: 'Stock',    Icon: IconChart,   needsCompany: true },
+    { id: 'valuation',  label: 'Value',    Icon: IconSliders, needsCompany: true },
+    { id: 'ai',         label: 'AI',       Icon: IconAI,      needsCompany: true },
+    { id: 'peers',      label: 'Peers',    Icon: IconPeers,   needsCompany: true },
+    { id: 'financials', label: 'Data',     Icon: IconTable,   needsCompany: true },
   ];
 
   return (
@@ -128,7 +124,7 @@ function BottomNav({
       className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border flex">
+      <div className="bg-card/98 backdrop-blur-xl border-t border-border flex">
         {tabs.map(({ id, label, Icon, needsCompany }) => {
           const disabled = needsCompany && !hasCompany;
           const isOn = active === id;
@@ -136,11 +132,12 @@ function BottomNav({
             <button
               key={id}
               onClick={() => !disabled && onChange(id)}
-              className={`flex-1 flex flex-col items-center py-2.5 gap-0.5 transition-colors
-                ${isOn ? 'text-gold' : disabled ? 'text-muted/25' : 'text-muted'}`}
+              className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-w-0
+                ${isOn ? 'text-gold' : disabled ? 'text-muted/25' : 'text-muted hover:text-primary/70'}`}
             >
               <Icon on={isOn} />
-              <span className="text-[10px] font-medium leading-none">{label}</span>
+              <span className="text-[9px] font-medium leading-none truncate">{label}</span>
+              {isOn && <div className="w-4 h-0.5 rounded-full bg-gold mt-0.5" />}
             </button>
           );
         })}
@@ -154,9 +151,10 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
   const showStock = activeTab !== 'search' && company;
   const isPos = company ? company.changePercent >= 0 : true;
   return (
-    <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-xl border-b border-border flex items-center justify-between px-4"
+      style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', paddingBottom: '12px' }}>
       <div className="flex items-center gap-2.5">
-        <RobuLogo size={28} />
+        <RobuLogo size={26} />
         {showStock ? (
           <div>
             <span className="text-sm font-bold text-primary font-mono">{company.symbol}</span>
@@ -170,12 +168,12 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
       </div>
       <div className="flex items-center gap-2">
         {showStock && (
-          <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded-full font-mono">
+          <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded-full font-mono">
             {company.symbol.endsWith('.BO') ? 'BSE' : 'NSE'}
           </span>
         )}
         {showStock && (
-          <div className="flex items-center gap-1 text-[11px] text-muted/60">
+          <div className="flex items-center gap-1 text-[10px] text-muted/60">
             <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
             <span>Live</span>
           </div>
@@ -188,49 +186,73 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
 // ─── Loader / Error ───────────────────────────────────────────────────────────
 function MobileLoader({ symbol }: { symbol: string }) {
   return (
-    <div className="flex flex-col items-center justify-center h-64 gap-3">
-      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm text-muted">Loading {symbol}…</p>
+    <div className="flex flex-col items-center justify-center h-64 gap-4 px-6">
+      <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      <div className="text-center">
+        <p className="text-sm text-muted">Loading {symbol || '…'}</p>
+        <p className="text-xs text-muted/50 mt-1">Fetching live data from NSE/BSE</p>
+      </div>
     </div>
   );
 }
 function MobileError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center h-64 gap-3 px-6 text-center">
-      <p className="text-sm text-loss">{message}</p>
-      <button onClick={onRetry} className="px-4 py-2 bg-gold/10 border border-gold/30 rounded-lg text-xs text-gold">Retry</button>
+    <div className="flex flex-col items-center justify-center h-64 gap-4 px-6 text-center">
+      <div className="w-12 h-12 rounded-full bg-loss/10 border border-loss/20 flex items-center justify-center text-xl">⚠️</div>
+      <div>
+        <p className="text-sm text-loss font-medium">Couldn't load data</p>
+        <p className="text-xs text-muted mt-1">{message}</p>
+      </div>
+      <button onClick={onRetry} className="px-5 py-2.5 bg-gold/10 border border-gold/30 rounded-xl text-sm text-gold font-medium active:scale-95 transition-transform">
+        Try again
+      </button>
     </div>
   );
 }
 
 // ─── Search View ──────────────────────────────────────────────────────────────
 function SearchView({ onSelect, selectedSymbol }: { onSelect: (s: string) => void; selectedSymbol: string }) {
-  const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TATAMOTORS', 'SBIN', 'ADANIENT'];
+  const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TATAMOTORS', 'SBIN', 'ADANIENT', 'ANGELONE', 'KAYNES'];
   return (
-    <div className="flex flex-col px-5 pb-28">
-      {/* Wordmark */}
-      <div className="flex flex-col items-center pt-12 pb-10">
-        <RobuLogo size={56} />
+    <div className="flex flex-col px-4 pb-32">
+      {/* Hero */}
+      <div className="flex flex-col items-center pt-10 pb-8">
+        <RobuLogo size={52} />
         <h1 className="text-2xl font-bold text-primary mt-4 tracking-tight">Robu Terminal</h1>
-        <p className="text-sm text-muted mt-1">Indian Equities Research</p>
+        <p className="text-sm text-muted mt-1 text-center px-4">Find out if any Indian stock is cheap, fair, or expensive</p>
       </div>
 
       {/* Search bar */}
-      <div className="mb-8">
+      <div className="mb-6">
         <CompanySearch onSelect={onSelect} selectedSymbol={selectedSymbol} />
       </div>
 
+      {/* Feature tiles — "what can I do?" */}
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        {[
+          { icon: '📊', title: 'Value it',      body: 'Is it cheap?' },
+          { icon: '👥', title: 'Compare',       body: 'vs rivals' },
+          { icon: '🤖', title: 'AI analysis',   body: 'Plain English' },
+        ].map(tile => (
+          <div key={tile.title} className="bg-card border border-border rounded-xl p-3 text-center">
+            <div className="text-xl mb-1">{tile.icon}</div>
+            <p className="text-[10px] font-semibold text-primary">{tile.title}</p>
+            <p className="text-[9px] text-muted mt-0.5">{tile.body}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Popular chips */}
-      <p className="text-[11px] uppercase tracking-widest text-muted font-medium mb-3">Popular</p>
+      <p className="text-[10px] uppercase tracking-widest text-muted font-medium mb-2">Popular stocks to try</p>
       <div className="flex flex-wrap gap-2">
         {chips.map((sym) => (
           <button
             key={sym}
             onClick={() => onSelect(sym)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all active:scale-95 ${
               selectedSymbol === sym
                 ? 'bg-gold text-terminal'
-                : 'bg-card border border-border text-muted active:scale-95'
+                : 'bg-card border border-border text-muted'
             }`}
           >
             {sym}
@@ -242,8 +264,9 @@ function SearchView({ onSelect, selectedSymbol }: { onSelect: (s: string) => voi
 }
 
 // ─── Overview View ────────────────────────────────────────────────────────────
-function OverviewView({ company, financials, isLoading, error, onRetry }: {
-  company: Company | null; financials: FinancialYear[]; isLoading: boolean; error: string | null; onRetry: () => void;
+function OverviewView({ company, financials, assumptions, isLoading, error, onRetry }: {
+  company: Company | null; financials: FinancialYear[]; assumptions: ValuationAssumptions;
+  isLoading: boolean; error: string | null; onRetry: () => void;
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
@@ -252,83 +275,77 @@ function OverviewView({ company, financials, isLoading, error, onRetry }: {
   const isPos = company.changePercent >= 0;
   const low = company.week52Low;
   const high = company.week52High;
-  const pct = Math.max(0, Math.min(100, ((company.currentPrice - low) / (high - low)) * 100));
+  const pct = high > low ? Math.max(2, Math.min(98, ((company.currentPrice - low) / (high - low)) * 100)) : 50;
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
   const stats = [
-    { label: 'Market Cap', value: fmt(company.marketCap) },
-    { label: 'P/E Ratio', value: `${company.pe.toFixed(1)}x`, color: 'text-gold' },
-    { label: 'P/B Ratio', value: `${company.pb.toFixed(1)}x` },
-    { label: 'ROE', value: `${company.roe.toFixed(1)}%`, color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
-    { label: 'D/E Ratio', value: `${company.debtToEquity.toFixed(2)}x`, color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
-    { label: 'Div Yield', value: `${company.dividendYield.toFixed(2)}%` },
+    { label: 'Market Cap',  value: fmt(company.marketCap) },
+    { label: 'P/E Ratio',   value: `${company.pe.toFixed(1)}x`,    color: 'text-gold' },
+    { label: 'P/B Ratio',   value: `${company.pb.toFixed(1)}x` },
+    { label: 'ROE',         value: `${company.roe.toFixed(1)}%`,   color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
+    { label: 'Debt / Equity', value: `${company.debtToEquity.toFixed(2)}x`, color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
+    { label: 'Div Yield',   value: `${company.dividendYield.toFixed(2)}%` },
   ];
 
   return (
-    <div className="px-4 pt-4 pb-28 space-y-3">
-      {/* ── Hero Price Card ── */}
-      <div className="bg-card rounded-2xl p-5 border border-border">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <p className="text-xs font-mono text-gold font-bold tracking-wider">{company.symbol}</p>
-            <h2 className="text-lg font-bold text-primary leading-snug mt-0.5 max-w-[200px]">{company.name}</h2>
-            <p className="text-xs text-muted mt-0.5">{company.sector}</p>
-          </div>
-        </div>
+    <div className="px-4 pt-4 pb-32 space-y-3">
+      {/* Verdict banner */}
+      <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
-        <div className="flex items-end gap-3 mb-1">
-          <span className="text-[2.5rem] font-bold font-mono text-primary leading-none tracking-tight">
+      {/* Hero Price Card */}
+      <div className="bg-card rounded-2xl p-5 border border-border">
+        <div className="mb-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono font-bold text-gold tracking-wider">{company.symbol}</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted">{company.sector}</span>
+          </div>
+          <h2 className="text-base font-bold text-primary leading-snug">{company.name}</h2>
+        </div>
+        <div className="flex items-end gap-2 mb-1">
+          <span className="text-4xl font-bold font-mono text-primary leading-none">
             ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
         </div>
-        <div className={`flex items-center gap-2 ${isPos ? 'text-gain' : 'text-loss'}`}>
-          <span className="text-sm font-semibold font-mono">
-            {isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)}
-          </span>
-          <span className="text-sm font-semibold font-mono">
-            ({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)
-          </span>
-          <span className="text-xs text-muted">today</span>
+        <div className={`flex items-center gap-2 text-sm font-semibold font-mono mb-5 ${isPos ? 'text-gain' : 'text-loss'}`}>
+          <span>{isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)}</span>
+          <span>({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)</span>
+          <span className="text-xs text-muted font-normal">today</span>
         </div>
-
         {/* 52W range bar */}
-        <div className="mt-5">
-          <div className="flex justify-between text-[11px] text-muted mb-2">
-            <span>₹{low.toLocaleString('en-IN')}</span>
-            <span>52W Range</span>
-            <span>₹{high.toLocaleString('en-IN')}</span>
-          </div>
-          <div className="relative h-1.5 bg-border rounded-full">
-            <div className="h-full bg-gradient-to-r from-loss via-gold to-gain rounded-full opacity-40" style={{ width: '100%' }} />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-gold bg-terminal shadow-lg"
-              style={{ left: `calc(${pct}% - 8px)` }}
-            />
-          </div>
+        <div className="flex justify-between text-[10px] text-muted mb-1.5">
+          <span>52W Low ₹{low.toLocaleString('en-IN')}</span>
+          <span>52W High ₹{high.toLocaleString('en-IN')}</span>
+        </div>
+        <div className="relative h-2 bg-border rounded-full overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
+            style={{ left: `calc(${pct}% - 7px)` }}
+          />
         </div>
       </div>
 
-      {/* ── Stats Grid 2-col ── */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
         {stats.map((s, i) => (
-          <div key={i} className="bg-card border border-border rounded-xl p-3.5">
-            <p className="text-[11px] text-muted mb-1 uppercase tracking-wide">{s.label}</p>
+          <div key={i} className="bg-card border border-border rounded-xl p-3">
+            <p className="text-[10px] text-muted mb-1 uppercase tracking-wide">{s.label}</p>
             <p className={`text-base font-bold font-mono ${s.color || 'text-primary'}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* ── Latest Financials Row ── */}
+      {/* Latest Financials */}
       {latest && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-[11px] text-muted uppercase tracking-wider mb-3">Financials — {latest.year}</p>
-          <div className="space-y-3">
+          <p className="text-[10px] text-muted uppercase tracking-wider mb-3 font-semibold">Last reported year — {latest.year}</p>
+          <div className="space-y-2.5">
             {[
-              { label: 'Revenue', value: fmt(latest.revenue) },
-              { label: 'Net Profit (PAT)', value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
-              { label: 'EBITDA Margin', value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary' },
-              { label: 'Net Margin', value: `${latest.netMargin.toFixed(1)}%` },
-              { label: 'EPS', value: `₹${latest.eps.toFixed(1)}` },
+              { label: 'Revenue',          value: fmt(latest.revenue) },
+              { label: 'Net Profit (PAT)', value: fmt(latest.pat),                       color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
+              { label: 'EBITDA Margin',    value: `${latest.ebitdaMargin.toFixed(1)}%`,  color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary' },
+              { label: 'Net Margin',       value: `${latest.netMargin.toFixed(1)}%` },
+              { label: 'EPS',              value: `₹${latest.eps.toFixed(1)}` },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="text-sm text-muted">{r.label}</span>
@@ -353,9 +370,7 @@ function MobileSlider({
         <p className="text-sm text-muted">{label}</p>
         <div className="flex items-center gap-0.5">
           <input
-            type="number"
-            min={min} max={max} step={step}
-            value={value}
+            type="number" min={min} max={max} step={step} value={value}
             onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max)); }}
             className={`w-16 text-right text-base font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           />
@@ -368,7 +383,7 @@ function MobileSlider({
         className="w-full h-2 rounded-full appearance-none cursor-pointer"
         style={{ background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)` }}
       />
-      {hint && <p className="text-xs text-muted mt-1.5 font-mono">{hint}</p>}
+      {hint && <p className="text-xs text-muted/70 mt-1.5 font-mono leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -380,33 +395,42 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
-  if (!company || financials.length === 0) return null;
+  if (!company || financials.length === 0) return (
+    <div className="flex flex-col items-center justify-center h-64 gap-3 px-6 text-center">
+      <p className="text-sm text-muted">No financial data available for this stock</p>
+    </div>
+  );
+
   const latest = financials[financials.length - 1];
   const sectorProfile = getSectorProfile(company.sector);
 
   return (
-    <div className="px-4 pt-4 pb-28 space-y-4">
-      {/* Assumptions card — now sector-aware */}
+    <div className="px-4 pt-4 pb-32 space-y-4">
+      {/* Verdict */}
+      <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+
+      {/* Assumptions */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-          <h3 className="text-sm font-semibold text-primary">Assumptions</h3>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+          <h3 className="text-sm font-semibold text-primary">Your assumptions</h3>
           <span className="ml-auto text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
             {sectorProfile.sectorLabel}
           </span>
         </div>
+        <p className="text-xs text-muted -mt-3">Adjust these sliders to see how the target price changes</p>
         <MobileSlider
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
           min={1} max={50} step={0.5} suffix="%" color="text-accent"
           onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-          hint={`Actual: ${latest.revenueGrowth.toFixed(1)}%`}
+          hint={`How fast do you think sales will grow? Actual last year: ${latest.revenueGrowth.toFixed(1)}%`}
         />
         {sectorProfile.model !== 'pb' && (
           <MobileSlider
             label="Net Margin" value={assumptions.netMarginAssumption}
             min={1} max={50} step={0.5} suffix="%" color="text-gain"
             onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-            hint={`Actual: ${latest.netMargin.toFixed(1)}%`}
+            hint={`Of ₹100 earned, how much stays as profit? Actual: ${latest.netMargin.toFixed(1)}%`}
           />
         )}
         <MobileSlider
@@ -415,24 +439,23 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           min={sectorProfile.exitMultipleMin}
           max={sectorProfile.exitMultipleMax}
           step={sectorProfile.exitMultipleStep}
-          suffix="x"
-          color="text-gold"
+          suffix="x" color="text-gold"
           onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
           hint={
-            sectorProfile.model === 'pe' ? `Current P/E: ${company.pe.toFixed(1)}x` :
-            sectorProfile.model === 'pb' ? `Current P/B: ${company.pb.toFixed(1)}x` :
-            `Default: ${sectorProfile.defaultExitMultiple}x`
+            sectorProfile.model === 'pe' ? `At what P/E will you sell? Current: ${company.pe.toFixed(1)}x` :
+            sectorProfile.model === 'pb' ? `At what P/B will you sell? Current: ${company.pb.toFixed(1)}x` :
+            `Sector default: ${sectorProfile.defaultExitMultiple}x`
           }
         />
         <div>
-          <p className="text-sm text-muted mb-2">Horizon</p>
+          <p className="text-sm text-muted mb-2">How many years are you projecting?</p>
           <div className="flex gap-2">
             {[3, 5, 7, 10].map((y) => (
               <button
                 key={y}
                 onClick={() => setAssumptions(a => ({ ...a, years: y }))}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold font-mono transition-all active:scale-95 ${
-                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted'
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold font-mono transition-all active:scale-95 ${
+                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border/60 text-muted'
                 }`}
               >
                 {y}Y
@@ -442,16 +465,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         </div>
       </div>
 
-      {/* Forecast chart — historical + projected bars */}
       <ForecastChart financials={financials} assumptions={assumptions} />
-
-      {/* Scenario cards — now sector-aware with probability weights */}
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
-
-      {/* Valuation Engine */}
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
-
-      {/* What Must Happen */}
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
     </div>
   );
@@ -465,9 +481,31 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company) return null;
   return (
-    <div className="px-4 pt-4 pb-28 space-y-4">
-      <AIOverview company={company} />
+    <div className="px-4 pt-4 pb-32 space-y-4">
+      {/* Bug fix: pass financials to AIOverview */}
+      <AIOverview company={company} financials={financials} />
       <HistoricalValuationChart company={company} />
+      <IndustryBenchmarks company={company} financials={financials} />
+    </div>
+  );
+}
+
+// ─── Peers View ───────────────────────────────────────────────────────────────
+function PeersView({ company, isLoading, error, onRetry }: {
+  company: Company | null; isLoading: boolean; error: string | null; onRetry: () => void;
+}) {
+  if (isLoading) return <MobileLoader symbol="…" />;
+  if (error) return <MobileError message={error} onRetry={onRetry} />;
+  if (!company) return null;
+  return (
+    <div className="pt-4 pb-32">
+      <div className="px-4 mb-3">
+        <h3 className="text-sm font-semibold text-primary">Peer Comparison</h3>
+        <p className="text-xs text-muted mt-0.5">How {company.symbol} compares to sector peers — scroll right</p>
+      </div>
+      <div className="overflow-x-auto px-4">
+        <PeerCompare company={company} />
+      </div>
     </div>
   );
 }
@@ -478,9 +516,13 @@ function FinancialsView({ financials, isLoading, error, onRetry }: {
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
-  if (financials.length === 0) return null;
+  if (financials.length === 0) return (
+    <div className="flex items-center justify-center h-64">
+      <p className="text-sm text-muted px-6 text-center">No financial history available for this stock</p>
+    </div>
+  );
   return (
-    <div className="pt-4 pb-28">
+    <div className="pt-4 pb-32">
       <div className="px-4 mb-3">
         <h3 className="text-sm font-semibold text-primary">Financial History</h3>
         <p className="text-xs text-muted mt-0.5">Scroll right to see all years</p>
@@ -501,41 +543,68 @@ export default function MobileLayout({
   assumptions, setAssumptions, onSelect, onRetry,
 }: Props) {
   const [activeTab, setActiveTab] = useState<MobileTab>('search');
+  // Persist tab component instances to prevent re-mount (avoids re-fetch on tab switch)
+  const mountedTabs = useRef<Set<MobileTab>>(new Set(['search']));
 
   function handleSelect(symbol: string) {
     onSelect(symbol);
     setActiveTab('overview');
   }
 
-  const latest = financials.length > 0 ? financials[financials.length - 1] : null;
+  function handleTabChange(tab: MobileTab) {
+    mountedTabs.current.add(tab);
+    setActiveTab(tab);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-terminal lg:hidden">
       <MobileHeader company={company} activeTab={activeTab} />
 
-      <main className="flex-1 overflow-y-auto">
-        {activeTab === 'search' && (
+      <main className="flex-1 overflow-y-auto overscroll-none">
+        {/* Always mounted views (no re-fetch on revisit) */}
+        <div className={activeTab === 'search' ? '' : 'hidden'}>
           <SearchView onSelect={handleSelect} selectedSymbol={selectedSymbol} />
+        </div>
+
+        {mountedTabs.current.has('overview') && (
+          <div className={activeTab === 'overview' ? '' : 'hidden'}>
+            <OverviewView
+              company={company} financials={financials} assumptions={assumptions}
+              isLoading={isLoading} error={error} onRetry={onRetry}
+            />
+          </div>
         )}
-        {activeTab === 'overview' && (
-          <OverviewView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+
+        {mountedTabs.current.has('valuation') && (
+          <div className={activeTab === 'valuation' ? '' : 'hidden'}>
+            <ValuationView
+              company={company} financials={financials}
+              assumptions={assumptions} setAssumptions={setAssumptions}
+              isLoading={isLoading} error={error} onRetry={onRetry}
+            />
+          </div>
         )}
-        {activeTab === 'valuation' && (
-          <ValuationView
-            company={company} financials={financials}
-            assumptions={assumptions} setAssumptions={setAssumptions}
-            isLoading={isLoading} error={error} onRetry={onRetry}
-          />
+
+        {mountedTabs.current.has('ai') && (
+          <div className={activeTab === 'ai' ? '' : 'hidden'}>
+            <AIView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+          </div>
         )}
-        {activeTab === 'ai' && (
-          <AIView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+
+        {mountedTabs.current.has('peers') && (
+          <div className={activeTab === 'peers' ? '' : 'hidden'}>
+            <PeersView company={company} isLoading={isLoading} error={error} onRetry={onRetry} />
+          </div>
         )}
-        {activeTab === 'financials' && (
-          <FinancialsView financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+
+        {mountedTabs.current.has('financials') && (
+          <div className={activeTab === 'financials' ? '' : 'hidden'}>
+            <FinancialsView financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+          </div>
         )}
       </main>
 
-      <BottomNav active={activeTab} onChange={setActiveTab} hasCompany={!!company} />
+      <BottomNav active={activeTab} onChange={handleTabChange} hasCompany={!!company} />
     </div>
   );
 }
