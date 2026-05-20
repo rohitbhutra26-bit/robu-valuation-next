@@ -1,6 +1,7 @@
 'use client';
 
 import { ValuationAssumptions } from '@/lib/types';
+import { Pencil } from '@/lib/icons';
 
 interface AssumptionsPanelProps {
   assumptions: ValuationAssumptions;
@@ -66,7 +67,7 @@ function SliderRow({
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full h-1 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #F59E0B 0%, #F59E0B ${pct}%, #1F2937 ${pct}%, #1F2937 100%)`,
+            background: `linear-gradient(to right, #34d399 0%, #34d399 ${pct}%, #0f2416 ${pct}%, #0f2416 100%)`,
           }}
         />
         <div className="flex justify-between mt-1">
@@ -92,9 +93,9 @@ export default function AssumptionsPanel({
   return (
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center gap-2 mb-4">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
-          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-        </svg>
+        <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+          <Pencil size={13} className="text-accent" />
+        </div>
         <h3 className="text-sm font-semibold text-primary">Valuation Assumptions</h3>
       </div>
 

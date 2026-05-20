@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import { computeTargetPath, Feasibility, PathRequirement } from '@/lib/targetPathEngine';
+import { Clock } from '@/lib/icons';
 
 interface Props {
   company: Company;
@@ -141,10 +142,9 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 8v4l3 3" strokeLinecap="round"/>
-            </svg>
+            <div className="w-6 h-6 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center">
+              <Clock size={13} className="text-gold" />
+            </div>
             <h3 className="text-sm font-semibold text-primary">What Must Happen?</h3>
           </div>
           <p className="text-[11px] text-muted mt-1">

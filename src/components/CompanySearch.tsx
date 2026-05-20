@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchResult } from '@/lib/types';
+import { Search, X } from '@/lib/icons';
 
 interface CompanySearchProps {
   onSelect: (symbol: string) => void;
@@ -89,10 +90,7 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
     <div className="relative w-full">
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
+          <Search size={14} />
         </div>
         <input
           ref={inputRef}
@@ -114,9 +112,7 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
             onClick={() => { setQuery(''); setIsOpen(false); }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
+            <X size={12} />
           </button>
         )}
       </div>

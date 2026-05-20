@@ -1,6 +1,7 @@
 'use client';
 
 import { FinancialYear } from '@/lib/types';
+import { Activity } from '@/lib/icons';
 
 interface EarningsQualityProps {
   financials: FinancialYear[];
@@ -83,9 +84,9 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
+          <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center">
+            <Activity size={13} className="text-gain" />
+          </div>
           <h3 className="text-sm font-semibold text-primary">Earnings Quality</h3>
         </div>
         <div className="flex items-center gap-2">

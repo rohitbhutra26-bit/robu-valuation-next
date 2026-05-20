@@ -2,6 +2,9 @@
 
 import React, { useState, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import {
+  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users, AlertTriangle, Pencil,
+} from '@/lib/icons';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
@@ -54,56 +57,22 @@ function fmt(n: number) {
 
 // ─── Nav Icons ────────────────────────────────────────────────────────────────
 function IconSearch({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="m21 21-4.35-4.35" strokeLinecap="round" />
-    </svg>
-  );
+  return <Search size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconChart({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <path d="M3 3v18h18" strokeLinecap="round" />
-      <path d="m19 9-5 5-4-4-3 3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <TrendingUp size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconSliders({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
-      <circle cx="9" cy="6" r="2" fill={on ? '#34d399' : 'none'} />
-      <circle cx="15" cy="12" r="2" fill={on ? '#34d399' : 'none'} />
-      <circle cx="9" cy="18" r="2" fill={on ? '#34d399' : 'none'} />
-    </svg>
-  );
+  return <SlidersHorizontal size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconAI({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <path d="M12 2l1.4 4.3L18 7.5l-4.6 2.7L12 14l-1.4-3.8L6 7.5l4.6-1.2L12 2z" strokeLinejoin="round" />
-      <path d="M5 17l.7 2 2 .7-2 .7L5 22l-.7-2-2-.7 2-.7L5 17z" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Sparkles size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconTable({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18M3 15h18M9 3v18" strokeLinecap="round" />
-    </svg>
-  );
+  return <Table2 size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconPeers({ on }: { on: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={on ? '#34d399' : 'currentColor'} strokeWidth={on ? 2.2 : 1.8}>
-      <circle cx="9" cy="7" r="3" />
-      <circle cx="17" cy="7" r="3" />
-      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" strokeLinecap="round" />
-      <path d="M21 21v-2a4 4 0 0 0-2-3.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <Users size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 
 // ─── Bottom Nav ───────────────────────────────────────────────────────────────
@@ -198,7 +167,9 @@ function MobileLoader({ symbol }: { symbol: string }) {
 function MobileError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-64 gap-4 px-6 text-center">
-      <div className="w-12 h-12 rounded-full bg-loss/10 border border-loss/20 flex items-center justify-center text-xl">⚠️</div>
+      <div className="w-12 h-12 rounded-full bg-loss/10 border border-loss/20 flex items-center justify-center">
+          <AlertTriangle size={22} className="text-loss" />
+        </div>
       <div>
         <p className="text-sm text-loss font-medium">Couldn't load data</p>
         <p className="text-xs text-muted mt-1">{message}</p>
@@ -230,12 +201,14 @@ function SearchView({ onSelect, selectedSymbol }: { onSelect: (s: string) => voi
       {/* Feature tiles — "what can I do?" */}
       <div className="grid grid-cols-3 gap-2 mb-6">
         {[
-          { icon: '📊', title: 'Value it',      body: 'Is it cheap?' },
-          { icon: '👥', title: 'Compare',       body: 'vs rivals' },
-          { icon: '🤖', title: 'AI analysis',   body: 'Plain English' },
+          { Icon: TrendingUp,        iconCls: 'text-gain',   bg: 'bg-gain/10',   border: 'border-gain/20',   title: 'Value it',    body: 'Is it cheap?' },
+          { Icon: Users,             iconCls: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20', title: 'Compare',     body: 'vs rivals' },
+          { Icon: Sparkles,          iconCls: 'text-gold',   bg: 'bg-gold/10',   border: 'border-gold/20',   title: 'AI analysis', body: 'Plain English' },
         ].map(tile => (
           <div key={tile.title} className="bg-card border border-border rounded-xl p-3 text-center">
-            <div className="text-xl mb-1">{tile.icon}</div>
+            <div className={`w-8 h-8 rounded-lg ${tile.bg} border ${tile.border} flex items-center justify-center mx-auto mb-2`}>
+              <tile.Icon size={16} className={tile.iconCls} />
+            </div>
             <p className="text-[10px] font-semibold text-primary">{tile.title}</p>
             <p className="text-[9px] text-muted mt-0.5">{tile.body}</p>
           </div>
@@ -412,7 +385,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       {/* Assumptions */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+          <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+            <Pencil size={12} className="text-accent" />
+          </div>
           <h3 className="text-sm font-semibold text-primary">Your assumptions</h3>
           <span className="ml-auto text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
             {sectorProfile.sectorLabel}

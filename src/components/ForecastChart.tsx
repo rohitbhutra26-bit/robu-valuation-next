@@ -12,6 +12,7 @@
 
 import { useMemo } from 'react';
 import { FinancialYear, ValuationAssumptions } from '@/lib/types';
+import { BarChart3 } from '@/lib/icons';
 
 interface ForecastPoint {
   year: string;
@@ -91,11 +92,9 @@ export default function ForecastChart({ financials, assumptions }: Props) {
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
-            <rect x="3" y="12" width="4" height="9" rx="1"/>
-            <rect x="10" y="7" width="4" height="14" rx="1"/>
-            <rect x="17" y="3" width="4" height="18" rx="1"/>
-          </svg>
+          <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center">
+            <BarChart3 size={13} className="text-gain" />
+          </div>
           <h3 className="text-sm font-semibold text-primary">Revenue & Profit Forecast</h3>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted">
