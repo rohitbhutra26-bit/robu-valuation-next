@@ -1,12 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Company, FinancialYear } from '@/lib/types';
-import { generateInsight } from '@/lib/aiInsight';
+import { generateInsight, StockInsight } from '@/lib/aiInsight';
 import {
   Sparkles, TrendingUp, TrendingDown, AlertTriangle,
   ShieldAlert, Eye, PauseCircle, ThumbsUp,
 } from '@/lib/icons';
+
+// Module-level cache — persists across tab switches, avoids re-fetching same stock
+const aiCache = new Map<string, StockInsight>();
 
 interface AIOverviewProps {
   company: Company;
@@ -27,8 +30,57 @@ const VERDICT_CONFIG: Record<string, {
 };
 
 export default function AIOverview({ company, financials = [] }: AIOverviewProps) {
-  const insight = useMemo(() => generateInsight(company, financials), [company, financials]);
-  const cfg = VERDICT_CONFIG[insight.verdict] ?? VERDICT_CONFIG['Hold'];
+  // Rule-based insight — synchronous, instant, always available
+  const ruleInsight = generateInsight(company, financials);
+
+  // Gemini-upgraded insight — loads async, replaces rule-based silently
+  const [aiInsight, setAiInsight]   = useState<StockInsight | null>(
+    aiCache.get(company.symbol) ?? null
+  );
+  const [aiLoading, setAiLoading]   = useState(!aiCache.has(company.symbol));
+
+  useEffect(() => {
+    // Already have it cached for this symbol — use immediately
+    if (aiCache.has(company.symbol)) {
+      setAiInsight(aiCache.get(company.symbol)!);
+      setAiLoading(false);
+      return;
+    }
+
+    setAiLoading(true);
+    setAiInsight(null);
+
+    fetch('/api/ai-analysis', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ company, financials }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        if (data?.verdict && data?.summary) {
+          const upgraded: StockInsight = {
+            verdict:      data.verdict,
+            confidence:   data.confidence ?? 'Medium',
+            summary:      data.summary,
+            bull:         data.bull,
+            bear:         data.bear,
+            verdictColor: '',  // driven by VERDICT_CONFIG
+          };
+          aiCache.set(company.symbol, upgraded);
+          setAiInsight(upgraded);
+        }
+      })
+      .catch(() => {
+        // Silent fallback — rule-based stays visible, no error shown
+      })
+      .finally(() => setAiLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company.symbol]);
+
+  // Show AI insight if ready, otherwise show rule-based instantly
+  const insight = aiInsight ?? ruleInsight;
+  const isAI    = !!aiInsight;
+  const cfg     = VERDICT_CONFIG[insight.verdict] ?? VERDICT_CONFIG['Hold'];
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3">
@@ -40,8 +92,26 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-primary leading-none">AI Analysis</h3>
-          <p className="text-[10px] text-muted mt-0.5">Computed from live data · not financial advice</p>
+          <p className="text-[10px] text-muted mt-0.5">
+            {isAI
+              ? 'Gemini AI · not financial advice'
+              : aiLoading
+              ? 'Analysing with Gemini…'
+              : 'Rule-based analysis · not financial advice'}
+          </p>
         </div>
+
+        {/* Loading spinner while Gemini fetches */}
+        {aiLoading && (
+          <div className="w-3.5 h-3.5 border border-accent border-t-transparent rounded-full animate-spin flex-shrink-0" />
+        )}
+
+        {/* Gemini badge once loaded */}
+        {isAI && !aiLoading && (
+          <span className="text-[9px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono flex-shrink-0">
+            Gemini
+          </span>
+        )}
       </div>
 
       {/* Verdict pill */}
@@ -51,9 +121,11 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-xs font-bold ${cfg.color}`}>{cfg.label}</p>
-          <p className="text-[10px] text-muted/70 mt-0.5">Analyst rating: {insight.verdict}</p>
+          <p className="text-[10px] text-muted/70 mt-0.5">Rating: {insight.verdict}</p>
         </div>
-        <span className="text-[10px] text-muted/50 font-mono flex-shrink-0">{insight.confidence}</span>
+        <span className="text-[10px] text-muted/50 font-mono flex-shrink-0">
+          {insight.confidence}
+        </span>
       </div>
 
       {/* Summary */}
