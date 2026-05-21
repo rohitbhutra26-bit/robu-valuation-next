@@ -19,6 +19,7 @@ module.exports = {
         primary:  'rgb(var(--color-primary) / <alpha-value>)',
         muted:    'rgb(var(--color-muted) / <alpha-value>)',
         accent:   'rgb(var(--color-accent) / <alpha-value>)',
+        warning:  'rgb(var(--color-warning) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Space Grotesk', 'sans-serif'],

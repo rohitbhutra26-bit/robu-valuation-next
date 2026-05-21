@@ -423,8 +423,8 @@ export default function Home() {
                         <div className="bg-card border border-border rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-1.5">
                             <SlidersHorizontal size={14} className="text-accent flex-shrink-0" />
-                            <h3 className="text-sm font-semibold text-primary">Your Assumptions — adjust to see your target price</h3>
-                            <span className="ml-auto text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
+                            <h3 className="text-sm font-semibold text-primary min-w-0">Your Assumptions — adjust to see your target price</h3>
+                            <span className="ml-auto flex-shrink-0 text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded max-w-[180px] truncate" title={`${sectorProfile.sectorLabel} — ${sectorProfile.exitMultipleLabel}`}>
                               {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
                             </span>
                           </div>

@@ -62,10 +62,10 @@ function StatPill({ label, value, color, sub }: {
   label: string; value: string; color: string; sub?: string;
 }) {
   return (
-    <div className="bg-border/20 rounded-lg p-3 text-center">
-      <p className="text-[11px] text-muted mb-1">{label}</p>
-      <p className={`text-base font-bold font-mono ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-muted mt-0.5">{sub}</p>}
+    <div className="bg-border/20 rounded-lg p-3 text-center min-w-0 overflow-hidden">
+      <p className="text-[11px] text-muted mb-1 truncate">{label}</p>
+      <p className={`text-base font-bold font-mono ${color} truncate`}>{value}</p>
+      {sub && <p className="text-[11px] text-muted mt-0.5 truncate">{sub}</p>}
     </div>
   );
 }
@@ -183,7 +183,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono cursor-default ${
               quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
               quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
-              quality.score >= 40 ? 'text-yellow-300 bg-yellow-300/10 border-yellow-300/25' :
+              quality.score >= 40 ? 'text-warning bg-warning/10 border-warning/25' :
                                     'text-loss bg-loss/10 border-loss/25'
             }`}
           >
@@ -301,13 +301,13 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
           <p className={`text-2xl font-bold font-mono ${
             quality.score >= 80 ? 'text-gain' :
             quality.score >= 60 ? 'text-gold' :
-            quality.score >= 40 ? 'text-yellow-300' : 'text-loss'
+            quality.score >= 40 ? 'text-warning' : 'text-loss'
           }`}>{quality.score}</p>
           <p className="text-[10px] text-muted">/ 100</p>
           <p className={`text-[10px] font-bold mt-0.5 ${
             quality.score >= 80 ? 'text-gain' :
             quality.score >= 60 ? 'text-gold' :
-            quality.score >= 40 ? 'text-yellow-300' : 'text-loss'
+            quality.score >= 40 ? 'text-warning' : 'text-loss'
           }`}>{quality.label}</p>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
       )}
 
       {/* ── Key signals ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatPill
           label="Margin of Safety"
           value={`${mos.toFixed(1)}%`}

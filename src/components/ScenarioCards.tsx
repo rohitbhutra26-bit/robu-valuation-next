@@ -115,7 +115,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${
               quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
               quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
-              quality.score >= 40 ? 'text-yellow-300 bg-yellow-300/10 border-yellow-300/25' :
+              quality.score >= 40 ? 'text-warning bg-warning/10 border-warning/25' :
                                     'text-loss bg-loss/10 border-loss/25'
             }`}>
               {quality.label} · {quality.score}/100
@@ -137,13 +137,13 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
       </div>
 
       {/* ── Three scenario cards ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {scenarios.map((s) => {
           const isPositive = s.upside >= 0;
           return (
             <div
               key={s.name}
-              className="rounded-xl p-4 border"
+              className="rounded-xl p-4 border min-w-0 overflow-hidden"
               style={{ backgroundColor: `${s.color}08`, borderColor: `${s.color}30` }}
             >
               {/* Name + probability + upside */}

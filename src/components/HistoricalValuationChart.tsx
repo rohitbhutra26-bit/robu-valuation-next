@@ -87,26 +87,32 @@ function LineChart({
   const zone   = pctile >= 75 ? { label: 'Expensive',    cls: 'text-loss'  }
                : pctile >= 50 ? { label: 'Above median', cls: 'text-gold'  }
                : pctile >= 25 ? { label: 'Below median', cls: 'text-gain'  }
-               :                { label: 'Historically cheap', cls: 'text-gain' };
+               :                { label: 'Cheap',        cls: 'text-gain'  };
 
   // X-axis tick labels (first, mid, last)
   const tickIdxs = [0, Math.floor(n / 2), n - 1];
 
   return (
     <div>
-      {/* Stats row */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3 text-[11px] text-muted font-mono">
-          <span>Min <span className="text-primary">{stats.min.toFixed(1)}x</span></span>
-          <span>Median <span className="text-primary">{stats.median.toFixed(1)}x</span></span>
-          <span>Max <span className="text-primary">{stats.max.toFixed(1)}x</span></span>
-        </div>
-        <div className="text-right">
-          <span className="text-[11px] text-muted">Current </span>
-          <span className={`text-[11px] font-bold font-mono ${zone.cls}`}>
-            {currentVal > 0 ? `${currentVal.toFixed(1)}x` : '—'}
-          </span>
-          <span className={`text-[10px] ml-1.5 ${zone.cls}`}>({zone.label})</span>
+      {/* Stats row — stacked to avoid overflow in 280px sidebar */}
+      <div className="mb-2 space-y-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[11px] text-muted font-mono">
+            <span>Min <span className="text-primary">{stats.min.toFixed(1)}x</span></span>
+            <span>Med <span className="text-primary">{stats.median.toFixed(1)}x</span></span>
+            <span>Max <span className="text-primary">{stats.max.toFixed(1)}x</span></span>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <span className="text-[11px] text-muted">Now</span>
+            <span className={`text-[11px] font-bold font-mono ${zone.cls}`}>
+              {currentVal > 0 ? `${currentVal.toFixed(1)}x` : '—'}
+            </span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${
+              zone.cls === 'text-gain' ? 'bg-gain/10 border-gain/30 text-gain'
+              : zone.cls === 'text-loss' ? 'bg-loss/10 border-loss/30 text-loss'
+              : 'bg-gold/10 border-gold/30 text-gold'
+            }`}>{zone.label}</span>
+          </div>
         </div>
       </div>
 
@@ -134,9 +140,9 @@ function LineChart({
 
         {/* Min/Max lines */}
         <line x1={PAD.l} y1={yMin_px} x2={PAD.l + innerW} y2={yMin_px}
-          stroke="#0f2d18" strokeWidth="0.6" strokeDasharray="2 4" />
+          stroke="rgb(var(--color-border))" strokeWidth="0.8" strokeDasharray="2 4" />
         <line x1={PAD.l} y1={yMax_px} x2={PAD.l + innerW} y2={yMax_px}
-          stroke="#0f2d18" strokeWidth="0.6" strokeDasharray="2 4" />
+          stroke="rgb(var(--color-border))" strokeWidth="0.8" strokeDasharray="2 4" />
 
         {/* Y-axis labels */}
         {[stats.min, stats.median, stats.max].map((v, i) => (
@@ -146,7 +152,7 @@ function LineChart({
             y={yOf(v) + 3}
             textAnchor="end"
             fontSize="8"
-            fill="#93b4d4"
+            fill="rgb(var(--color-muted))"
             fontFamily="JetBrains Mono, monospace"
           >
             {v.toFixed(0)}
@@ -175,7 +181,7 @@ function LineChart({
             y={H - 4}
             textAnchor="middle"
             fontSize="8"
-            fill="#93b4d4"
+            fill="rgb(var(--color-muted))"
             fontFamily="JetBrains Mono, monospace"
           >
             {validPairs[idx]?.d.slice(0, 7) || ''}
@@ -186,9 +192,9 @@ function LineChart({
       {/* Percentile bar */}
       <div className="mt-2">
         <div className="flex justify-between text-[10px] text-muted mb-0.5">
-          <span>Historically cheap</span>
-          <span>{pctile}th percentile</span>
-          <span>Historically expensive</span>
+          <span className="text-gain/70">◀ Cheap</span>
+          <span>{pctile}th %ile</span>
+          <span className="text-loss/70">Pricey ▶</span>
         </div>
         <div className="h-1.5 bg-border rounded-full overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-r from-gain via-gold to-loss opacity-40 rounded-full" />

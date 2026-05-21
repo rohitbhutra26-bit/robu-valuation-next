@@ -19,11 +19,11 @@ export default function DataQualityBanner({ quality }: Props) {
 
   const textColor =
     quality.level === 'High'   ? 'text-gain' :
-    quality.level === 'Medium' ? 'text-yellow-300' : 'text-loss';
+    quality.level === 'Medium' ? 'text-warning' : 'text-loss';
 
   const bgColor =
     quality.level === 'High'   ? 'bg-gain/5' :
-    quality.level === 'Medium' ? 'bg-yellow-300/5' : 'bg-loss/5';
+    quality.level === 'Medium' ? 'bg-warning/5' : 'bg-loss/5';
 
   const StatusIcon =
     quality.level === 'High'   ? CheckCircle2 :
@@ -76,7 +76,7 @@ export default function DataQualityBanner({ quality }: Props) {
             <div key={i} className="flex gap-2">
               {issue.severity === 'error'
                 ? <XCircle size={12} className="text-loss flex-shrink-0 mt-0.5" />
-                : <AlertTriangle size={12} className="text-yellow-300 flex-shrink-0 mt-0.5" />}
+                : <AlertTriangle size={12} className="text-warning flex-shrink-0 mt-0.5" />}
               <div>
                 <p className="text-[11px] text-primary font-medium leading-tight">{issue.message}</p>
                 <p className="text-[10px] text-muted leading-relaxed mt-0.5">{issue.detail}</p>

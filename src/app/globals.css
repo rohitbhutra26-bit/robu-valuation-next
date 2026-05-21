@@ -13,6 +13,7 @@
   --color-primary:  240 246 255;   /* #f0f6ff near-white text */
   --color-muted:    147 180 212;   /* #93b4d4 secondary text */
   --color-accent:   125 211 252;   /* #7dd3fc sky blue highlights */
+  --color-warning:  253 224 71;    /* #fde047 yellow-300 — caution on dark */
 }
 
 [data-theme="light"] {
@@ -25,6 +26,7 @@
   --color-primary:  15 23 42;      /* #0f172a near-black text */
   --color-muted:    71 85 105;     /* #475569 medium slate */
   --color-accent:   59 130 246;    /* #3b82f6 blue */
+  --color-warning:  180 83 9;      /* #b45309 amber-700 — caution on light, WCAG AA */
 }
 
 * {
