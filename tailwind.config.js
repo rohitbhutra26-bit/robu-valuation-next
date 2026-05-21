@@ -7,16 +7,18 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // CSS variable approach — every color works with Tailwind opacity modifiers
+      // e.g. bg-card/50, text-muted/60, border-border/30 all work correctly
       colors: {
-        terminal: '#07111f',   // deep navy page bg
-        card:     '#0e1e32',   // card surface — slightly lighter for contrast
-        border:   '#1f3558',   // visible navy border
-        gold:     '#60a5fa',   // blue accent — bright enough to read
-        gain:     '#4ade80',   // green for profit (universal)
-        loss:     '#f87171',   // red for loss (universal)
-        primary:  '#f0f6ff',   // near-white — very high contrast
-        muted:    '#93b4d4',   // light blue-grey — passes WCAG AA
-        accent:   '#7dd3fc',   // sky blue for badges/highlights
+        terminal: 'rgb(var(--color-terminal) / <alpha-value>)',
+        card:     'rgb(var(--color-card) / <alpha-value>)',
+        border:   'rgb(var(--color-border) / <alpha-value>)',
+        gold:     'rgb(var(--color-gold) / <alpha-value>)',
+        gain:     'rgb(var(--color-gain) / <alpha-value>)',
+        loss:     'rgb(var(--color-loss) / <alpha-value>)',
+        primary:  'rgb(var(--color-primary) / <alpha-value>)',
+        muted:    'rgb(var(--color-muted) / <alpha-value>)',
+        accent:   'rgb(var(--color-accent) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Space Grotesk', 'sans-serif'],

@@ -5,6 +5,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users, AlertTriangle, Pencil,
 } from '@/lib/icons';
+import ThemeToggle from './ThemeToggle';
 import { getSectorProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
@@ -147,6 +148,7 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
             <span>Live</span>
           </div>
         )}
+        <ThemeToggle />
       </div>
     </header>
   );

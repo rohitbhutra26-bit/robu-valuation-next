@@ -67,4 +67,8 @@ export {
   ThumbsUp,
   Bookmark,
 
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  Sun,
+  Moon,
+
 } from 'lucide-react';

@@ -2,16 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme tokens — RGB triplets so Tailwind opacity modifiers (bg-card/50) work ── */
 :root {
-  --color-terminal: #07111f;
-  --color-card:     #0e1e32;
-  --color-border:   #1f3558;
-  --color-gold:     #60a5fa;
-  --color-gain:     #4ade80;
-  --color-loss:     #f87171;
-  --color-primary:  #f0f6ff;
-  --color-muted:    #93b4d4;
-  --color-accent:   #7dd3fc;
+  --color-terminal: 7 17 31;       /* #07111f deep navy bg */
+  --color-card:     14 30 50;      /* #0e1e32 card surface */
+  --color-border:   31 53 88;      /* #1f3558 visible border */
+  --color-gold:     96 165 250;    /* #60a5fa blue accent */
+  --color-gain:     74 222 128;    /* #4ade80 green profit */
+  --color-loss:     248 113 113;   /* #f87171 red loss */
+  --color-primary:  240 246 255;   /* #f0f6ff near-white text */
+  --color-muted:    147 180 212;   /* #93b4d4 secondary text */
+  --color-accent:   125 211 252;   /* #7dd3fc sky blue highlights */
+}
+
+[data-theme="light"] {
+  --color-terminal: 241 245 249;   /* #f1f5f9 soft slate bg */
+  --color-card:     255 255 255;   /* #ffffff white cards */
+  --color-border:   203 213 225;   /* #cbd5e1 light border */
+  --color-gold:     37 99 235;     /* #2563eb rich blue accent */
+  --color-gain:     22 163 74;     /* #16a34a dark green */
+  --color-loss:     220 38 38;     /* #dc2626 dark red */
+  --color-primary:  15 23 42;      /* #0f172a near-black text */
+  --color-muted:    71 85 105;     /* #475569 medium slate */
+  --color-accent:   59 130 246;    /* #3b82f6 blue */
 }
 
 * {
@@ -20,49 +33,44 @@
   padding: 0;
 }
 
+html {
+  font-size: 15px;
+  scroll-behavior: smooth;
+}
+
 html,
 body {
-  height: 100%;
-  background-color: #07111f;
-  color: #f0f6ff;
+  background-color: rgb(var(--color-terminal));
+  color: rgb(var(--color-primary));
   font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
+  line-height: 1.6;
   overscroll-behavior: none;
 }
 
-/* Remove 300ms tap delay on all interactive elements (Android fix) */
+/* Remove 300ms tap delay */
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }
 
-/* Prevent text selection flash on tap on mobile */
 button {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* ── Custom scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #1f3558;
+  background: rgb(var(--color-border));
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #2e4d7a;
+  background: rgb(var(--color-border) / 0.75);
 }
 
-/* Range input styling */
+/* ── Range inputs ─────────────────────────────────────────────────────────── */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -72,7 +80,7 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  background: #1f3558;
+  background: rgb(var(--color-border));
   height: 4px;
   border-radius: 2px;
 }
@@ -81,40 +89,40 @@ input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   margin-top: -6px;
-  background-color: #3b82f6;
+  background-color: rgb(var(--color-gold));
   height: 16px;
   width: 16px;
   border-radius: 50%;
 }
 
-input[type='range']:focus {
-  outline: none;
-}
+input[type='range']:focus { outline: none; }
+input[type='range']:focus::-webkit-slider-thumb { box-shadow: none; }
 
-input[type='range']:focus::-webkit-slider-thumb {
-  box-shadow: none;
-}
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; }
 
-/* Table styles */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
+/* ── Accessibility: nudge the very small label text up ───────────────────── */
+/* 93 occurrences of text-[9/10/11px] across components — boost them globally */
+.text-\[9px\]  { font-size: 11px !important; }
+.text-\[10px\] { font-size: 11px !important; }
+.text-\[11px\] { font-size: 12px !important; }
 
-/* Animations */
+/* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.fade-in { animation: fadeIn 0.2s ease-out; }
 
-.fade-in {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* Blue gradient text */
+/* ── Gradient accent text ─────────────────────────────────────────────────── */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: linear-gradient(135deg, rgb(var(--color-gold)), rgb(var(--color-accent)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── Light mode shadow — cards need depth on white bg ────────────────────── */
+[data-theme="light"] .shadow-card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
 }

@@ -21,6 +21,7 @@ import ForecastChart from '@/components/ForecastChart';
 import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon } from '@/lib/icons';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
@@ -257,7 +258,9 @@ export default function Home() {
             </div>
           )}
 
-          <div className="w-[80px]" />
+          <div className="w-[80px] flex justify-end">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

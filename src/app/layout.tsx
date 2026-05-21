@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     maximumScale: 1,
     viewportFit: 'cover',
   },
-  themeColor: '#111111',
+  themeColor: '#07111f',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -23,14 +23,28 @@ export const metadata: Metadata = {
   },
 };
 
+// Inline script runs synchronously before first paint — prevents flash of wrong theme
+const antiFlashScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('robu-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <head>
+        {/* Anti-flash: set theme before paint so there's no white flicker */}
+        <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
