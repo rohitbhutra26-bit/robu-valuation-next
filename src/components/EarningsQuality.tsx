@@ -98,16 +98,17 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
       {/* CAGR metrics */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
-          { label: `Revenue CAGR (${years}Y)`, value: revCAGR, g: revGrade, color: 'bg-accent', max: 40 },
-          { label: `PAT CAGR (${years}Y)`, value: patCAGR, g: patGrade, color: 'bg-gain', max: 50 },
-          { label: `EPS CAGR (${years}Y)`, value: epsCAGR, g: epsGrade, color: 'bg-gold', max: 40 },
-        ].map(({ label, value, g, color }) => (
-          <div key={label} className="bg-border/20 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-muted">{label}</span>
+          { label: 'Revenue', sublabel: `${years}Y CAGR`, value: revCAGR, g: revGrade, color: 'bg-accent', max: 40 },
+          { label: 'PAT', sublabel: `${years}Y CAGR`, value: patCAGR, g: patGrade, color: 'bg-gain', max: 50 },
+          { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade, color: 'bg-gold', max: 40 },
+        ].map(({ label, sublabel, value, g, color }) => (
+          <div key={label} className="bg-border/20 rounded-lg p-3 min-w-0">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-xs font-semibold text-primary truncate">{label}</span>
               <GradeChip grade={g} />
             </div>
-            <p className={`text-base font-bold font-mono ${value >= 12 ? 'text-gain' : value >= 5 ? 'text-gold' : 'text-loss'}`}>
+            <span className="text-[11px] text-muted">{sublabel}</span>
+            <p className={`text-base font-bold font-mono mt-1 ${value >= 12 ? 'text-gain' : value >= 5 ? 'text-gold' : 'text-loss'}`}>
               {value >= 0 ? '+' : ''}{value.toFixed(1)}%
             </p>
             <MiniBar value={value} max={40} color={color} />
@@ -145,12 +146,12 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
           { label: 'Margin Consistency', value: marginStdDev, suffix: '% σ', g: consistencyGrade, threshold: 'Low σ = stable', invert: true },
           { label: 'Avg Net Margin', value: avgMargin, suffix: '%', g: grade(avgMargin, [12, 6, 2]), threshold: '12% = A' },
         ].map(({ label, value, suffix, g, threshold }) => (
-          <div key={label} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
-            <div>
-              <p className="text-xs text-muted">{label}</p>
-              <p className="text-xs text-muted">{threshold}</p>
+          <div key={label} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/50 last:border-0">
+            <div className="min-w-0">
+              <p className="text-xs text-muted truncate">{label}</p>
+              <p className="text-[11px] text-muted/60">{threshold}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-sm font-mono text-primary">{value.toFixed(1)}{suffix}</span>
               <GradeChip grade={g} />
             </div>

@@ -94,26 +94,25 @@ function LineChart({
 
   return (
     <div>
-      {/* Stats row — stacked to avoid overflow in 280px sidebar */}
-      <div className="mb-2 space-y-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[11px] text-muted font-mono">
-            <span>Min <span className="text-primary">{stats.min.toFixed(1)}x</span></span>
-            <span>Med <span className="text-primary">{stats.median.toFixed(1)}x</span></span>
-            <span>Max <span className="text-primary">{stats.max.toFixed(1)}x</span></span>
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <span className="text-[11px] text-muted">Now</span>
-            <span className={`text-[11px] font-bold font-mono ${zone.cls}`}>
-              {currentVal > 0 ? `${currentVal.toFixed(1)}x` : '—'}
-            </span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${
-              zone.cls === 'text-gain' ? 'bg-gain/10 border-gain/30 text-gain'
-              : zone.cls === 'text-loss' ? 'bg-loss/10 border-loss/30 text-loss'
-              : 'bg-gold/10 border-gold/30 text-gold'
-            }`}>{zone.label}</span>
-          </div>
-        </div>
+      {/* Row 1: Range stats */}
+      <div className="flex items-center gap-3 text-[11px] text-muted font-mono mb-1">
+        <span>Min <span className="text-primary font-semibold">{stats.min.toFixed(1)}x</span></span>
+        <span className="text-border/60">·</span>
+        <span>Median <span className="text-primary font-semibold">{stats.median.toFixed(1)}x</span></span>
+        <span className="text-border/60">·</span>
+        <span>Max <span className="text-primary font-semibold">{stats.max.toFixed(1)}x</span></span>
+      </div>
+      {/* Row 2: Current value — own line so it never overflows */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[11px] text-muted">Current</span>
+        <span className={`text-sm font-bold font-mono ${zone.cls}`}>
+          {currentVal > 0 ? `${currentVal.toFixed(1)}x` : '—'}
+        </span>
+        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+          zone.cls === 'text-gain' ? 'bg-gain/10 border-gain/30 text-gain'
+          : zone.cls === 'text-loss' ? 'bg-loss/10 border-loss/30 text-loss'
+          : 'bg-gold/10 border-gold/30 text-gold'
+        }`}>{zone.label}</span>
       </div>
 
       {/* SVG chart */}
