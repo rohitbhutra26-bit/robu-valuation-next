@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import { computeTargetPath, Feasibility, PathRequirement } from '@/lib/targetPathEngine';
 import { Clock } from '@/lib/icons';
 
@@ -110,7 +110,7 @@ function VerdictBanner({ feasibility, summary }: { feasibility: Feasibility; sum
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function WhatMustHappen({ company, financials, assumptions }: Props) {
-  const profile = getSectorProfile(company.sector);
+  const profile = getCompanyProfile(company);
 
   const [targetInput, setTargetInput] = useState('');
   const [targetPrice, setTargetPrice] = useState<number | null>(null);

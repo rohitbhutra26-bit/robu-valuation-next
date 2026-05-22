@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 
 interface Props {
@@ -16,7 +16,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   const fairValue = useMemo(() => {
     if (!financials.length || !company.currentPrice) return 0;
     try {
-      const profile = getSectorProfile(company.sector);
+      const profile = getCompanyProfile(company);
       const result = runPrimaryModel(
         profile.model,
         financials,

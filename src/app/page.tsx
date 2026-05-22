@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
 import DataQualityBanner from '@/components/DataQualityBanner';
 import CompanySearch from '@/components/CompanySearch';
@@ -22,7 +22,7 @@ import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon } from '@/lib/icons';
+import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw } from '@/lib/icons';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -58,6 +58,15 @@ export default function Home() {
     exitMultiple: 25,
     years: 5,
   });
+  // Store the suggested defaults so Reset always goes back to what the algorithm picked
+  const defaultAssumptionsRef = useRef<ValuationAssumptions>({
+    revenueGrowthRate: 15,
+    netMarginAssumption: 20,
+    exitPE: 25,
+    exitMultiple: 25,
+    years: 5,
+  });
+  const defaultAutoFillLabelRef = useRef<string | null>(null);
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
   // Read directly from window.location — no useSearchParams/Suspense needed.
@@ -150,7 +159,7 @@ export default function Home() {
   //   5. Sets exit multiple from sector-appropriate default
   // → User sees pre-filled, intelligent numbers on load. Zero manual input needed.
   function _applyAssumptions(companyData: Company, fins: FinancialYear[]) {
-    const sectorProfile = getSectorProfile(companyData.sector);
+    const sectorProfile = getCompanyProfile(companyData);
     const industryCagr  = getIndustryCagr(companyData.sector);
 
     // Run data validator first — winsorise outlier years before feeding to model
@@ -169,20 +178,39 @@ export default function Home() {
       5,
     );
 
-    setAssumptions({
+    const freshAssumptions: ValuationAssumptions = {
       revenueGrowthRate:   suggested.revenueGrowthRate,
       netMarginAssumption: suggested.netMarginAssumption,
       exitPE:  Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
       exitMultiple: suggested.exitMultiple,
       years: 5,
-    });
+    };
+    setAssumptions(freshAssumptions);
+    // Save as the canonical defaults for this company — Reset will come back here
+    defaultAssumptionsRef.current = freshAssumptions;
 
     const sourceLabel =
       suggested.source === 'analyst_guidance' ? '⚡ Analyst consensus' :
       suggested.source === 'historical_cagr'  ? '📈 Historical CAGR' :
                                                 '🏭 Sector baseline';
-    setAutoFillLabel(`${sourceLabel} · ${suggested.confidence} confidence · ${suggested.rationale}`);
+    const label = `${sourceLabel} · ${suggested.confidence} confidence · ${suggested.rationale}`;
+    setAutoFillLabel(label);
+    defaultAutoFillLabelRef.current = label;
   }
+
+  // ── Reset assumptions back to what the algorithm suggested on load ──────────
+  function resetAssumptions() {
+    setAssumptions({ ...defaultAssumptionsRef.current });
+    setAutoFillLabel(defaultAutoFillLabelRef.current);
+  }
+
+  // True if user has changed any value from the algorithm's suggestion
+  const hasChanges = company && (
+    assumptions.revenueGrowthRate   !== defaultAssumptionsRef.current.revenueGrowthRate   ||
+    assumptions.netMarginAssumption !== defaultAssumptionsRef.current.netMarginAssumption ||
+    assumptions.exitMultiple        !== defaultAssumptionsRef.current.exitMultiple         ||
+    assumptions.years               !== defaultAssumptionsRef.current.years
+  );
 
   // ── Prefetch on hover — fires 200ms after hover to avoid noise ────────────
   const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -236,6 +264,8 @@ export default function Home() {
       setAssumptions={setAssumptions}
       onSelect={handleSelect}
       onRetry={() => loadCompany(selectedSymbol)}
+      onReset={resetAssumptions}
+      hasChanges={!!hasChanges}
     />
 
     {/* ═══════════════════ DESKTOP ══════════════════ */}
@@ -418,15 +448,27 @@ export default function Home() {
 
                     {/* Assumptions panel */}
                     {(() => {
-                      const sectorProfile = getSectorProfile(company.sector);
+                      const sectorProfile = getCompanyProfile(company);
                       return (
                         <div className="bg-card border border-border rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-1.5">
                             <SlidersHorizontal size={14} className="text-accent flex-shrink-0" />
                             <h3 className="text-sm font-semibold text-primary min-w-0">Your Assumptions — adjust to see your target price</h3>
-                            <span className="ml-auto flex-shrink-0 text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded max-w-[180px] truncate" title={`${sectorProfile.sectorLabel} — ${sectorProfile.exitMultipleLabel}`}>
-                              {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
-                            </span>
+                            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                              {hasChanges && (
+                                <button
+                                  onClick={resetAssumptions}
+                                  title="Reset to algorithm-suggested defaults"
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold text-loss border border-loss/30 bg-loss/5 hover:bg-loss/10 transition-all active:scale-95"
+                                >
+                                  <RotateCcw size={10} />
+                                  Reset
+                                </button>
+                              )}
+                              <span className="text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded max-w-[180px] truncate" title={`${sectorProfile.sectorLabel} — ${sectorProfile.exitMultipleLabel}`}>
+                                {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
+                              </span>
+                            </div>
                           </div>
                           {/* Auto-fill badge — shows where the numbers came from */}
                           {autoFillLabel && (

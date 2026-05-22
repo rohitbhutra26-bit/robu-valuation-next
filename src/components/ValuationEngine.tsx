@@ -1,7 +1,7 @@
 'use client';
 
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import {
   runPrimaryModel,
   peModel,
@@ -74,7 +74,7 @@ function StatPill({ label, value, color, sub }: {
 export default function ValuationEngine({ company, financials, assumptions }: ValuationEngineProps) {
   if (!financials.length) return null;
 
-  const profile = getSectorProfile(company.sector);
+  const profile = getCompanyProfile(company);
   const model   = profile.model;
 
   // ── Intelligence layer ────────────────────────────────────────────────────

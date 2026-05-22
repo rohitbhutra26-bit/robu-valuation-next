@@ -1,7 +1,7 @@
 'use client';
 
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 
 interface SensitivityMatrixProps {
@@ -25,7 +25,7 @@ export default function SensitivityMatrix({
 }: SensitivityMatrixProps) {
   if (!financials.length) return null;
 
-  const profile = getSectorProfile(company.sector);
+  const profile = getCompanyProfile(company);
   const g       = assumptions.revenueGrowthRate;
   const mult    = assumptions.exitMultiple;
   const margin  = assumptions.netMarginAssumption;

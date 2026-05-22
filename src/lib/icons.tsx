@@ -66,6 +66,7 @@ export {
   PauseCircle,
   ThumbsUp,
   Bookmark,
+  RotateCcw,
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   Sun,

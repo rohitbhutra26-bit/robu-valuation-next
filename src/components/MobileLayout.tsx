@@ -3,10 +3,10 @@
 import React, { useState, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
-  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users, AlertTriangle, Pencil,
+  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users, AlertTriangle, Pencil, RotateCcw,
 } from '@/lib/icons';
 import ThemeToggle from './ThemeToggle';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
 import ScenarioCards from './ScenarioCards';
@@ -32,6 +32,8 @@ interface Props {
   setAssumptions: React.Dispatch<React.SetStateAction<ValuationAssumptions>>;
   onSelect: (symbol: string) => void;
   onRetry: () => void;
+  onReset: () => void;
+  hasChanges: boolean;
 }
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
@@ -376,10 +378,11 @@ function MobileSlider({
   );
 }
 
-function ValuationView({ company, financials, assumptions, setAssumptions, isLoading, error, onRetry }: {
+function ValuationView({ company, financials, assumptions, setAssumptions, isLoading, error, onRetry, onReset, hasChanges }: {
   company: Company | null; financials: FinancialYear[]; assumptions: ValuationAssumptions;
   setAssumptions: React.Dispatch<React.SetStateAction<ValuationAssumptions>>;
   isLoading: boolean; error: string | null; onRetry: () => void;
+  onReset: () => void; hasChanges: boolean;
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
@@ -390,7 +393,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   );
 
   const latest = financials[financials.length - 1];
-  const sectorProfile = getSectorProfile(company.sector);
+  const sectorProfile = getCompanyProfile(company);
 
   return (
     <div className="px-4 pt-4 pb-32 space-y-4">
@@ -400,13 +403,24 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       {/* Assumptions */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
             <Pencil size={12} className="text-accent" />
           </div>
           <h3 className="text-sm font-semibold text-primary">Your assumptions</h3>
-          <span className="ml-auto text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
-            {sectorProfile.sectorLabel}
-          </span>
+          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+            {hasChanges && (
+              <button
+                onClick={onReset}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-loss border border-loss/30 bg-loss/5 active:scale-95 transition-all"
+              >
+                <RotateCcw size={11} />
+                Reset
+              </button>
+            )}
+            <span className="text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
+              {sectorProfile.sectorLabel}
+            </span>
+          </div>
         </div>
         <p className="text-xs text-muted -mt-3">Adjust these sliders to see how the target price changes</p>
         <MobileSlider
@@ -531,7 +545,7 @@ function FinancialsView({ financials, isLoading, error, onRetry }: {
 // ─── Main Mobile Layout ───────────────────────────────────────────────────────
 export default function MobileLayout({
   company, financials, selectedSymbol, isLoading, error,
-  assumptions, setAssumptions, onSelect, onRetry,
+  assumptions, setAssumptions, onSelect, onRetry, onReset, hasChanges,
 }: Props) {
   const [activeTab, setActiveTab] = useState<MobileTab>('search');
   // Persist tab component instances to prevent re-mount (avoids re-fetch on tab switch)
@@ -572,6 +586,7 @@ export default function MobileLayout({
               company={company} financials={financials}
               assumptions={assumptions} setAssumptions={setAssumptions}
               isLoading={isLoading} error={error} onRetry={onRetry}
+              onReset={onReset} hasChanges={hasChanges}
             />
           </div>
         )}

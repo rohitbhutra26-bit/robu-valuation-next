@@ -3,7 +3,7 @@
 import { ValuationAssumptions, ScenarioResult } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
-import { getSectorProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
 import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
 
 interface ScenarioCardsProps {
@@ -28,7 +28,7 @@ interface Scenario {
 export default function ScenarioCards({ financials, assumptions, currentPrice, company }: ScenarioCardsProps) {
   if (!financials.length) return null;
 
-  const profile  = getSectorProfile(company.sector);
+  const profile  = getCompanyProfile(company);
   const years    = assumptions.years;
 
   // ── Intelligence upgrade: company-specific volatility-driven deltas ───────

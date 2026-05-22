@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Activity } from '@/lib/icons';
 import { Company } from '@/lib/types';
-import { getSectorProfile } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 
 interface DataPoint {
   date: string;
@@ -214,7 +214,7 @@ export default function HistoricalValuationChart({ company }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [activeMetric, setActiveMetric] = useState<'pe' | 'pb'>('pe');
 
-  const profile = getSectorProfile(company.sector);
+  const profile = getCompanyProfile(company);
   // Banks/NBFCs → default to P/B; others → P/E
   const defaultMetric: 'pe' | 'pb' = profile.model === 'pb' ? 'pb' : 'pe';
 

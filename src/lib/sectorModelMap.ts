@@ -83,34 +83,66 @@ function pbProfile(label: string, defaultPB: number, max: number): SectorProfile
 // ─── The map ─────────────────────────────────────────────────────────────────
 
 export const SECTOR_PROFILES: Record<string, SectorProfile> = {
-  // ── PE-based ──
+  // ══ P/E-based ══════════════════════════════════════════════════════════════
+
+  // ── IT / Tech ──
   'Information Technology': peProfile('IT / Software', 28),
   'Technology':             peProfile('IT / Software', 28),
-  'FMCG':                   peProfile('FMCG', 52),
-  'Pharmaceuticals':        peProfile('Pharma', 32),
-  'Healthcare':             peProfile('Healthcare', 45),
-  'Automobiles':            peProfile('Auto', 22),
-  'Consumer':               peProfile('Consumer', 45),
-  'Consumer Discretionary': peProfile('Consumer Discretionary', 45),
-  'Cement':                 peProfile('Cement', 28),
-  'Telecom':                peProfile('Telecom', 35),
-  'Conglomerate':           peProfile('Conglomerate', 35),
 
-  // ── EV/EBITDA-based ──
+  // ── Consumer ──
+  'FMCG':                    peProfile('FMCG', 52),
+  'Consumer':                peProfile('Consumer', 40),
+  'Consumer Discretionary':  peProfile('Consumer', 35),
+  // Yahoo Finance aliases — many Indian stocks come tagged with these
+  'Consumer Cyclical':       peProfile('Consumer Cyclical', 25),   // autos, retail, discretionary
+  'Consumer Defensive':      peProfile('Consumer Defensive', 40),  // FMCG, staples
+
+  // ── Healthcare / Pharma ──
+  'Pharmaceuticals':         peProfile('Pharma', 32),
+  'Healthcare':              peProfile('Healthcare', 45),
+
+  // ── Auto ──
+  'Automobiles':             peProfile('Auto', 22),
+  'Auto':                    peProfile('Auto', 22),
+
+  // ── Industrials / Capital Goods ──
+  'Capital Goods':           peProfile('Capital Goods', 28),
+  'Industrials':             peProfile('Industrials', 26),         // Yahoo Finance alias
+  'Industrial Conglomerates':peProfile('Industrials', 26),
+  'Electrical Equipment':    peProfile('Electrical Equip', 30),
+  'Defence':                 peProfile('Defence', 35),
+
+  // ── Other P/E ──
+  'Cement':                  peProfile('Cement', 28),
+  'Chemicals':               peProfile('Chemicals', 30),
+  'Telecom':                 peProfile('Telecom', 35),
+  'Communication Services':  peProfile('Telecom / Media', 30),     // Yahoo Finance alias
+  'Conglomerate':            peProfile('Conglomerate', 35),
+  'Retail':                  peProfile('Retail', 35),
+  'Real Estate':             peProfile('Real Estate / REIT', 22),
+  'Textiles':                peProfile('Textiles', 18),
+  'Hospitality':             peProfile('Hospitality', 30),
+  'Aviation':                peProfile('Aviation', 15),
+  'Logistics':               peProfile('Logistics', 25),
+  'Media':                   peProfile('Media', 22),
+
+  // ══ EV/EBITDA-based ════════════════════════════════════════════════════════
   'Metals':           evEbitdaProfile('Metals & Mining',    6,  2, 15),
   'Metals & Mining':  evEbitdaProfile('Metals & Mining',    6,  2, 15),
   'Mining':           evEbitdaProfile('Mining',             7,  2, 15),
+  'Basic Materials':  evEbitdaProfile('Metals / Materials', 6,  2, 15),  // Yahoo Finance alias
   'Infrastructure':   evEbitdaProfile('Infrastructure',    14,  5, 30),
   'Energy':           evEbitdaProfile('Energy / O&G',       7,  3, 18),
   'Utilities':        evEbitdaProfile('Power / Utilities',  9,  4, 20),
+  'Oil & Gas':        evEbitdaProfile('Oil & Gas',          5,  2, 12),
 
-  // ── P/B-based ──
-  'Banking':           pbProfile('Banking',           2.2,  8),
-  'Financial Services':pbProfile('Financial Services', 4.5, 12),
-  'NBFC':              pbProfile('NBFC',               4.5, 12),
-  'Insurance':         pbProfile('Insurance',          8,   20),
+  // ══ P/B-based ══════════════════════════════════════════════════════════════
+  'Banking':            pbProfile('Banking',            2.2,  8),
+  'Financial Services': pbProfile('Financial Services',  4.5, 12),
+  'NBFC':               pbProfile('NBFC',                4.5, 12),
+  'Insurance':          pbProfile('Insurance',           8,   20),
 
-  // ── EV/Sales-based (high-growth tech) ──
+  // ══ EV/Sales-based (high-growth / early-stage) ═════════════════════════════
   'Electronics': {
     model: 'ev_sales',
     sectorLabel: 'Electronics / EMS',
@@ -129,6 +161,285 @@ export const DEFAULT_SECTOR_PROFILE: SectorProfile = peProfile('Broad Market', 2
 
 export function getSectorProfile(sector: string): SectorProfile {
   return SECTOR_PROFILES[sector] ?? DEFAULT_SECTOR_PROFILE;
+}
+
+// ─── Company-name overrides ──────────────────────────────────────────────────
+// Problem: Screener.in tags a huge variety of businesses as "Financial Services"
+// — banks, NBFCs, exchanges, AMCs, depositories, brokers all get the same sector.
+// Applying P/B to MCX (an exchange) is like valuing Google on book value — wrong.
+//
+// This function goes one level deeper: it inspects the company NAME to detect
+// the actual business type and returns the correct valuation profile.
+//
+// Rule priority:
+//   1. Name-based override (most specific)
+//   2. Sector-based lookup (SECTOR_PROFILES map)
+//   3. DEFAULT_SECTOR_PROFILE (Broad Market P/E)
+
+// Dedicated profiles for mis-classified "Financial Services" sub-types
+const EXCHANGE_PROFILE: SectorProfile = {
+  model: 'pe',
+  sectorLabel: 'Exchange / Capital Mkt',
+  exitMultipleLabel: 'Exit P/E',
+  defaultExitMultiple: 45,
+  exitMultipleMin: 20,
+  exitMultipleMax: 100,
+  exitMultipleStep: 1,
+  multipleRationale: 'Exchanges are fee-based platform businesses — valued on earnings (P/E), not book value',
+  bearGrowthDelta: -7,  bearMarginDelta: -3,  bearMultipleDelta: -10,
+  bullGrowthDelta:  8,  bullMarginDelta:  3,  bullMultipleDelta:  15,
+};
+
+const DEPOSITORY_PROFILE: SectorProfile = {
+  model: 'pe',
+  sectorLabel: 'Depository / Registrar',
+  exitMultipleLabel: 'Exit P/E',
+  defaultExitMultiple: 40,
+  exitMultipleMin: 20,
+  exitMultipleMax: 80,
+  exitMultipleStep: 1,
+  multipleRationale: 'Depositories are utility-like monopolies — priced on earnings quality, not book',
+  bearGrowthDelta: -5,  bearMarginDelta: -3,  bearMultipleDelta: -8,
+  bullGrowthDelta:  6,  bullMarginDelta:  3,  bullMultipleDelta: 10,
+};
+
+const AMC_PROFILE: SectorProfile = {
+  model: 'pe',
+  sectorLabel: 'Asset Management (AMC)',
+  exitMultipleLabel: 'Exit P/E',
+  defaultExitMultiple: 35,
+  exitMultipleMin: 15,
+  exitMultipleMax: 80,
+  exitMultipleStep: 1,
+  multipleRationale: 'AMCs earn management fees on AUM — valued on P/E, grows with market cap expansion',
+  bearGrowthDelta: -8,  bearMarginDelta: -3,  bearMultipleDelta: -8,
+  bullGrowthDelta:  9,  bullMarginDelta:  3,  bullMultipleDelta: 10,
+};
+
+const INSURANCE_PROFILE: SectorProfile = {
+  model: 'pe',
+  sectorLabel: 'Insurance',
+  exitMultipleLabel: 'Exit P/E',
+  defaultExitMultiple: 55,
+  exitMultipleMin: 20,
+  exitMultipleMax: 120,
+  exitMultipleStep: 1,
+  multipleRationale: 'Indian insurers trade on P/E (embedded value proxy) — HDFC Life / SBI Life trade at 55–80x',
+  bearGrowthDelta: -6,  bearMarginDelta: -2,  bearMultipleDelta: -10,
+  bullGrowthDelta:  8,  bullMarginDelta:  2,  bullMultipleDelta:  15,
+};
+
+const BROKER_PROFILE: SectorProfile = {
+  model: 'pe',
+  sectorLabel: 'Broking / Wealth Mgmt',
+  exitMultipleLabel: 'Exit P/E',
+  defaultExitMultiple: 28,
+  exitMultipleMin: 10,
+  exitMultipleMax: 60,
+  exitMultipleStep: 1,
+  multipleRationale: 'Fee-based brokers & wealth managers — earnings-driven, not book-value driven',
+  bearGrowthDelta: -8,  bearMarginDelta: -4,  bearMultipleDelta: -6,
+  bullGrowthDelta: 10,  bullMarginDelta:  4,  bullMultipleDelta:  8,
+};
+
+// Known symbols that are mis-classified by Screener.in (belt-and-suspenders)
+// Add any stock here where the name-based detection doesn't catch it.
+const SYMBOL_OVERRIDES: Record<string, SectorProfile> = {
+  // ── Exchanges ──
+  MCX:       EXCHANGE_PROFILE,
+  BSE:       EXCHANGE_PROFILE,
+  // ── Depositories / Registrars ──
+  CDSL:      DEPOSITORY_PROFILE,
+  CAMS:      DEPOSITORY_PROFILE,
+  KFINTECH:  DEPOSITORY_PROFILE,
+  // ── AMCs ──
+  HDFCAMC:   AMC_PROFILE,
+  NAM_INDIA:  AMC_PROFILE,   // Nippon AMC
+  ABSLAMC:   AMC_PROFILE,    // Aditya Birla Sun Life AMC
+  // ── Brokers & Wealth Managers ──
+  ANGELONE:  BROKER_PROFILE,  // Angel One (was Angel Broking — name change hides it)
+  MOFSL:     BROKER_PROFILE,  // Motilal Oswal Financial Services
+  IIFLSEC:   BROKER_PROFILE,  // IIFL Securities
+  '360ONE':  BROKER_PROFILE,  // 360 ONE WAM (wealth management)
+  NUVAMA:    BROKER_PROFILE,  // Nuvama Wealth
+
+  // ── Auto companies tagged as "Consumer Cyclical" by Yahoo Finance ──
+  // These stocks use Screener.in sector = "Consumer Cyclical" but should be Auto P/E
+  MM:          peProfile('Auto / Diversified', 22),   // Mahindra & Mahindra
+  MARUTI:      peProfile('Auto', 24),                 // Maruti Suzuki
+  TATAMOTORS:  peProfile('Auto', 14),                 // Tata Motors (lower PE — global, cyclical)
+  HEROMOTOCO:  peProfile('Auto', 20),                 // Hero MotoCorp
+  BAJAJ_AUTO:  peProfile('Auto', 25),                 // Bajaj Auto
+  EICHERMOT:   peProfile('Auto / Premium', 30),       // Eicher Motors (Royal Enfield premium)
+  TIINDIA:     peProfile('Auto Ancillaries', 28),     // Tube Investments
+  MOTHERSON:   peProfile('Auto Ancillaries', 18),     // Samvardhana Motherson
+  BOSCHLTD:    peProfile('Auto Ancillaries', 40),     // Bosch India
+  BHARATFORG:  peProfile('Auto Ancillaries', 28),     // Bharat Forge
+
+  // ── Retail / consumer stocks tagged as "Consumer Cyclical" ──
+  TITAN:       peProfile('Premium Consumer', 55),     // Titan (jewellery/watches — premium brand PE)
+  DMART:       peProfile('Retail', 80),               // Avenue Supermarts (DMart — extremely premium)
+  TRENT:       peProfile('Retail / Fashion', 120),    // Trent (high-growth premium)
+  JUBLFOOD:    peProfile('QSR / Food', 65),           // Jubilant FoodWorks (Dominos)
+  DEVYANI:     peProfile('QSR / Food', 75),           // Devyani Intl (KFC/Pizza Hut)
+};
+
+// ─── Industry → Profile map (Yahoo Finance "summaryProfile.industry" values) ──
+// Yahoo Finance industry is MORE granular than sector — check it first.
+// e.g. M&M sector="Consumer Cyclical" but industry="Auto Manufacturers" → correct!
+const INDUSTRY_PROFILES: Record<string, SectorProfile> = {
+  // ── Auto ──
+  'Auto Manufacturers':             peProfile('Auto', 22),
+  'Auto Parts':                     peProfile('Auto Ancillaries', 25),
+  'Recreational Vehicles':          peProfile('Auto', 20),
+  'Farm & Heavy Construction Machinery': peProfile('Industrials', 20),
+  'Trucks, Construction & Farm Machinery': peProfile('Industrials', 20),
+
+  // ── Exchanges & Capital Markets ──
+  'Financial Data & Stock Exchanges': EXCHANGE_PROFILE,
+  'Capital Markets':                  EXCHANGE_PROFILE,
+  'Securities & Data Services':       DEPOSITORY_PROFILE,
+
+  // ── Asset Management ──
+  'Asset Management':               AMC_PROFILE,
+  'Investment Management':          AMC_PROFILE,
+
+  // ── Insurance ──
+  'Insurance—Life':                 INSURANCE_PROFILE,
+  'Insurance—Diversified':          INSURANCE_PROFILE,
+  'Insurance—Property & Casualty':  INSURANCE_PROFILE,
+  'Insurance':                      INSURANCE_PROFILE,
+
+  // ── Banking ──
+  'Banks—Diversified':              pbProfile('Banking', 2.2, 8),
+  'Banks—Regional':                 pbProfile('Banking', 1.8, 6),
+
+  // ── IT / Software ──
+  'Software—Application':           peProfile('IT / Software', 28),
+  'Software—Infrastructure':        peProfile('IT / Software', 28),
+  'Information Technology Services':peProfile('IT / Software', 28),
+  'IT Services':                    peProfile('IT / Software', 28),
+
+  // ── Pharma / Healthcare ──
+  'Drug Manufacturers—General':     peProfile('Pharma', 30),
+  'Drug Manufacturers—Specialty & Generic': peProfile('Pharma', 28),
+  'Biotechnology':                  peProfile('Pharma / Biotech', 35),
+  'Medical Devices':                peProfile('Healthcare', 35),
+  'Medical Care Facilities':        peProfile('Healthcare', 40),
+  'Diagnostics & Research':         peProfile('Healthcare', 45),
+
+  // ── Consumer / Retail ──
+  'Specialty Retail':               peProfile('Retail', 35),
+  'Department Stores':              peProfile('Retail', 25),
+  'Grocery Stores':                 peProfile('Retail', 30),
+  'Restaurants':                    peProfile('QSR / Food', 60),
+  'Consumer Electronics':           peProfile('Consumer Electronics', 30),
+  'Household & Personal Products':  peProfile('FMCG', 50),
+  'Food Distribution':              peProfile('FMCG', 35),
+
+  // ── Industrials ──
+  'Electrical Equipment & Parts':   peProfile('Electrical Equip', 30),
+  'Industrial Distribution':        peProfile('Industrials', 25),
+  'Specialty Industrial Machinery': peProfile('Industrials', 28),
+  'Aerospace & Defense':            peProfile('Defence', 35),
+  'Engineering & Construction':     evEbitdaProfile('Infrastructure', 12, 4, 25),
+
+  // ── Materials / Metals ──
+  'Steel':                          evEbitdaProfile('Steel', 6, 2, 12),
+  'Aluminum':                       evEbitdaProfile('Metals', 5, 2, 10),
+  'Copper':                         evEbitdaProfile('Metals', 5, 2, 10),
+  'Other Industrial Metals & Mining': evEbitdaProfile('Metals', 6, 2, 12),
+  'Gold':                           evEbitdaProfile('Mining', 8, 3, 15),
+  'Specialty Chemicals':            peProfile('Specialty Chemicals', 32),
+  'Basic Materials':                evEbitdaProfile('Materials', 6, 2, 12),
+
+  // ── Energy ──
+  'Oil & Gas E&P':                  evEbitdaProfile('Oil & Gas', 5, 2, 10),
+  'Oil & Gas Integrated':           evEbitdaProfile('Oil & Gas', 5, 2, 10),
+  'Oil & Gas Refining & Marketing': evEbitdaProfile('Oil & Gas / Refining', 6, 2, 12),
+
+  // ── Telecom / Media ──
+  'Telecom Services':               peProfile('Telecom', 30),
+  'Broadcasting':                   peProfile('Media', 22),
+  'Entertainment':                  peProfile('Media', 25),
+
+  // ── Real Estate ──
+  'Real Estate—Diversified':        peProfile('Real Estate', 25),
+  'Real Estate—Development':        peProfile('Real Estate', 20),
+  'REIT—Diversified':               peProfile('REIT', 20),
+
+  // ── Utilities ──
+  'Utilities—Regulated Electric':   evEbitdaProfile('Power / Utilities', 9, 4, 18),
+  'Utilities—Renewable':            evEbitdaProfile('Power / Utilities', 12, 5, 22),
+};
+
+export function getCompanyProfile(company: {
+  name: string;
+  symbol: string;
+  sector: string;
+  industry?: string;
+}): SectorProfile {
+  const name = company.name.toLowerCase();
+  const sym  = company.symbol.toUpperCase().replace('.NS', '').replace('.BO', '');
+
+  // 1. Symbol-level hard overrides (known mis-classifications)
+  if (SYMBOL_OVERRIDES[sym]) return SYMBOL_OVERRIDES[sym];
+
+  // 2. Industry-level lookup — most precise signal available
+  //    Yahoo Finance "summaryProfile.industry" is far more granular than "sector"
+  //    e.g. M&M: sector="Consumer Cyclical" but industry="Auto Manufacturers" → correct model
+  if (company.industry && INDUSTRY_PROFILES[company.industry]) {
+    return INDUSTRY_PROFILES[company.industry];
+  }
+
+  // 2. Name-based detection — catches companies Screener.in dumps into "Financial Services"
+  //    that are NOT banks or lending NBFCs
+
+  // Exchanges: MCX, BSE, NSE — platform fee businesses, NOT lending
+  if (name.includes('exchange') || name.includes('commodity exchang')) {
+    return EXCHANGE_PROFILE;
+  }
+
+  // Depositories and registrars: CDSL, NSDL, CAMS, KFin
+  if (
+    name.includes('depositor') ||
+    name.includes('registrar') ||
+    name.includes('transfer agent') ||
+    name.includes('kfin')
+  ) {
+    return DEPOSITORY_PROFILE;
+  }
+
+  // Asset Management Companies
+  if (
+    name.includes('asset management') ||
+    name.includes('asset mgmt') ||
+    name.includes('mutual fund') ||
+    (name.includes(' amc') && !name.includes('bank'))
+  ) {
+    return AMC_PROFILE;
+  }
+
+  // Insurance companies (life, general, reinsurance)
+  if (
+    name.includes('insurance') ||
+    name.includes('reinsurance') ||
+    name.includes('life insurance') ||
+    name.includes('general insurance')
+  ) {
+    return INSURANCE_PROFILE;
+  }
+
+  // Broking, wealth management, financial advisory
+  if (
+    (name.includes('broking') || name.includes('brokerage') || name.includes('wealth')) &&
+    !name.includes('bank') && !name.includes('finance')
+  ) {
+    return BROKER_PROFILE;
+  }
+
+  // 3. Sector-based fallback (original logic)
+  return getSectorProfile(company.sector);
 }
 
 // ─── India sector long-run CAGR table ────────────────────────────────────────
