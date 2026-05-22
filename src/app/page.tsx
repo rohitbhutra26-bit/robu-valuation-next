@@ -445,14 +445,14 @@ export default function Home() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                             <SliderInput
                               label="Revenue Growth" value={assumptions.revenueGrowthRate}
-                              min={1} max={50} step={0.5} suffix="%" color="text-accent"
+                              min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
                               onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
                               hint={`Fades to ${getIndustryCagr(company.sector)}% India ${company.sector} CAGR`}
                             />
                             {sectorProfile.model !== 'pb' && (
                               <SliderInput
                                 label="Net Margin" value={assumptions.netMarginAssumption}
-                                min={1} max={50} step={0.5} suffix="%" color="text-gain"
+                                min={1} max={50} inputMax={100} step={0.5} suffix="%" color="text-gain"
                                 onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
                                 hint={`${latest?.year} actual: ${latest?.netMargin.toFixed(1)}%`}
                               />
@@ -460,7 +460,7 @@ export default function Home() {
                             {sectorProfile.model === 'pb' && (
                               <SliderInput
                                 label="Book Value Growth" value={assumptions.revenueGrowthRate}
-                                min={1} max={40} step={0.5} suffix="%" color="text-gain"
+                                min={1} max={40} inputMax={100} step={0.5} suffix="%" color="text-gain"
                                 onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
                                 hint={`ROE: ${company.roe.toFixed(1)}% → proxy for BV growth`}
                               />
@@ -470,6 +470,7 @@ export default function Home() {
                               value={assumptions.exitMultiple}
                               min={sectorProfile.exitMultipleMin}
                               max={sectorProfile.exitMultipleMax}
+                              inputMax={sectorProfile.model === 'pe' ? 3000 : sectorProfile.model === 'pb' ? 50 : sectorProfile.exitMultipleMax * 10}
                               step={sectorProfile.exitMultipleStep}
                               suffix="x"
                               color="text-gold"
@@ -650,13 +651,15 @@ const SLIDER_TOOLTIPS: Record<string, string> = {
 };
 
 function SliderInput({
-  label, value, min, max, step, suffix, color, onChange, hint,
+  label, value, min, max, inputMax, step, suffix, color, onChange, hint,
 }: {
-  label: string; value: number; min: number; max: number;
+  label: string; value: number; min: number; max: number; inputMax?: number;
   step: number; suffix: string; color: string;
   onChange: (v: number) => void; hint?: string;
 }) {
-  const pct = ((value - min) / (max - min)) * 100;
+  const effectiveInputMax = inputMax ?? max;
+  const pct = Math.min(((value - min) / (max - min)) * 100, 100);
+  const beyondSlider = value > max;
   const tooltip = SLIDER_TOOLTIPS[label];
   return (
     <div>
@@ -674,20 +677,25 @@ function SliderInput({
         </div>
         <div className="flex items-center gap-0.5 flex-shrink-0">
           <input
-            type="number" min={min} max={max} step={step} value={value}
-            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max)); }}
-            className={`w-14 text-right text-sm font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+            type="number" min={min} max={effectiveInputMax} step={step} value={value}
+            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), effectiveInputMax)); }}
+            className={`w-16 text-right text-sm font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           />
           <span className={`text-sm font-bold font-mono ${color}`}>{suffix}</span>
         </div>
       </div>
       <input
-        type="range" min={min} max={max} step={step} value={value}
+        type="range" min={min} max={max} step={step} value={Math.min(value, max)}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1f3558 ${pct}%, #1f3558 100%)` }}
+        style={{ background: beyondSlider
+          ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
+          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)` }}
       />
-      {hint && <p className="text-[10px] text-muted/70 mt-1 font-mono leading-snug">{hint}</p>}
+      {beyondSlider && (
+        <p className="text-[10px] text-gold font-mono mt-0.5">▲ beyond {max}{suffix} — custom value</p>
+      )}
+      {hint && <p className="text-[10px] text-muted/70 mt-0.5 font-mono leading-snug">{hint}</p>}
     </div>
   );
 }

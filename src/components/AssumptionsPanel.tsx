@@ -16,6 +16,7 @@ function SliderRow({
   value,
   min,
   max,
+  inputMax,
   step,
   onChange,
   suffix,
@@ -24,18 +25,22 @@ function SliderRow({
   label: string;
   value: number;
   min: number;
-  max: number;
+  max: number;          // slider visual range
+  inputMax?: number;    // max the user can TYPE (higher than slider max)
   step: number;
   onChange: (v: number) => void;
   suffix: string;
   color?: string;
 }) {
-  const pct = ((value - min) / (max - min)) * 100;
+  const effectiveInputMax = inputMax ?? max;
+  // Slider fill: clamp to 100% if value exceeds slider range
+  const pct = Math.min(((value - min) / (max - min)) * 100, 100);
+  const beyondSlider = value > max;
 
   function handleInput(raw: string) {
     const n = parseFloat(raw);
     if (!isNaN(n)) {
-      onChange(Math.min(Math.max(n, min), max));
+      onChange(Math.min(Math.max(n, min), effectiveInputMax));
     }
   }
 
@@ -43,16 +48,16 @@ function SliderRow({
     <div className="mb-4">
       <div className="flex justify-between items-center mb-1.5">
         <span className="text-xs text-muted">{label}</span>
-        {/* Editable number input */}
+        {/* Editable number input — no upper clamp beyond inputMax */}
         <div className="flex items-center gap-0.5">
           <input
             type="number"
             min={min}
-            max={max}
+            max={effectiveInputMax}
             step={step}
             value={value}
             onChange={(e) => handleInput(e.target.value)}
-            className={`w-16 text-right text-sm font-semibold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
+            className={`w-20 text-right text-sm font-semibold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
           />
           <span className={`text-sm font-semibold font-mono ${color}`}>{suffix}</span>
         </div>
@@ -63,16 +68,21 @@ function SliderRow({
           min={min}
           max={max}
           step={step}
-          value={value}
+          value={Math.min(value, max)}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full h-1 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1f3558 ${pct}%, #1f3558 100%)`,
+            background: beyondSlider
+              ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
+              : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)`,
           }}
         />
         <div className="flex justify-between mt-1">
           <span className="text-xs text-muted font-mono">{min}{suffix}</span>
-          <span className="text-xs text-muted font-mono">{max}{suffix}</span>
+          {beyondSlider
+            ? <span className="text-xs text-gold font-mono font-semibold">▲ beyond {max}{suffix}</span>
+            : <span className="text-xs text-muted font-mono">{max}{suffix}</span>
+          }
         </div>
       </div>
     </div>
@@ -104,6 +114,7 @@ export default function AssumptionsPanel({
         value={assumptions.revenueGrowthRate}
         min={1}
         max={50}
+        inputMax={200}
         step={0.5}
         onChange={(v) => update('revenueGrowthRate', v)}
         suffix="%"
@@ -115,6 +126,7 @@ export default function AssumptionsPanel({
         value={assumptions.netMarginAssumption}
         min={1}
         max={50}
+        inputMax={100}
         step={0.5}
         onChange={(v) => update('netMarginAssumption', v)}
         suffix="%"
@@ -126,6 +138,7 @@ export default function AssumptionsPanel({
         value={assumptions.exitPE}
         min={5}
         max={100}
+        inputMax={3000}
         step={1}
         onChange={(v) => update('exitPE', v)}
         suffix="x"

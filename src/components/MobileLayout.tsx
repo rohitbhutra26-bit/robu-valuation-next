@@ -38,13 +38,14 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="9" fill="#07111f"/>
-      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="#3b82f6" strokeWidth="1" strokeOpacity="0.35" fill="none"/>
-      <rect x="7" y="7" width="7" height="26" rx="2" fill="#3b82f6"/>
-      <rect x="7" y="7" width="21" height="7" rx="2" fill="#3b82f6"/>
-      <rect x="22" y="7" width="6" height="14" rx="2" fill="#3b82f6"/>
-      <rect x="7" y="14" width="21" height="7" rx="2" fill="#3b82f6"/>
-      <path d="M14 21 L21 21 L31 33 L24 33 Z" fill="#3b82f6"/>
+      {/* bg rect uses theme card color so it doesn't look like a black square in light mode */}
+      <rect width="40" height="40" rx="9" fill="rgb(var(--color-card))"/>
+      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="rgb(var(--color-gold))" strokeWidth="1" strokeOpacity="0.4" fill="none"/>
+      <rect x="7" y="7" width="7" height="26" rx="2" fill="rgb(var(--color-gold))"/>
+      <rect x="7" y="7" width="21" height="7" rx="2" fill="rgb(var(--color-gold))"/>
+      <rect x="22" y="7" width="6" height="14" rx="2" fill="rgb(var(--color-gold))"/>
+      <rect x="7" y="14" width="21" height="7" rx="2" fill="rgb(var(--color-gold))"/>
+      <path d="M14 21 L21 21 L31 33 L24 33 Z" fill="rgb(var(--color-gold))"/>
     </svg>
   );
 }
@@ -57,23 +58,24 @@ function fmt(n: number) {
 }
 
 // ─── Nav Icons ────────────────────────────────────────────────────────────────
+// Icons always use explicit colors — never inherit from a potentially low-opacity parent
 function IconSearch({ on }: { on: boolean }) {
-  return <Search size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <Search size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconChart({ on }: { on: boolean }) {
-  return <TrendingUp size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <TrendingUp size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconSliders({ on }: { on: boolean }) {
-  return <SlidersHorizontal size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <SlidersHorizontal size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconAI({ on }: { on: boolean }) {
-  return <Sparkles size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <Sparkles size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconTable({ on }: { on: boolean }) {
-  return <Table2 size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <Table2 size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 function IconPeers({ on }: { on: boolean }) {
-  return <Users size={20} className={on ? 'text-gold' : 'text-current'} strokeWidth={on ? 2.2 : 1.8} />;
+  return <Users size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
 }
 
 // ─── Bottom Nav ───────────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ function BottomNav({
               key={id}
               onClick={() => !disabled && onChange(id)}
               className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-w-0
-                ${isOn ? 'text-gold' : disabled ? 'text-muted/25' : 'text-muted hover:text-primary/70'}`}
+                ${isOn ? 'text-gold' : disabled ? 'opacity-30 cursor-not-allowed' : 'hover:opacity-80'}`}
             >
               <Icon on={isOn} />
               <span className="text-[9px] font-medium leading-none truncate">{label}</span>
@@ -143,7 +145,7 @@ function MobileHeader({ company, activeTab }: { company: Company | null; activeT
           </span>
         )}
         {showStock && (
-          <div className="flex items-center gap-1 text-[10px] text-muted/60">
+          <div className="flex items-center gap-1 text-[10px] text-muted">
             <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
             <span>Live</span>
           </div>
@@ -336,29 +338,40 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
 
 // ─── Valuation View ───────────────────────────────────────────────────────────
 function MobileSlider({
-  label, value, min, max, step, suffix, color, onChange, hint,
-}: { label: string; value: number; min: number; max: number; step: number; suffix: string; color: string; onChange: (v: number) => void; hint?: string }) {
-  const pct = ((value - min) / (max - min)) * 100;
+  label, value, min, max, inputMax, step, suffix, color, onChange, hint,
+}: { label: string; value: number; min: number; max: number; inputMax?: number; step: number; suffix: string; color: string; onChange: (v: number) => void; hint?: string }) {
+  const effectiveInputMax = inputMax ?? max;
+  const pct = Math.min(((value - min) / (max - min)) * 100, 100);
+  const beyondSlider = value > max;
   return (
     <div className="py-1">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-muted">{label}</p>
         <div className="flex items-center gap-0.5">
           <input
-            type="number" min={min} max={max} step={step} value={value}
-            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), max)); }}
-            className={`w-16 text-right text-base font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+            type="number" min={min} max={effectiveInputMax} step={step} value={value}
+            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), effectiveInputMax)); }}
+            className={`w-20 text-right text-base font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           />
           <span className={`text-base font-bold font-mono ${color}`}>{suffix}</span>
         </div>
       </div>
       <input
-        type="range" min={min} max={max} step={step} value={value}
+        type="range" min={min} max={max} step={step} value={Math.min(value, max)}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, #1f3558 ${pct}%, #1f3558 100%)` }}
+        style={{ background: beyondSlider
+          ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
+          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)` }}
       />
-      {hint && <p className="text-xs text-muted/70 mt-1.5 font-mono leading-snug">{hint}</p>}
+      <div className="flex justify-between mt-1">
+        <span className="text-[10px] text-muted font-mono">{min}{suffix}</span>
+        {beyondSlider
+          ? <span className="text-[10px] text-gold font-mono font-semibold">▲ beyond {max}{suffix}</span>
+          : <span className="text-[10px] text-muted font-mono">{max}{suffix}</span>
+        }
+      </div>
+      {hint && <p className="text-xs text-muted/70 mt-1 font-mono leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -398,14 +411,14 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         <p className="text-xs text-muted -mt-3">Adjust these sliders to see how the target price changes</p>
         <MobileSlider
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
-          min={1} max={50} step={0.5} suffix="%" color="text-accent"
+          min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
           onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
           hint={`How fast do you think sales will grow? Actual last year: ${latest.revenueGrowth.toFixed(1)}%`}
         />
         {sectorProfile.model !== 'pb' && (
           <MobileSlider
             label="Net Margin" value={assumptions.netMarginAssumption}
-            min={1} max={50} step={0.5} suffix="%" color="text-gain"
+            min={1} max={50} inputMax={100} step={0.5} suffix="%" color="text-gain"
             onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
             hint={`Of ₹100 earned, how much stays as profit? Actual: ${latest.netMargin.toFixed(1)}%`}
           />
@@ -415,6 +428,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           value={assumptions.exitMultiple}
           min={sectorProfile.exitMultipleMin}
           max={sectorProfile.exitMultipleMax}
+          inputMax={sectorProfile.model === 'pe' ? 3000 : sectorProfile.model === 'pb' ? 50 : sectorProfile.exitMultipleMax * 10}
           step={sectorProfile.exitMultipleStep}
           suffix="x" color="text-gold"
           onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
@@ -432,7 +446,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
                 key={y}
                 onClick={() => setAssumptions(a => ({ ...a, years: y }))}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold font-mono transition-all active:scale-95 ${
-                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border/60 text-muted'
+                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted'
                 }`}
               >
                 {y}Y
@@ -534,10 +548,10 @@ export default function MobileLayout({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-terminal lg:hidden">
+    <div className="flex flex-col h-screen bg-terminal lg:hidden" style={{ height: '100dvh' }}>
       <MobileHeader company={company} activeTab={activeTab} />
 
-      <main className="flex-1 overflow-y-auto overscroll-none">
+      <main className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Always mounted views (no re-fetch on revisit) */}
         <div className={activeTab === 'search' ? '' : 'hidden'}>
           <SearchView onSelect={handleSelect} selectedSymbol={selectedSymbol} />
