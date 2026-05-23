@@ -1,6 +1,7 @@
 'use client';
 
 import { Company } from '@/lib/types';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 
 interface CompanyHeaderProps {
   company: Company;
@@ -15,6 +16,8 @@ function formatCr(value: number): string {
 
 export default function CompanyHeader({ company }: CompanyHeaderProps) {
   const isPositive = company.changePercent >= 0;
+  const smartProfile = getCompanyProfile(company);
+  const smartSectorLabel = smartProfile.sectorLabel;
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
@@ -25,7 +28,7 @@ export default function CompanyHeader({ company }: CompanyHeaderProps) {
               {company.symbol}
             </span>
             <span className="text-xs px-2 py-0.5 bg-border rounded text-muted border border-border/50">
-              {company.sector}
+              {smartSectorLabel}
             </span>
             <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded">
               NSE
