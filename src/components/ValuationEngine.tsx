@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
+import MethodsDrawer from '@/components/MethodsDrawer';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import {
   runPrimaryModel,
@@ -231,45 +232,43 @@ export default function ValuationEngine({ company, financials, assumptions, comp
           />
         </div>
 
-        {/* Toggle for full method details */}
+        {/* Drawer trigger */}
         <button
-          onClick={() => setShowDetails(v => !v)}
+          onClick={() => setShowDetails(true)}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-border text-xs text-muted hover:text-primary hover:border-gold/30 transition-all"
         >
-          <span>{showDetails ? 'Hide method breakdown ▲' : 'Show all valuation methods ▾'}</span>
+          <span>Show all valuation methods ▾</span>
         </button>
 
-        {/* Collapsible full detail */}
-        {showDetails && (
-          <div className="space-y-4 pt-1">
-            {/* Method cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <MethodCard method={primaryResult.model} desc={primaryResult.desc} fairValue={primaryResult.fairValue} currentPrice={company.currentPrice} primary />
-              {model === 'pb' && gordonResult?.isValid ? (
-                <MethodCard method="Gordon Growth P/B" desc={gordonResult.desc} fairValue={gordonResult.fairValue} currentPrice={company.currentPrice} />
-              ) : (
-                <MethodCard method={pegResult.model} desc={pegResult.desc} fairValue={pegResult.fairValue} currentPrice={company.currentPrice} />
-              )}
-              {peCheck ? (
-                <MethodCard method="Forward P/E (cross-check)" desc={peCheck.desc} fairValue={peCheck.fairValue} currentPrice={company.currentPrice} />
-              ) : sectorPECheck ? (
-                <MethodCard method="Sector P/E" desc={sectorPECheck.desc} fairValue={sectorPECheck.fairValue} currentPrice={company.currentPrice} />
-              ) : null}
-              <MethodCard method={eyResult.model} desc={eyResult.desc} fairValue={eyResult.fairValue} currentPrice={company.currentPrice} />
+        {/* Vaul bottom-sheet drawer */}
+        <MethodsDrawer open={showDetails} onClose={() => setShowDetails(false)}>
+          {/* Method cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <MethodCard method={primaryResult.model} desc={primaryResult.desc} fairValue={primaryResult.fairValue} currentPrice={company.currentPrice} primary />
+            {model === 'pb' && gordonResult?.isValid ? (
+              <MethodCard method="Gordon Growth P/B" desc={gordonResult.desc} fairValue={gordonResult.fairValue} currentPrice={company.currentPrice} />
+            ) : (
+              <MethodCard method={pegResult.model} desc={pegResult.desc} fairValue={pegResult.fairValue} currentPrice={company.currentPrice} />
+            )}
+            {peCheck ? (
+              <MethodCard method="Forward P/E (cross-check)" desc={peCheck.desc} fairValue={peCheck.fairValue} currentPrice={company.currentPrice} />
+            ) : sectorPECheck ? (
+              <MethodCard method="Sector P/E" desc={sectorPECheck.desc} fairValue={sectorPECheck.fairValue} currentPrice={company.currentPrice} />
+            ) : null}
+            <MethodCard method={eyResult.model} desc={eyResult.desc} fairValue={eyResult.fairValue} currentPrice={company.currentPrice} />
+          </div>
+          {/* Earnings quality */}
+          <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-primary mb-0.5">Earnings Quality</p>
+              <p className="text-[11px] text-muted leading-relaxed">{quality.breakdown}</p>
             </div>
-            {/* Earnings quality */}
-            <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-primary mb-0.5">Earnings Quality</p>
-                <p className="text-[11px] text-muted leading-relaxed line-clamp-2">{quality.breakdown}</p>
-              </div>
-              <div className="flex-shrink-0 text-center">
-                <p className={`text-2xl font-bold font-mono ${quality.score >= 80 ? 'text-gain' : quality.score >= 60 ? 'text-gold' : quality.score >= 40 ? 'text-warning' : 'text-loss'}`}>{quality.score}</p>
-                <p className="text-[10px] text-muted">/ 100</p>
-              </div>
+            <div className="flex-shrink-0 text-center">
+              <p className={`text-2xl font-bold font-mono ${quality.score >= 80 ? 'text-gain' : quality.score >= 60 ? 'text-gold' : quality.score >= 40 ? 'text-warning' : 'text-loss'}`}>{quality.score}</p>
+              <p className="text-[10px] text-muted">/ 100</p>
             </div>
           </div>
-        )}
+        </MethodsDrawer>
       </div>
     );
   }

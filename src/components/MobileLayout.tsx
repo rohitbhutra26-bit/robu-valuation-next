@@ -3,7 +3,9 @@
 import React, { useState, useRef } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
-  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users, AlertTriangle, Pencil, RotateCcw,
+  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users,
+  AlertTriangle, Pencil, RotateCcw, Bookmark, Briefcase, Filter,
+  ChevronRight,
 } from '@/lib/icons';
 import ThemeToggle from './ThemeToggle';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
@@ -19,8 +21,13 @@ import ForecastChart from './ForecastChart';
 import IndustryBenchmarks from './IndustryBenchmarks';
 import PeerCompare from './PeerCompare';
 import VerdictCard from './VerdictCard';
+import WatchlistView from './WatchlistView';
+import PortfolioView from './PortfolioView';
+import StockScreener from './StockScreener';
 
-type MobileTab = 'search' | 'overview' | 'valuation' | 'ai' | 'financials' | 'peers';
+// ─── Tab types ────────────────────────────────────────────────────────────────
+type MainTab  = 'home' | 'screener' | 'watchlist' | 'portfolio' | 'stock';
+type StockTab = 'overview' | 'valuation' | 'ai' | 'peers' | 'financials';
 
 interface Props {
   company: Company | null;
@@ -40,7 +47,6 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* bg rect uses theme card color so it doesn't look like a black square in light mode */}
       <rect width="40" height="40" rx="9" fill="rgb(var(--color-card))"/>
       <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="rgb(var(--color-gold))" strokeWidth="1" strokeOpacity="0.4" fill="none"/>
       <rect x="7" y="7" width="7" height="26" rx="2" fill="rgb(var(--color-gold))"/>
@@ -55,42 +61,40 @@ export function RobuLogo({ size = 32 }: { size?: number }) {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number) {
   if (n >= 100000) return `₹${(n / 100000).toFixed(2)}L Cr`;
-  if (n >= 1000) return `₹${(n / 1000).toFixed(1)}K Cr`;
+  if (n >= 1000)   return `₹${(n / 1000).toFixed(1)}K Cr`;
   return `₹${n.toLocaleString('en-IN')} Cr`;
 }
 
-// ─── Nav Icons ────────────────────────────────────────────────────────────────
-// Icons always use explicit colors — never inherit from a potentially low-opacity parent
-function IconSearch({ on }: { on: boolean }) {
-  return <Search size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-function IconChart({ on }: { on: boolean }) {
-  return <TrendingUp size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-function IconSliders({ on }: { on: boolean }) {
-  return <SlidersHorizontal size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-function IconAI({ on }: { on: boolean }) {
-  return <Sparkles size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-function IconTable({ on }: { on: boolean }) {
-  return <Table2 size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-function IconPeers({ on }: { on: boolean }) {
-  return <Users size={20} className={on ? 'text-gold' : 'text-muted'} strokeWidth={on ? 2.2 : 1.8} />;
-}
-
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+// ─── Main Bottom Nav (5 tabs) ─────────────────────────────────────────────────
 function BottomNav({
   active, onChange, hasCompany,
-}: { active: MobileTab; onChange: (t: MobileTab) => void; hasCompany: boolean }) {
-  const tabs: { id: MobileTab; label: string; Icon: React.FC<{ on: boolean }>; needsCompany?: boolean }[] = [
-    { id: 'search',     label: 'Search',   Icon: IconSearch },
-    { id: 'overview',   label: 'Stock',    Icon: IconChart,   needsCompany: true },
-    { id: 'valuation',  label: 'Value',    Icon: IconSliders, needsCompany: true },
-    { id: 'ai',         label: 'AI',       Icon: IconAI,      needsCompany: true },
-    { id: 'peers',      label: 'Peers',    Icon: IconPeers,   needsCompany: true },
-    { id: 'financials', label: 'Data',     Icon: IconTable,   needsCompany: true },
+}: { active: MainTab; onChange: (t: MainTab) => void; hasCompany: boolean }) {
+  const tabs: { id: MainTab; label: string; icon: React.ReactNode }[] = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: <Search size={20} strokeWidth={active === 'home' ? 2.2 : 1.8} className={active === 'home' ? 'text-gold' : 'text-muted'} />,
+    },
+    {
+      id: 'screener',
+      label: 'Screen',
+      icon: <Filter size={20} strokeWidth={active === 'screener' ? 2.2 : 1.8} className={active === 'screener' ? 'text-gold' : 'text-muted'} />,
+    },
+    {
+      id: 'watchlist',
+      label: 'Watchlist',
+      icon: <Bookmark size={20} strokeWidth={active === 'watchlist' ? 2.2 : 1.8} className={active === 'watchlist' ? 'text-gold' : 'text-muted'} />,
+    },
+    {
+      id: 'portfolio',
+      label: 'Portfolio',
+      icon: <Briefcase size={20} strokeWidth={active === 'portfolio' ? 2.2 : 1.8} className={active === 'portfolio' ? 'text-gold' : 'text-muted'} />,
+    },
+    {
+      id: 'stock',
+      label: hasCompany ? 'Analysis' : 'Stock',
+      icon: <TrendingUp size={20} strokeWidth={active === 'stock' ? 2.2 : 1.8} className={active === 'stock' ? 'text-gold' : hasCompany ? 'text-muted' : 'text-muted/30'} />,
+    },
   ];
 
   return (
@@ -99,18 +103,20 @@ function BottomNav({
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="bg-card/98 backdrop-blur-xl border-t border-border flex">
-        {tabs.map(({ id, label, Icon, needsCompany }) => {
-          const disabled = needsCompany && !hasCompany;
+        {tabs.map(({ id, label, icon }) => {
+          const disabled = id === 'stock' && !hasCompany;
           const isOn = active === id;
           return (
             <button
               key={id}
               onClick={() => !disabled && onChange(id)}
               className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-w-0
-                ${isOn ? 'text-gold' : disabled ? 'opacity-30 cursor-not-allowed' : 'hover:opacity-80'}`}
+                ${disabled ? 'opacity-25 cursor-not-allowed' : ''}`}
             >
-              <Icon on={isOn} />
-              <span className="text-[9px] font-medium leading-none truncate">{label}</span>
+              {icon}
+              <span className={`text-[9px] font-medium leading-none ${isOn ? 'text-gold' : 'text-muted'}`}>
+                {label}
+              </span>
               {isOn && <div className="w-4 h-0.5 rounded-full bg-gold mt-0.5" />}
             </button>
           );
@@ -120,40 +126,104 @@ function BottomNav({
   );
 }
 
-// ─── Mobile Header ────────────────────────────────────────────────────────────
-function MobileHeader({ company, activeTab }: { company: Company | null; activeTab: MobileTab }) {
-  const showStock = activeTab !== 'search' && company;
-  const isPos = company ? company.changePercent >= 0 : true;
+// ─── Stock Sub-tabs (horizontal scroll) ──────────────────────────────────────
+function StockSubNav({
+  active, onChange,
+}: { active: StockTab; onChange: (t: StockTab) => void }) {
+  const tabs: { id: StockTab; label: string }[] = [
+    { id: 'overview',   label: 'Overview' },
+    { id: 'valuation',  label: 'Valuation' },
+    { id: 'ai',         label: 'AI' },
+    { id: 'peers',      label: 'Peers' },
+    { id: 'financials', label: 'Data' },
+  ];
   return (
-    <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-xl border-b border-border flex items-center justify-between px-4"
-      style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', paddingBottom: '12px' }}>
-      <div className="flex items-center gap-2.5">
-        <RobuLogo size={26} />
-        {showStock ? (
-          <div>
-            <span className="text-sm font-bold text-primary font-mono">{company.symbol}</span>
-            <span className={`ml-2 text-xs font-semibold font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
-              {isPos ? '+' : ''}{company.changePercent.toFixed(2)}%
+    <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-b border-border bg-card/95 backdrop-blur-xl no-scrollbar">
+      {tabs.map(({ id, label }) => (
+        <button
+          key={id}
+          onClick={() => onChange(id)}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            active === id
+              ? 'bg-gold text-terminal'
+              : 'bg-border/50 text-muted hover:text-primary hover:bg-border'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Mobile Header ────────────────────────────────────────────────────────────
+function MobileHeader({
+  company, mainTab, stockTab,
+}: { company: Company | null; mainTab: MainTab; stockTab: StockTab }) {
+  const isStock = mainTab === 'stock' && company;
+  const isPos = company ? company.changePercent >= 0 : true;
+
+  const pageTitle: Record<MainTab, string> = {
+    home:      'Robu Terminal',
+    screener:  'Screener',
+    watchlist: 'Watchlist',
+    portfolio: 'Portfolio',
+    stock:     '',
+  };
+
+  return (
+    <header
+      className="sticky top-0 z-40 bg-card/98 backdrop-blur-xl border-b border-border"
+      style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' }}
+    >
+      <div className="flex items-center justify-between px-4 pb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <RobuLogo size={26} />
+          {isStock ? (
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-primary font-mono">{company.symbol}</span>
+                <span className={`text-xs font-bold font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
+                  {isPos ? '+' : ''}{company.changePercent.toFixed(2)}%
+                </span>
+              </div>
+              {/* Price always visible */}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-base font-bold font-mono text-primary leading-tight">
+                  ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className={`text-[11px] font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
+                  {isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(1)}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-sm font-bold text-primary tracking-tight">
+              {pageTitle[mainTab]}
             </span>
-          </div>
-        ) : (
-          <span className="text-sm font-bold text-primary tracking-tight">Robu Terminal</span>
-        )}
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isStock && (
+            <>
+              <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded-full font-mono">
+                NSE
+              </span>
+              <div className="flex items-center gap-1 text-[10px] text-muted">
+                <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
+                <span>Live</span>
+              </div>
+            </>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {showStock && (
-          <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded-full font-mono">
-            {company.symbol.endsWith('.BO') ? 'BSE' : 'NSE'}
-          </span>
-        )}
-        {showStock && (
-          <div className="flex items-center gap-1 text-[10px] text-muted">
-            <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
-            <span>Live</span>
-          </div>
-        )}
-        <ThemeToggle />
-      </div>
+
+      {/* Stock sub-tabs, rendered inside the sticky header */}
+      {mainTab === 'stock' && company && (
+        <StockSubNav active={stockTab} onChange={() => {}} />
+      )}
     </header>
   );
 }
@@ -170,12 +240,13 @@ function MobileLoader({ symbol }: { symbol: string }) {
     </div>
   );
 }
+
 function MobileError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-64 gap-4 px-6 text-center">
       <div className="w-12 h-12 rounded-full bg-loss/10 border border-loss/20 flex items-center justify-center">
-          <AlertTriangle size={22} className="text-loss" />
-        </div>
+        <AlertTriangle size={22} className="text-loss" />
+      </div>
       <div>
         <p className="text-sm text-loss font-medium">Couldn't load data</p>
         <p className="text-xs text-muted mt-1">{message}</p>
@@ -187,44 +258,80 @@ function MobileError({ message, onRetry }: { message: string; onRetry: () => voi
   );
 }
 
-// ─── Search View ──────────────────────────────────────────────────────────────
-function SearchView({ onSelect, selectedSymbol }: { onSelect: (s: string) => void; selectedSymbol: string }) {
+// ─── Home View ────────────────────────────────────────────────────────────────
+function HomeView({
+  onSelect, selectedSymbol, onGoTo,
+}: { onSelect: (s: string) => void; selectedSymbol: string; onGoTo: (t: MainTab) => void }) {
   const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TATAMOTORS', 'SBIN', 'ADANIENT', 'ANGELONE', 'KAYNES'];
+
+  const shortcuts = [
+    {
+      id: 'screener' as MainTab,
+      title: 'Stock Screener',
+      desc: 'Filter all NSE stocks by ROE, P/E, margin & more',
+      Icon: Filter,
+      color: 'text-accent',
+      bg: 'bg-accent/10',
+      border: 'border-accent/20',
+    },
+    {
+      id: 'watchlist' as MainTab,
+      title: 'Watchlist',
+      desc: 'Stocks you\'ve bookmarked for quick access',
+      Icon: Bookmark,
+      color: 'text-gold',
+      bg: 'bg-gold/10',
+      border: 'border-gold/20',
+    },
+    {
+      id: 'portfolio' as MainTab,
+      title: 'Portfolio',
+      desc: 'Track holdings, P&L and import from broker',
+      Icon: Briefcase,
+      color: 'text-gain',
+      bg: 'bg-gain/10',
+      border: 'border-gain/20',
+    },
+  ];
+
   return (
     <div className="flex flex-col px-4 pb-32">
       {/* Hero */}
-      <div className="flex flex-col items-center pt-10 pb-8">
+      <div className="flex flex-col items-center pt-8 pb-6">
         <RobuLogo size={52} />
         <h1 className="text-2xl font-bold text-primary mt-4 tracking-tight">Robu Terminal</h1>
-        <p className="text-sm text-muted mt-1 text-center px-4">Find out if any Indian stock is cheap, fair, or expensive</p>
+        <p className="text-sm text-muted mt-1 text-center px-4">Is any Indian stock cheap, fair, or expensive?</p>
       </div>
 
-      {/* Search bar */}
-      <div className="mb-6">
+      {/* Search */}
+      <div className="mb-5">
         <CompanySearch onSelect={onSelect} selectedSymbol={selectedSymbol} />
       </div>
 
-      {/* Feature tiles — "what can I do?" */}
-      <div className="grid grid-cols-3 gap-2 mb-6">
-        {[
-          { Icon: TrendingUp,        iconCls: 'text-gain',   bg: 'bg-gain/10',   border: 'border-gain/20',   title: 'Value it',    body: 'Is it cheap?' },
-          { Icon: Users,             iconCls: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20', title: 'Compare',     body: 'vs rivals' },
-          { Icon: Sparkles,          iconCls: 'text-gold',   bg: 'bg-gold/10',   border: 'border-gold/20',   title: 'AI analysis', body: 'Plain English' },
-        ].map(tile => (
-          <div key={tile.title} className="bg-card border border-border rounded-xl p-3 text-center">
-            <div className={`w-8 h-8 rounded-lg ${tile.bg} border ${tile.border} flex items-center justify-center mx-auto mb-2`}>
-              <tile.Icon size={16} className={tile.iconCls} />
+      {/* Utility shortcuts */}
+      <div className="space-y-2 mb-5">
+        {shortcuts.map(s => (
+          <button
+            key={s.id}
+            onClick={() => onGoTo(s.id)}
+            className="w-full flex items-center gap-3 bg-card border border-border rounded-xl p-3.5 hover:border-border/80 active:scale-[0.99] transition-all text-left"
+          >
+            <div className={`w-9 h-9 rounded-xl ${s.bg} border ${s.border} flex items-center justify-center flex-shrink-0`}>
+              <s.Icon size={17} className={s.color} />
             </div>
-            <p className="text-[10px] font-semibold text-primary">{tile.title}</p>
-            <p className="text-[9px] text-muted mt-0.5">{tile.body}</p>
-          </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-primary">{s.title}</p>
+              <p className="text-[11px] text-muted mt-0.5 truncate">{s.desc}</p>
+            </div>
+            <ChevronRight size={15} className="text-muted/40 flex-shrink-0" />
+          </button>
         ))}
       </div>
 
       {/* Popular chips */}
-      <p className="text-[10px] uppercase tracking-widest text-muted font-medium mb-2">Popular stocks to try</p>
+      <p className="text-[10px] uppercase tracking-widest text-muted font-medium mb-2">Popular stocks</p>
       <div className="flex flex-wrap gap-2">
-        {chips.map((sym) => (
+        {chips.map(sym => (
           <button
             key={sym}
             onClick={() => onSelect(sym)}
@@ -258,54 +365,50 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
   const stats = [
-    { label: 'Market Cap',  value: fmt(company.marketCap) },
-    { label: 'P/E Ratio',   value: `${company.pe.toFixed(1)}x`,    color: 'text-gold' },
-    { label: 'P/B Ratio',   value: `${company.pb.toFixed(1)}x` },
-    { label: 'ROE',         value: `${company.roe.toFixed(1)}%`,   color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
-    { label: 'Debt / Equity', value: `${company.debtToEquity.toFixed(2)}x`, color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
-    { label: 'Div Yield',   value: `${company.dividendYield.toFixed(2)}%` },
+    { label: 'Market Cap',    value: fmt(company.marketCap) },
+    { label: 'P/E Ratio',    value: `${company.pe.toFixed(1)}x`,             color: 'text-gold' },
+    { label: 'P/B Ratio',    value: `${company.pb.toFixed(1)}x` },
+    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
+    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
+    { label: 'Div Yield',    value: `${company.dividendYield.toFixed(2)}%` },
   ];
 
   return (
     <div className="px-4 pt-4 pb-32 space-y-3">
-      {/* Verdict banner */}
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
-      {/* Hero Price Card */}
-      <div className="bg-card rounded-2xl p-5 border border-border">
-        <div className="mb-3">
+      {/* Price card */}
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <div className="mb-2">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-mono font-bold text-gold tracking-wider">{company.symbol}</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted max-w-[120px] truncate">{company.sector}</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted max-w-[140px] truncate">{company.sector}</span>
           </div>
           <h2 className="text-base font-bold text-primary leading-snug line-clamp-2">{company.name}</h2>
         </div>
-        <div className="flex items-end gap-2 mb-1">
-          <span className="text-3xl font-bold font-mono text-primary leading-none min-w-0 break-all">
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-3xl font-bold font-mono text-primary leading-none">
             ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
         </div>
-        <div className={`flex items-center flex-wrap gap-x-2 gap-y-0.5 text-sm font-semibold font-mono mb-5 ${isPos ? 'text-gain' : 'text-loss'}`}>
+        <div className={`flex items-center flex-wrap gap-x-2 gap-y-0.5 text-sm font-semibold font-mono mb-4 ${isPos ? 'text-gain' : 'text-loss'}`}>
           <span>{isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)}</span>
           <span>({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)</span>
           <span className="text-xs text-muted font-normal">today</span>
         </div>
-        {/* 52W range bar */}
         <div className="flex justify-between text-[10px] text-muted mb-1.5 gap-2">
-          <span className="truncate">Low ₹{low.toLocaleString('en-IN')}</span>
-          <span className="flex-shrink-0">High ₹{high.toLocaleString('en-IN')}</span>
+          <span className="truncate">52W Low ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+          <span className="flex-shrink-0">52W High ₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
         </div>
         <div className="relative h-2 bg-border rounded-full overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
-            style={{ left: `calc(${pct}% - 7px)` }}
-          />
+          <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
+            style={{ left: `calc(${pct}% - 7px)` }} />
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {stats.map((s, i) => (
           <div key={i} className="bg-card border border-border rounded-xl p-3">
             <p className="text-[10px] text-muted mb-1 uppercase tracking-wide">{s.label}</p>
@@ -317,14 +420,14 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
       {/* Latest Financials */}
       {latest && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-[10px] text-muted uppercase tracking-wider mb-3 font-semibold">Last reported year — {latest.year}</p>
+          <p className="text-[10px] text-muted uppercase tracking-wider mb-3 font-semibold">Last reported — {latest.year}</p>
           <div className="space-y-2.5">
             {[
-              { label: 'Revenue',          value: fmt(latest.revenue) },
-              { label: 'Net Profit (PAT)', value: fmt(latest.pat),                       color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
-              { label: 'EBITDA Margin',    value: `${latest.ebitdaMargin.toFixed(1)}%`,  color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary' },
-              { label: 'Net Margin',       value: `${latest.netMargin.toFixed(1)}%` },
-              { label: 'EPS',              value: `₹${latest.eps.toFixed(1)}` },
+              { label: 'Revenue',         value: fmt(latest.revenue) },
+              { label: 'Net Profit (PAT)',value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
+              { label: 'EBITDA Margin',   value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary' },
+              { label: 'Net Margin',      value: `${latest.netMargin.toFixed(1)}%` },
+              { label: 'EPS',             value: `₹${latest.eps.toFixed(1)}` },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="text-sm text-muted">{r.label}</span>
@@ -342,7 +445,6 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
 function MobileSlider({
   label, value, min, max, inputMax, step, suffix, color, onChange, hint,
 }: { label: string; value: number; min: number; max: number; inputMax?: number; step: number; suffix: string; color: string; onChange: (v: number) => void; hint?: string }) {
-  const effectiveInputMax = inputMax ?? max;
   const pct = Math.min(((value - min) / (max - min)) * 100, 100);
   const beyondSlider = value > max;
   return (
@@ -351,27 +453,28 @@ function MobileSlider({
         <p className="text-sm text-muted">{label}</p>
         <div className="flex items-center gap-0.5">
           <input
-            type="number" min={min} max={effectiveInputMax} step={step} value={value}
-            onChange={(e) => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), effectiveInputMax)); }}
-            className={`w-20 text-right text-base font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+            type="number" min={min} max={inputMax ?? max} step={step} value={value}
+            onChange={e => { const n = parseFloat(e.target.value); if (!isNaN(n)) onChange(Math.min(Math.max(n, min), inputMax ?? max)); }}
+            className={`w-20 text-right text-base font-bold font-mono bg-transparent border-b border-border focus:border-gold focus:outline-none ${color} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none`}
           />
           <span className={`text-base font-bold font-mono ${color}`}>{suffix}</span>
         </div>
       </div>
       <input
         type="range" min={min} max={max} step={step} value={Math.min(value, max)}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onChange={e => onChange(parseFloat(e.target.value))}
         className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{ background: beyondSlider
-          ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)` }}
+        style={{
+          background: beyondSlider
+            ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
+            : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)`,
+        }}
       />
       <div className="flex justify-between mt-1">
         <span className="text-[10px] text-muted font-mono">{min}{suffix}</span>
         {beyondSlider
           ? <span className="text-[10px] text-gold font-mono font-semibold">▲ beyond {max}{suffix}</span>
-          : <span className="text-[10px] text-muted font-mono">{max}{suffix}</span>
-        }
+          : <span className="text-[10px] text-muted font-mono">{max}{suffix}</span>}
       </div>
       {hint && <p className="text-xs text-muted/70 mt-1 font-mono leading-snug">{hint}</p>}
     </div>
@@ -381,14 +484,13 @@ function MobileSlider({
 function ValuationView({ company, financials, assumptions, setAssumptions, isLoading, error, onRetry, onReset, hasChanges }: {
   company: Company | null; financials: FinancialYear[]; assumptions: ValuationAssumptions;
   setAssumptions: React.Dispatch<React.SetStateAction<ValuationAssumptions>>;
-  isLoading: boolean; error: string | null; onRetry: () => void;
-  onReset: () => void; hasChanges: boolean;
+  isLoading: boolean; error: string | null; onRetry: () => void; onReset: () => void; hasChanges: boolean;
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company || financials.length === 0) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3 px-6 text-center">
-      <p className="text-sm text-muted">No financial data available for this stock</p>
+      <p className="text-sm text-muted">No financial data available</p>
     </div>
   );
 
@@ -397,10 +499,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
 
   return (
     <div className="px-4 pt-4 pb-32 space-y-4">
-      {/* Verdict */}
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
-      {/* Assumptions */}
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
@@ -409,12 +509,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           <h3 className="text-sm font-semibold text-primary">Your assumptions</h3>
           <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
             {hasChanges && (
-              <button
-                onClick={onReset}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-loss border border-loss/30 bg-loss/5 active:scale-95 transition-all"
-              >
-                <RotateCcw size={11} />
-                Reset
+              <button onClick={onReset} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-loss border border-loss/30 bg-loss/5 active:scale-95 transition-all">
+                <RotateCcw size={11} /> Reset
               </button>
             )}
             <span className="text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
@@ -422,18 +518,18 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
             </span>
           </div>
         </div>
-        <p className="text-xs text-muted -mt-3">Adjust these sliders to see how the target price changes</p>
+        <p className="text-xs text-muted -mt-3">Adjust to see how the target price changes</p>
         <MobileSlider
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
           min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
-          onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
+          onChange={v => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
           hint={`How fast do you think sales will grow? Actual last year: ${latest.revenueGrowth.toFixed(1)}%`}
         />
         {sectorProfile.model !== 'pb' && (
           <MobileSlider
             label="Net Margin" value={assumptions.netMarginAssumption}
             min={1} max={50} inputMax={100} step={0.5} suffix="%" color="text-gain"
-            onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
+            onChange={v => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
             hint={`Of ₹100 earned, how much stays as profit? Actual: ${latest.netMargin.toFixed(1)}%`}
           />
         )}
@@ -445,7 +541,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           inputMax={sectorProfile.model === 'pe' ? 3000 : sectorProfile.model === 'pb' ? 50 : sectorProfile.exitMultipleMax * 10}
           step={sectorProfile.exitMultipleStep}
           suffix="x" color="text-gold"
-          onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
+          onChange={v => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
           hint={
             sectorProfile.model === 'pe' ? `At what P/E will you sell? Current: ${company.pe.toFixed(1)}x` :
             sectorProfile.model === 'pb' ? `At what P/B will you sell? Current: ${company.pb.toFixed(1)}x` :
@@ -453,9 +549,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           }
         />
         <div>
-          <p className="text-sm text-muted mb-2">How many years are you projecting?</p>
+          <p className="text-sm text-muted mb-2">Projection horizon</p>
           <div className="flex gap-2">
-            {[3, 5, 7, 10].map((y) => (
+            {[3, 5, 7, 10].map(y => (
               <button
                 key={y}
                 onClick={() => setAssumptions(a => ({ ...a, years: y }))}
@@ -487,7 +583,6 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (!company) return null;
   return (
     <div className="px-4 pt-4 pb-32 space-y-4">
-      {/* Bug fix: pass financials to AIOverview */}
       <AIOverview company={company} financials={financials} />
       <HistoricalValuationChart company={company} />
       <IndustryBenchmarks company={company} financials={financials} />
@@ -506,7 +601,7 @@ function PeersView({ company, isLoading, error, onRetry }: {
     <div className="pt-4 pb-32">
       <div className="px-4 mb-3">
         <h3 className="text-sm font-semibold text-primary">Peer Comparison</h3>
-        <p className="text-xs text-muted mt-0.5">How {company.symbol} compares to sector peers — scroll right</p>
+        <p className="text-xs text-muted mt-0.5">How {company.symbol} stacks up — scroll right →</p>
       </div>
       <div className="overflow-x-auto px-4">
         <PeerCompare company={company} />
@@ -523,14 +618,14 @@ function FinancialsView({ financials, isLoading, error, onRetry }: {
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (financials.length === 0) return (
     <div className="flex items-center justify-center h-64">
-      <p className="text-sm text-muted px-6 text-center">No financial history available for this stock</p>
+      <p className="text-sm text-muted px-6 text-center">No financial history available</p>
     </div>
   );
   return (
     <div className="pt-4 pb-32">
       <div className="px-4 mb-3">
         <h3 className="text-sm font-semibold text-primary">Financial History</h3>
-        <p className="text-xs text-muted mt-0.5">Scroll right to see all years</p>
+        <p className="text-xs text-muted mt-0.5">Scroll right to see all years →</p>
       </div>
       <div className="overflow-x-auto px-4">
         <FinancialsTable financials={financials} />
@@ -547,70 +642,202 @@ export default function MobileLayout({
   company, financials, selectedSymbol, isLoading, error,
   assumptions, setAssumptions, onSelect, onRetry, onReset, hasChanges,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<MobileTab>('search');
-  // Persist tab component instances to prevent re-mount (avoids re-fetch on tab switch)
-  const mountedTabs = useRef<Set<MobileTab>>(new Set(['search']));
+  const [mainTab, setMainTab]   = useState<MainTab>('home');
+  const [stockTab, setStockTab] = useState<StockTab>('overview');
+
+  const mountedMain  = useRef<Set<MainTab>>(new Set<MainTab>(['home']));
+  const mountedStock = useRef<Set<StockTab>>(new Set<StockTab>(['overview']));
 
   function handleSelect(symbol: string) {
     onSelect(symbol);
-    setActiveTab('overview');
+    setMainTab('stock');
+    setStockTab('overview');
+    mountedMain.current.add('stock');
+    mountedStock.current.add('overview');
   }
 
-  function handleTabChange(tab: MobileTab) {
-    mountedTabs.current.add(tab);
-    setActiveTab(tab);
+  function handleMainTab(tab: MainTab) {
+    mountedMain.current.add(tab);
+    setMainTab(tab);
   }
+
+  function handleStockTab(tab: StockTab) {
+    mountedStock.current.add(tab);
+    setStockTab(tab);
+  }
+
+  // When screener selects a symbol, go to stock tab
+  function handleScreenerSelect(symbol: string) {
+    handleSelect(symbol);
+  }
+
+  const showStockContent = mainTab === 'stock';
 
   return (
     <div className="flex flex-col h-screen bg-terminal lg:hidden" style={{ height: '100dvh' }}>
-      <MobileHeader company={company} activeTab={activeTab} />
 
-      <main className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {/* Always mounted views (no re-fetch on revisit) */}
-        <div className={activeTab === 'search' ? '' : 'hidden'}>
-          <SearchView onSelect={handleSelect} selectedSymbol={selectedSymbol} />
+      {/* Sticky header — includes stock sub-tabs when on stock view */}
+      <header
+        className="sticky top-0 z-40 bg-card/98 backdrop-blur-xl border-b border-border flex-shrink-0"
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' }}
+      >
+        {/* Main header row */}
+        <div className="flex items-center justify-between px-4 pb-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <RobuLogo size={26} />
+            {showStockContent && company ? (
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold font-mono text-primary">{company.symbol}</span>
+                  <span className={`text-xs font-bold font-mono ${company.changePercent >= 0 ? 'text-gain' : 'text-loss'}`}>
+                    {company.changePercent >= 0 ? '+' : ''}{company.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-base font-bold font-mono text-primary leading-tight">
+                    ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </span>
+                  <span className={`text-[11px] font-mono ${company.changePercent >= 0 ? 'text-gain' : 'text-loss'}`}>
+                    {company.changePercent >= 0 ? '+' : ''}₹{Math.abs(company.change).toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <span className="text-sm font-bold text-primary tracking-tight">
+                {{ home: 'Robu Terminal', screener: 'Screener', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab]}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {showStockContent && company && (
+              <>
+                <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded-full font-mono">NSE</span>
+                <div className="flex items-center gap-1 text-[10px] text-muted">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
+                  <span>Live</span>
+                </div>
+              </>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
 
-        {mountedTabs.current.has('overview') && (
-          <div className={activeTab === 'overview' ? '' : 'hidden'}>
-            <OverviewView
-              company={company} financials={financials} assumptions={assumptions}
-              isLoading={isLoading} error={error} onRetry={onRetry}
-            />
+        {/* Stock sub-tabs */}
+        {showStockContent && company && (
+          <div className="flex gap-1.5 overflow-x-auto px-4 pb-2.5 no-scrollbar">
+            {([
+              { id: 'overview' as StockTab,   label: 'Overview' },
+              { id: 'valuation' as StockTab,  label: 'Valuation' },
+              { id: 'ai' as StockTab,         label: 'AI' },
+              { id: 'peers' as StockTab,      label: 'Peers' },
+              { id: 'financials' as StockTab, label: 'Data' },
+            ]).map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => handleStockTab(id)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  stockTab === id
+                    ? 'bg-gold text-terminal'
+                    : 'bg-border/50 text-muted hover:text-primary'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* Scrollable content */}
+      <main className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+
+        {/* ── Home ── */}
+        <div className={mainTab === 'home' ? '' : 'hidden'}>
+          <HomeView onSelect={handleSelect} selectedSymbol={selectedSymbol} onGoTo={handleMainTab} />
+        </div>
+
+        {/* ── Screener ── */}
+        {mountedMain.current.has('screener') && (
+          <div className={mainTab === 'screener' ? '' : 'hidden'}>
+            <StockScreener onSelectSymbol={handleScreenerSelect} />
           </div>
         )}
 
-        {mountedTabs.current.has('valuation') && (
-          <div className={activeTab === 'valuation' ? '' : 'hidden'}>
-            <ValuationView
-              company={company} financials={financials}
-              assumptions={assumptions} setAssumptions={setAssumptions}
-              isLoading={isLoading} error={error} onRetry={onRetry}
-              onReset={onReset} hasChanges={hasChanges}
-            />
+        {/* ── Watchlist ── */}
+        {mountedMain.current.has('watchlist') && (
+          <div className={mainTab === 'watchlist' ? '' : 'hidden'}>
+            <WatchlistView onSelectSymbol={handleSelect} currentSymbol={selectedSymbol} />
           </div>
         )}
 
-        {mountedTabs.current.has('ai') && (
-          <div className={activeTab === 'ai' ? '' : 'hidden'}>
-            <AIView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+        {/* ── Portfolio ── */}
+        {mountedMain.current.has('portfolio') && (
+          <div className={mainTab === 'portfolio' ? '' : 'hidden'}>
+            <PortfolioView onSelectSymbol={handleSelect} />
           </div>
         )}
 
-        {mountedTabs.current.has('peers') && (
-          <div className={activeTab === 'peers' ? '' : 'hidden'}>
-            <PeersView company={company} isLoading={isLoading} error={error} onRetry={onRetry} />
-          </div>
-        )}
+        {/* ── Stock analysis ── */}
+        {mountedMain.current.has('stock') && (
+          <div className={mainTab === 'stock' ? '' : 'hidden'}>
+            {/* Overview */}
+            {mountedStock.current.has('overview') && (
+              <div className={stockTab === 'overview' ? '' : 'hidden'}>
+                <OverviewView
+                  company={company} financials={financials} assumptions={assumptions}
+                  isLoading={isLoading} error={error} onRetry={onRetry}
+                />
+              </div>
+            )}
+            {/* Valuation */}
+            {mountedStock.current.has('valuation') && (
+              <div className={stockTab === 'valuation' ? '' : 'hidden'}>
+                <ValuationView
+                  company={company} financials={financials}
+                  assumptions={assumptions} setAssumptions={setAssumptions}
+                  isLoading={isLoading} error={error} onRetry={onRetry}
+                  onReset={onReset} hasChanges={hasChanges}
+                />
+              </div>
+            )}
+            {/* AI */}
+            {mountedStock.current.has('ai') && (
+              <div className={stockTab === 'ai' ? '' : 'hidden'}>
+                <AIView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+              </div>
+            )}
+            {/* Peers */}
+            {mountedStock.current.has('peers') && (
+              <div className={stockTab === 'peers' ? '' : 'hidden'}>
+                <PeersView company={company} isLoading={isLoading} error={error} onRetry={onRetry} />
+              </div>
+            )}
+            {/* Financials */}
+            {mountedStock.current.has('financials') && (
+              <div className={stockTab === 'financials' ? '' : 'hidden'}>
+                <FinancialsView financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+              </div>
+            )}
 
-        {mountedTabs.current.has('financials') && (
-          <div className={activeTab === 'financials' ? '' : 'hidden'}>
-            <FinancialsView financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+            {/* No stock loaded yet */}
+            {!company && !isLoading && (
+              <div className="flex flex-col items-center justify-center h-64 gap-4 px-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-border/60 flex items-center justify-center">
+                  <Search size={22} className="text-muted/40" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary mb-1">No stock selected</p>
+                  <p className="text-xs text-muted">Go to Home and search for a stock to analyse it here.</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
 
-      <BottomNav active={activeTab} onChange={handleTabChange} hasCompany={!!company} />
+      {/* 5-tab bottom nav */}
+      <BottomNav active={mainTab} onChange={handleMainTab} hasCompany={!!company} />
     </div>
   );
 }

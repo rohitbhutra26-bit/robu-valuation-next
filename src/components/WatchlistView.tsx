@@ -1,12 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getWatchlist, removeFromWatchlist, WatchlistEntry } from '@/lib/watchlist';
-import { Bookmark, AlertCircle, X, Clock } from '@/lib/icons';
+import { Bookmark, X, Clock, TrendingUp, TrendingDown, RefreshCw, AlertCircle } from '@/lib/icons';
 
 interface WatchlistViewProps {
   onSelectSymbol: (symbol: string) => void;
   currentSymbol?: string;
+}
+
+interface LiveQuote {
+  price: number;
+  pe: number | null;
+  marketCap: number;
+  fairValue: number | null;
+  upside: number | null;
+  loading: boolean;
+  error: boolean;
 }
 
 function timeAgo(ms: number): string {
@@ -21,10 +31,17 @@ function timeAgo(ms: number): string {
   return new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
+function fmtCap(n: number): string {
+  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L Cr`;
+  if (n >= 1000)   return `₹${(n / 1000).toFixed(0)}K Cr`;
+  return `₹${n.toLocaleString('en-IN')} Cr`;
+}
+
 export default function WatchlistView({ onSelectSymbol, currentSymbol }: WatchlistViewProps) {
   const [list, setList] = useState<WatchlistEntry[]>([]);
+  const [quotes, setQuotes] = useState<Record<string, LiveQuote>>({});
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Sync with localStorage on mount + whenever watchlist changes
   useEffect(() => {
     setList(getWatchlist());
     const handler = () => setList(getWatchlist());
@@ -32,97 +49,200 @@ export default function WatchlistView({ onSelectSymbol, currentSymbol }: Watchli
     return () => window.removeEventListener('robu_watchlist_change', handler);
   }, []);
 
+  const fetchQuotes = useCallback(async (symbols: string[]) => {
+    if (symbols.length === 0) return;
+    setRefreshing(true);
+
+    // Mark all as loading
+    setQuotes(prev => {
+      const next = { ...prev };
+      for (const sym of symbols) {
+        next[sym] = { price: 0, pe: null, marketCap: 0, fairValue: null, upside: null, loading: true, error: false };
+      }
+      return next;
+    });
+
+    // Fetch all in parallel — company-v2 gives price, PE, market cap
+    await Promise.allSettled(
+      symbols.map(async (sym) => {
+        try {
+          const res = await fetch(`/api/company-v2/${sym}`);
+          if (!res.ok) throw new Error('failed');
+          const d = await res.json();
+          setQuotes(prev => ({
+            ...prev,
+            [sym]: {
+              price:     parseFloat(d.currentPrice || 0),
+              pe:        d.pe ? parseFloat(d.pe) : null,
+              marketCap: parseFloat(d.marketCap || 0),
+              fairValue: null,
+              upside:    null,
+              loading:   false,
+              error:     false,
+            },
+          }));
+        } catch {
+          setQuotes(prev => ({
+            ...prev,
+            [sym]: { price: 0, pe: null, marketCap: 0, fairValue: null, upside: null, loading: false, error: true },
+          }));
+        }
+      })
+    );
+    setRefreshing(false);
+  }, []);
+
+  // Fetch when list changes
+  useEffect(() => {
+    if (list.length > 0) {
+      fetchQuotes(list.map(e => e.symbol));
+    }
+  }, [list, fetchQuotes]);
+
+  const gainers = list.filter(e => {
+    const q = quotes[e.symbol];
+    return q && !q.loading && !q.error && q.price > 0;
+  }).length;
+
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4">
 
-      {/* ── Page title ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-          <Bookmark size={15} className="text-gold" />
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+            <Bookmark size={15} className="text-gold" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-primary">Watchlist</h2>
+            <p className="text-[11px] text-muted">
+              {list.length === 0 ? 'No stocks saved yet' : `${list.length} stock${list.length !== 1 ? 's' : ''} · tap to analyse`}
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-base font-bold text-primary">Watchlist</h2>
-          <p className="text-[11px] text-muted">
-            {list.length === 0 ? 'No stocks saved yet' : `${list.length} stock${list.length > 1 ? 's' : ''} saved`}
-          </p>
-        </div>
+        {list.length > 0 && (
+          <button
+            onClick={() => fetchQuotes(list.map(e => e.symbol))}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 text-xs text-muted hover:text-primary px-2.5 py-1.5 rounded-lg border border-border hover:border-gold/30 transition-all disabled:opacity-50"
+          >
+            <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        )}
       </div>
 
-      {/* ── localStorage warning banner ─────────────────────────────────── */}
-      <div className="flex gap-3 p-3.5 mb-5 bg-gold/5 border border-gold/20 rounded-xl">
-        <AlertCircle size={15} className="text-gold flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-semibold text-gold mb-0.5">Saved on this browser only</p>
-          <p className="text-[11px] text-muted leading-relaxed">
-            Your watchlist is stored locally on this device and browser.
-            It will disappear if you clear browser data, use a different browser,
-            or open Robu Terminal on another device. No account needed — but no sync either.
+      {/* ── Local storage notice (compact) ── */}
+      {list.length > 0 && (
+        <div className="flex gap-2 p-3 bg-border/30 border border-border/50 rounded-xl">
+          <AlertCircle size={12} className="text-muted flex-shrink-0 mt-0.5" />
+          <p className="text-[10px] text-muted leading-relaxed">
+            Saved on this browser only — clears if you clear browser data or switch devices.
           </p>
         </div>
-      </div>
+      )}
 
-      {/* ── Empty state ─────────────────────────────────────────────────── */}
+      {/* ── Empty state ── */}
       {list.length === 0 && (
         <div className="text-center py-16">
           <div className="w-14 h-14 rounded-2xl bg-border/60 flex items-center justify-center mx-auto mb-4">
             <Bookmark size={22} className="text-muted/40" />
           </div>
-          <p className="text-sm font-medium text-primary mb-1">Nothing saved yet</p>
+          <p className="text-sm font-semibold text-primary mb-1">Nothing saved yet</p>
           <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
-            Search any stock and click the bookmark icon on its profile to save it here for quick access.
+            Search any stock and tap the bookmark icon on its profile to save it here.
           </p>
         </div>
       )}
 
-      {/* ── Watchlist entries ────────────────────────────────────────────── */}
+      {/* ── Cards ── */}
       {list.length > 0 && (
         <div className="space-y-2">
-          {list.map((entry) => {
+          {list.map(entry => {
             const isActive = entry.symbol === currentSymbol;
+            const q = quotes[entry.symbol];
+
             return (
               <div
                 key={entry.symbol}
-                className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer group ${
-                  isActive
-                    ? 'bg-gold/8 border-gold/25'
-                    : 'bg-card border-border hover:border-gold/20 hover:bg-gold/5'
-                }`}
                 onClick={() => onSelectSymbol(entry.symbol)}
+                className={`group relative rounded-xl border transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-gold/8 border-gold/30'
+                    : 'bg-card border-border hover:border-gold/25 hover:bg-gold/4'
+                }`}
               >
-                {/* Symbol chip */}
-                <span className="text-[11px] font-mono font-bold px-2 py-1 bg-gold/10 text-gold border border-gold/25 rounded-lg flex-shrink-0 min-w-[52px] text-center">
-                  {entry.symbol}
-                </span>
+                <div className="p-3.5">
+                  <div className="flex items-start justify-between gap-3">
 
-                {/* Name + sector */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-primary truncate leading-tight">
-                    {entry.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {entry.sector && (
-                      <span className="text-[10px] text-muted bg-border/50 px-1.5 py-0.5 rounded truncate max-w-[140px]">
-                        {entry.sector}
-                      </span>
-                    )}
+                    {/* Left: symbol + name + sector */}
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+                        <span className="text-[10px] font-bold font-mono text-gold leading-tight text-center px-0.5">
+                          {entry.symbol.slice(0, 4)}
+                        </span>
+                      </div>
+                      <div className="min-w-0 pt-0.5">
+                        <p className="text-sm font-bold text-primary truncate">{entry.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px] font-bold font-mono text-gold">{entry.symbol}</span>
+                          {entry.sector && (
+                            <span className="text-[10px] text-muted bg-border/50 px-1.5 py-0.5 rounded max-w-[120px] truncate">
+                              {entry.sector}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: live price + remove */}
+                    <div className="flex items-start gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        {q?.loading ? (
+                          <div className="w-12 h-4 bg-border/40 rounded animate-pulse mb-1" />
+                        ) : q?.error || !q ? (
+                          <p className="text-xs text-muted/50">—</p>
+                        ) : (
+                          <>
+                            <p className="text-sm font-bold font-mono text-primary">
+                              ₹{q.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            </p>
+                            {q.pe && (
+                              <p className="text-[10px] font-mono text-muted mt-0.5">
+                                PE {q.pe.toFixed(1)}x
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <button
+                        onClick={e => { e.stopPropagation(); removeFromWatchlist(entry.symbol); }}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/30 hover:text-loss hover:bg-loss/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Remove"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bottom row: market cap + added time */}
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-3">
+                      {q && !q.loading && !q.error && q.marketCap > 0 && (
+                        <span className="text-[10px] text-muted font-mono">{fmtCap(q.marketCap)}</span>
+                      )}
+                    </div>
                     <span className="flex items-center gap-1 text-[10px] text-muted/60">
                       <Clock size={9} />
-                      {timeAgo(entry.addedAt)}
+                      Added {timeAgo(entry.addedAt)}
                     </span>
                   </div>
                 </div>
 
-                {/* Remove button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFromWatchlist(entry.symbol);
-                  }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/40 hover:text-loss hover:bg-loss/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
-                  title="Remove from watchlist"
-                >
-                  <X size={13} />
-                </button>
+                {/* Active indicator */}
+                {isActive && (
+                  <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-gold rounded-full" />
+                )}
               </div>
             );
           })}

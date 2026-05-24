@@ -151,6 +151,10 @@ button {
   * { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
+/* Utility: hide scrollbar but keep scrollability */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* ── Range inputs ─────────────────────────────────────────────────────────── */
 input[type='range'] {
   -webkit-appearance: none;

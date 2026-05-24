@@ -63,38 +63,36 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
     : `${upside.toFixed(1)}% downside`;
 
   return (
-    <div className={`${verdict.bg} border ${verdict.border} rounded-xl p-4 flex flex-wrap items-center gap-3`}>
+    <div className={`${verdict.bg} border ${verdict.border} rounded-xl p-4`}>
 
-      {/* Icon + label — always on same row */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Icon circle */}
+      {/* Row 1: icon + label + upside — always horizontal */}
+      <div className="flex items-center gap-3">
         <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${verdict.color}`}
+          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0`}
           style={{ background: `${verdict.dot}18`, border: `1.5px solid ${verdict.dot}40` }}
         >
           <verdict.Icon size={18} className={verdict.color} />
         </div>
-
-        {/* Text */}
-        <div className="min-w-0">
-          <p className={`text-sm font-semibold ${verdict.color} leading-tight`}>{verdict.label}</p>
-          <p className="text-xs text-muted mt-0.5 leading-snug line-clamp-2">{verdict.sub}</p>
+        <div className="flex-1 overflow-hidden">
+          <p className={`text-sm font-semibold ${verdict.color} leading-tight truncate`}>{verdict.label}</p>
+          <p className="text-xs text-muted mt-0.5 leading-snug truncate">{verdict.sub}</p>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          <p className={`text-sm font-bold font-mono ${verdict.color} whitespace-nowrap`}>{upsideLabel}</p>
         </div>
       </div>
 
-      {/* Numbers — wraps below on very narrow screens */}
-      <div className="text-right flex-shrink-0">
-        <p className={`text-base font-bold font-mono ${verdict.color}`}>{upsideLabel}</p>
-        <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
-          <span className="text-xs text-muted">Target</span>
-          <span className="text-xs font-mono text-primary">
-            ₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </span>
-          <span className="text-xs text-muted">· Now</span>
-          <span className="text-xs font-mono text-primary">
-            ₹{current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </span>
-        </div>
+      {/* Row 2: target vs current price */}
+      <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-current/10 text-xs flex-wrap">
+        <span className="text-muted">Target</span>
+        <span className={`font-mono font-semibold ${verdict.color}`}>
+          ₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+        </span>
+        <span className="text-muted">·</span>
+        <span className="text-muted">Now</span>
+        <span className="font-mono text-primary">
+          ₹{current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+        </span>
       </div>
     </div>
   );

@@ -73,6 +73,7 @@ export {
   Check,
   Filter,
   Briefcase,
+  Upload,
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   Sun,
