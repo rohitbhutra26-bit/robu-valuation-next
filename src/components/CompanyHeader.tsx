@@ -2,9 +2,12 @@
 
 import { Company } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
+import { Bookmark } from '@/lib/icons';
 
 interface CompanyHeaderProps {
   company: Company;
+  isWatchlisted?: boolean;
+  onWatchlistToggle?: () => void;
 }
 
 function formatCr(value: number): string {
@@ -14,7 +17,7 @@ function formatCr(value: number): string {
   return `₹${value.toLocaleString('en-IN')} Cr`;
 }
 
-export default function CompanyHeader({ company }: CompanyHeaderProps) {
+export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggle }: CompanyHeaderProps) {
   const isPositive = company.changePercent >= 0;
   const smartProfile = getCompanyProfile(company);
   const smartSectorLabel = smartProfile.sectorLabel;
@@ -34,7 +37,22 @@ export default function CompanyHeader({ company }: CompanyHeaderProps) {
               NSE
             </span>
           </div>
-          <h1 className="mt-2 text-xl font-bold text-primary leading-tight">{company.name}</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <h1 className="text-xl font-bold text-primary leading-tight">{company.name}</h1>
+            {onWatchlistToggle && (
+              <button
+                onClick={onWatchlistToggle}
+                title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
+                className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                  isWatchlisted
+                    ? 'text-gold bg-gold/15 border border-gold/30'
+                    : 'text-muted/40 hover:text-gold hover:bg-gold/10 border border-transparent hover:border-gold/20'
+                }`}
+              >
+                <Bookmark size={14} className={isWatchlisted ? 'fill-gold' : ''} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="text-right">

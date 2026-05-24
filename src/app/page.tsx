@@ -7,6 +7,7 @@ import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib
 import DataQualityBanner from '@/components/DataQualityBanner';
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
+import WatchlistView from '@/components/WatchlistView';
 import KeyMetrics from '@/components/KeyMetrics';
 import AIOverview from '@/components/AIOverview';
 import FinancialsTable from '@/components/FinancialsTable';
@@ -22,7 +23,8 @@ import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw } from '@/lib/icons';
+import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark } from '@/lib/icons';
+import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -32,13 +34,15 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'financials' | 'peers';
+type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
-const NAV_ITEMS: { view: ActiveView; Icon: React.FC<{ size: number; className?: string }>; label: string; desc: string; badge?: string }[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string }[] = [
   { view: 'valuation',  Icon: Calculator, label: 'Valuation',    desc: "What's it worth?"          },
   { view: 'financials', Icon: Table2,     label: 'Financials',   desc: 'Revenue, profit & history'  },
-  { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies', badge: 'NEW' },
+  { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies'         },
+  { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks'               },
 ];
 
 export default function Home() {
@@ -67,6 +71,27 @@ export default function Home() {
     years: 5,
   });
   const defaultAutoFillLabelRef = useRef<string | null>(null);
+
+  // ── Watchlist state ──────────────────────────────────────────────────────
+  const [watchlistCount, setWatchlistCount] = useState(0);
+  const [isWatchlisted, setIsWatchlisted]   = useState(false);
+
+  // Sync watchlist count + current-stock bookmark state
+  useEffect(() => {
+    const sync = () => {
+      setWatchlistCount(getWatchlist().length);
+      if (company) setIsWatchlisted(isInWatchlist(company.symbol));
+    };
+    sync();
+    window.addEventListener('robu_watchlist_change', sync);
+    return () => window.removeEventListener('robu_watchlist_change', sync);
+  }, [company]);
+
+  function handleWatchlistToggle() {
+    if (!company) return;
+    const added = toggleWatchlist({ symbol: company.symbol, name: company.name, sector: company.sector });
+    setIsWatchlisted(added);
+  }
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
   // Read directly from window.location — no useSearchParams/Suspense needed.
@@ -288,7 +313,24 @@ export default function Home() {
             </div>
           )}
 
-          <div className="w-[80px] flex justify-end">
+          <div className="flex items-center gap-2">
+            {/* Watchlist shortcut — always visible in header */}
+            <button
+              onClick={() => { setHomeMode(false); setActiveView('watchlist'); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                activeView === 'watchlist'
+                  ? 'bg-gold/10 border-gold/30 text-gold'
+                  : 'bg-transparent border-border text-muted hover:text-primary hover:border-gold/20'
+              }`}
+            >
+              <Bookmark size={12} />
+              Watchlist
+              {watchlistCount > 0 && (
+                <span className="bg-gold text-terminal text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  {watchlistCount}
+                </span>
+              )}
+            </button>
             <ThemeToggle />
           </div>
         </div>
@@ -432,10 +474,19 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+            ) : activeView === 'watchlist' ? (
+              <WatchlistView
+                onSelectSymbol={(sym) => { handleSelect(sym); }}
+                currentSymbol={selectedSymbol}
+              />
             ) : company ? (
               <div className="p-4 space-y-4">
                 {/* Company header — always visible */}
-                <CompanyHeader company={company} />
+                <CompanyHeader
+                  company={company}
+                  isWatchlisted={isWatchlisted}
+                  onWatchlistToggle={handleWatchlistToggle}
+                />
 
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
