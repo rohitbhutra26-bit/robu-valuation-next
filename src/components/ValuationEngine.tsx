@@ -14,6 +14,7 @@ import {
 } from '@/lib/forecastUtils';
 import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
 import { Clock } from '@/lib/icons';
+import Tooltip from '@/components/Tooltip';
 
 interface ValuationEngineProps {
   company: Company;
@@ -31,20 +32,20 @@ function MethodCard({
   const isUp    = upside >= 0;
 
   return (
-    <div className={`rounded-xl p-3.5 border transition-all ${
+    <div className={`rounded-xl p-3 border transition-all ${
       primary
         ? 'border-gold bg-gold/5 shadow-[0_0_0_1px_rgba(245,158,11,0.15)]'
         : 'border-border bg-card'
     }`}>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className={`text-xs font-semibold ${primary ? 'text-gold' : 'text-muted'}`}>{method}</span>
+      <div className="flex items-start justify-between mb-1.5 gap-1">
+        <span className={`text-[11px] font-semibold leading-tight ${primary ? 'text-gold' : 'text-muted'}`}>{method}</span>
         {primary && (
-          <span className="text-[10px] font-bold text-terminal bg-gold px-1.5 py-0.5 rounded tracking-wide">
+          <span className="text-[9px] font-bold text-terminal bg-gold px-1.5 py-0.5 rounded tracking-wide flex-shrink-0">
             PRIMARY
           </span>
         )}
       </div>
-      <p className="text-lg font-bold font-mono text-primary mb-0.5">
+      <p className="text-base font-bold font-mono text-primary mb-0.5">
         {fairValue > 0
           ? `₹${fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
           : '—'}
@@ -52,7 +53,7 @@ function MethodCard({
       <p className={`text-sm font-semibold font-mono mb-1 ${isUp ? 'text-gain' : 'text-loss'}`}>
         {fairValue > 0 ? `${isUp ? '+' : ''}${upside.toFixed(1)}%` : '—'}
       </p>
-      <p className="text-[11px] text-muted leading-relaxed">{desc}</p>
+      <p className="text-[10px] text-muted leading-relaxed line-clamp-3">{desc}</p>
     </div>
   );
 }
@@ -166,35 +167,35 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center">
-            <Clock size={13} className="text-gold" />
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <Clock size={13} className="text-gold" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-primary">Valuation Engine</h3>
+              <p className="text-[10px] text-muted mt-0.5 leading-tight truncate">{profile.multipleRationale}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-primary">Valuation Engine</h3>
-            <p className="text-[11px] text-muted mt-0.5 leading-tight">{profile.multipleRationale}</p>
+          <div className={`text-[10px] px-2 py-0.5 rounded border font-semibold flex-shrink-0 ${verdict.cls}`}>
+            {verdict.text}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-          {/* Earnings quality badge */}
-          <span
-            title={quality.breakdown}
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono cursor-default ${
-              quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
-              quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
-              quality.score >= 40 ? 'text-warning bg-warning/10 border-warning/25' :
-                                    'text-loss bg-loss/10 border-loss/25'
-            }`}
-          >
+        {/* Badges row — separate line so they never push the title off */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${
+            quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
+            quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
+            quality.score >= 40 ? 'text-warning bg-warning/10 border-warning/25' :
+                                  'text-loss bg-loss/10 border-loss/25'
+          }`}>
             {quality.label}
+            <Tooltip text={quality.breakdown} position="bottom" />
           </span>
           <span className="text-[10px] font-bold text-gold bg-gold/10 border border-gold/20 px-2 py-0.5 rounded font-mono">
             {modelBadge}
           </span>
-          <div className={`text-xs px-2 py-1 rounded border font-semibold ${verdict.cls}`}>
-            {verdict.text}
-          </div>
         </div>
       </div>
 
@@ -291,9 +292,12 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
 
       {/* ── Earnings quality signal ── */}
       <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold text-primary mb-0.5">Earnings Quality Signal</p>
-          <p className="text-[11px] text-muted leading-relaxed" title={quality.breakdown}>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1 mb-0.5">
+            <p className="text-xs font-semibold text-primary">Earnings Quality Signal</p>
+            <Tooltip text={quality.breakdown} position="top" />
+          </div>
+          <p className="text-[11px] text-muted leading-relaxed line-clamp-2">
             {quality.breakdown}
           </p>
         </div>

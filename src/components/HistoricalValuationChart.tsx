@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Activity } from '@/lib/icons';
 import { Company } from '@/lib/types';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import Tooltip from '@/components/Tooltip';
 
 interface DataPoint {
   date: string;
@@ -255,18 +256,22 @@ export default function HistoricalValuationChart({ company }: Props) {
         </div>
         <div className="flex gap-1 flex-shrink-0">
           {(['pe', 'pb'] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => setActiveMetric(m)}
-              title={m === 'pe' ? 'Price ÷ Earnings — how much you pay for ₹1 of profit' : 'Price ÷ Book — how much you pay for ₹1 of net assets'}
-              className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all ${
-                activeMetric === m
-                  ? 'bg-gold text-terminal'
-                  : 'text-muted border border-border hover:text-primary'
-              }`}
-            >
-              {m === 'pe' ? 'P/E' : 'P/B'}
-            </button>
+            <span key={m} className="inline-flex items-center gap-0.5">
+              <button
+                onClick={() => setActiveMetric(m)}
+                className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all ${
+                  activeMetric === m
+                    ? 'bg-gold text-terminal'
+                    : 'text-muted border border-border hover:text-primary'
+                }`}
+              >
+                {m === 'pe' ? 'P/E' : 'P/B'}
+              </button>
+              <Tooltip
+                text={m === 'pe' ? 'Price ÷ Earnings — how much you pay for ₹1 of profit' : 'Price ÷ Book — how much you pay for ₹1 of net assets'}
+                position="bottom"
+              />
+            </span>
           ))}
         </div>
       </div>

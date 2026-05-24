@@ -5,6 +5,7 @@ import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
 import { getSectorProfile, getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
 import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
+import Tooltip from '@/components/Tooltip';
 
 interface ScenarioCardsProps {
   financials: FinancialYear[];
@@ -107,7 +108,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
             Model: <span className="text-gold font-medium">{profile.exitMultipleLabel}</span>
             {' · '}
             {deltas.isCompanySpecific
-              ? <span title={`Historical revenue σ = ${sigma.toFixed(1)}%`}>spread from σ={sigma.toFixed(1)}%</span>
+              ? <span className="inline-flex items-center gap-0.5">spread from σ={sigma.toFixed(1)}%<Tooltip text={`Historical revenue σ = ${sigma.toFixed(1)}% — measures how volatile this company's revenue has been`} /></span>
               : 'sector-template spread'}
           </p>
           {/* Earnings quality badge */}
@@ -120,8 +121,9 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
             }`}>
               {quality.label} · {quality.score}/100
             </span>
-            <span className="text-[10px] text-muted/60" title={quality.breakdown}>
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-muted/60">
               exit ×{quality.multiplier.toFixed(2)}
+              <Tooltip text={quality.breakdown} />
             </span>
           </div>
         </div>
