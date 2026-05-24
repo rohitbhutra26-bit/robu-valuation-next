@@ -22,8 +22,10 @@ module.exports = {
         warning:  'rgb(var(--color-warning) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        // Inter — professional financial UI standard (Bloomberg, Stripe, Linear)
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        // IBM Plex Mono — tabular numbers, designed for data display
+        mono: ['IBM Plex Mono', 'JetBrains Mono', 'Cascadia Code', 'monospace'],
       },
     },
   },

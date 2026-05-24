@@ -276,24 +276,24 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-mono font-bold text-gold tracking-wider">{company.symbol}</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted">{company.sector}</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted max-w-[120px] truncate">{company.sector}</span>
           </div>
-          <h2 className="text-base font-bold text-primary leading-snug">{company.name}</h2>
+          <h2 className="text-base font-bold text-primary leading-snug line-clamp-2">{company.name}</h2>
         </div>
         <div className="flex items-end gap-2 mb-1">
-          <span className="text-4xl font-bold font-mono text-primary leading-none">
+          <span className="text-3xl font-bold font-mono text-primary leading-none min-w-0 break-all">
             ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
         </div>
-        <div className={`flex items-center gap-2 text-sm font-semibold font-mono mb-5 ${isPos ? 'text-gain' : 'text-loss'}`}>
+        <div className={`flex items-center flex-wrap gap-x-2 gap-y-0.5 text-sm font-semibold font-mono mb-5 ${isPos ? 'text-gain' : 'text-loss'}`}>
           <span>{isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)}</span>
           <span>({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)</span>
           <span className="text-xs text-muted font-normal">today</span>
         </div>
         {/* 52W range bar */}
-        <div className="flex justify-between text-[10px] text-muted mb-1.5">
-          <span>52W Low ₹{low.toLocaleString('en-IN')}</span>
-          <span>52W High ₹{high.toLocaleString('en-IN')}</span>
+        <div className="flex justify-between text-[10px] text-muted mb-1.5 gap-2">
+          <span className="truncate">Low ₹{low.toLocaleString('en-IN')}</span>
+          <span className="flex-shrink-0">High ₹{high.toLocaleString('en-IN')}</span>
         </div>
         <div className="relative h-2 bg-border rounded-full overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
@@ -471,8 +471,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       </div>
 
       <ForecastChart financials={financials} assumptions={assumptions} />
-      <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
-      <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+      <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} compact />
+      <ValuationEngine company={company} financials={financials} assumptions={assumptions} compact />
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
     </div>
   );

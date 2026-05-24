@@ -2,6 +2,7 @@
 
 import { Company, FinancialYear } from '@/lib/types';
 import { BarChart3, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
+import { QuestionTooltip } from '@/components/Tooltip';
 
 interface IndustryBenchmarksProps {
   company: Company;
@@ -90,14 +91,7 @@ function CompareRow({
           <span className="text-[11px] text-primary font-medium truncate">
             {plain ? plain.label : label}
           </span>
-          {plain && (
-            <span
-              title={plain.tooltip}
-              className="flex-shrink-0 w-3 h-3 rounded-full bg-border text-muted/70 text-[7px] font-bold flex items-center justify-center cursor-help"
-            >
-              ?
-            </span>
-          )}
+          {plain && <QuestionTooltip text={plain.tooltip} />}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[10px] font-mono text-primary">{format(company)}</span>

@@ -12,6 +12,7 @@ interface ScenarioCardsProps {
   assumptions: ValuationAssumptions;
   currentPrice: number;
   company: Company;
+  compact?: boolean; // mobile: horizontal chips only
 }
 
 interface Scenario {
@@ -26,7 +27,7 @@ interface Scenario {
   cagr: number;
 }
 
-export default function ScenarioCards({ financials, assumptions, currentPrice, company }: ScenarioCardsProps) {
+export default function ScenarioCards({ financials, assumptions, currentPrice, company, compact = false }: ScenarioCardsProps) {
   if (!financials.length) return null;
 
   const profile  = getCompanyProfile(company);
@@ -96,6 +97,51 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     (sum, s) => sum + (s.fairValue * s.probability) / 100, 0
   );
   const weightedUpside = weightedFV > 0 ? (weightedFV / currentPrice - 1) * 100 : 0;
+
+  // ── Compact mode: mobile horizontal chips ────────────────────────────────
+  if (compact) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-primary">3 Scenarios</h3>
+          <span className="text-[10px] text-muted font-mono">
+            Weighted: <span className={`font-bold ${weightedUpside >= 0 ? 'text-gain' : 'text-loss'}`}>
+              ₹{weightedFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </span>
+          </span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {scenarios.map((s) => {
+            const isPos = s.upside >= 0;
+            return (
+              <div
+                key={s.name}
+                className="rounded-xl p-3 border flex-shrink-0 w-[140px]"
+                style={{ backgroundColor: `${s.color}08`, borderColor: `${s.color}30` }}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                  <span className="text-xs font-bold" style={{ color: s.color }}>{s.name}</span>
+                  <span className="text-[9px] font-bold px-1 rounded ml-auto" style={{ color: s.color, backgroundColor: `${s.color}20` }}>
+                    {s.probability}%
+                  </span>
+                </div>
+                <p className="text-xl font-bold font-mono text-primary leading-tight">
+                  ₹{s.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-sm font-semibold font-mono mt-0.5" style={{ color: s.color }}>
+                  {isPos ? '+' : ''}{s.upside.toFixed(1)}%
+                </p>
+                <p className="text-[10px] text-muted mt-1">
+                  CAGR <span className="font-mono font-semibold" style={{ color: s.color }}>{s.cagr.toFixed(1)}%</span>
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">

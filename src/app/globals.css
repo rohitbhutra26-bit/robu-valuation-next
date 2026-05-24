@@ -14,6 +14,10 @@
   --color-muted:    147 180 212;   /* #93b4d4 secondary text */
   --color-accent:   125 211 252;   /* #7dd3fc sky blue highlights */
   --color-warning:  253 224 71;    /* #fde047 yellow-300 — caution on dark */
+
+  /* Font family tokens */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
 }
 
 [data-theme="light"] {
@@ -29,29 +33,86 @@
   --color-warning:  180 83 9;      /* #b45309 amber-700 — caution on light, WCAG AA */
 }
 
-* {
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* ── Base ─────────────────────────────────────────────────────────────────── */
 html {
-  font-size: 15px;
+  /* 16px base — Inter is optimised for this */
+  font-size: 16px;
   scroll-behavior: smooth;
+  /* Prevent layout shifts from scrollbar appearing */
+  scrollbar-gutter: stable;
+  /* Better text rendering on all platforms */
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
-html,
-body {
+html, body {
   background-color: rgb(var(--color-terminal));
   color: rgb(var(--color-primary));
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
+  /* Inter's optimal line height */
+  line-height: 1.5;
   overscroll-behavior: none;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
-/* Remove 300ms tap delay */
+/* ── Typography ───────────────────────────────────────────────────────────── */
+
+/* Inter has better tracking at small sizes with slight letter-spacing */
+body {
+  letter-spacing: -0.011em;
+}
+
+/* Headings — slightly tighter tracking looks more premium */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+/* Monospace — override Tailwind's font-mono to use IBM Plex Mono */
+.font-mono,
+code,
+pre,
+[class*="font-mono"] {
+  font-family: var(--font-mono) !important;
+  /* Tabular figures — numbers align perfectly in columns */
+  font-feature-settings: "tnum" 1, "kern" 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* ── Overflow protection ──────────────────────────────────────────────────── */
+
+/* Any flex child that can overflow gets min-w-0 protection */
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Long words (company names, symbols) break safely */
+p, span, div, td, th, li {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* But allow nowrap on explicitly set whitespace-nowrap */
+.whitespace-nowrap {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* ── Interaction ──────────────────────────────────────────────────────────── */
+
+/* Remove 300ms tap delay on all interactive elements */
 button, a, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }
@@ -61,15 +122,33 @@ button {
   user-select: none;
 }
 
-/* ── Custom scrollbar ─────────────────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 5px; height: 5px; }
+/* ── Focus rings — accessible but non-intrusive ───────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-gold));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+/* Desktop: thin, subtle */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--color-border));
+  background: rgb(var(--color-border) / 0.6);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--color-border) / 0.75);
+  background: rgb(var(--color-border));
+}
+
+/* Mobile: hide scrollbars (native scroll handles it) */
+@media (max-width: 1023px) {
+  ::-webkit-scrollbar { display: none; }
+  * { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 /* ── Range inputs ─────────────────────────────────────────────────────────── */
@@ -95,11 +174,54 @@ input[type='range']::-webkit-slider-thumb {
   height: 16px;
   width: 16px;
   border-radius: 50%;
+  box-shadow: 0 0 0 3px rgb(var(--color-gold) / 0.15);
+  transition: box-shadow 0.15s;
+}
+
+input[type='range']:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 5px rgb(var(--color-gold) / 0.25);
+}
+
+input[type='range']:focus { outline: none; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; }
+
+/* ── Text size overrides — Inter is crisp so we can use the actual sizes ──── */
+/* Small UI labels stay readable — floor at 11px on mobile, 11px on desktop */
+.text-\[9px\]  { font-size: 11px !important; }
+.text-\[10px\] { font-size: 11px !important; }
+.text-\[11px\] { font-size: 12px !important; }
+
+/* On mobile, nudge everything up 1px for finger-friendliness */
+@media (max-width: 768px) {
+  .text-\[9px\]  { font-size: 12px !important; }
+  .text-\[10px\] { font-size: 12px !important; }
+  .text-\[11px\] { font-size: 13px !important; }
+  .text-xs  { font-size: 13px !important; }
+}
+
+/* ── Light mode: boost muted text contrast ───────────────────────────────── */
+/* text-muted at opacity 50–60 fails WCAG on white — enforce minimum */
+[data-theme="light"] .text-muted\/60,
+[data-theme="light"] .text-muted\/50,
+[data-theme="light"] .text-muted\/40 {
+  color: rgb(var(--color-muted)) !important;
+  opacity: 0.85;
+}
+
+/* Light mode cards need subtle shadow for depth */
+[data-theme="light"] .bg-card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+}
+
+/* Light mode borders need to be fully visible */
+[data-theme="light"] [class*="border-border"] {
+  border-color: rgb(var(--color-border)) !important;
 }
 
 /* ── Print / Export PDF ───────────────────────────────────────────────────── */
 @media print {
-  /* Hide all UI chrome */
   header, nav, footer,
   .no-print,
   [class*="sticky"],
@@ -107,7 +229,6 @@ input[type='range']::-webkit-slider-thumb {
     display: none !important;
   }
 
-  /* Show only the printable report */
   .print-only {
     display: block !important;
   }
@@ -115,6 +236,7 @@ input[type='range']::-webkit-slider-thumb {
   body {
     background: #fff !important;
     color: #111 !important;
+    font-family: Georgia, serif !important;
     font-size: 12px;
   }
 
@@ -129,28 +251,20 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* Hide print-only content on screen */
-.print-only {
-  display: none;
-}
-
-input[type='range']:focus { outline: none; }
-input[type='range']:focus::-webkit-slider-thumb { box-shadow: none; }
-
-/* ── Tables ───────────────────────────────────────────────────────────────── */
-table { border-collapse: collapse; width: 100%; }
-
-/* ── Accessibility: nudge the very small label text up ───────────────────── */
-/* 93 occurrences of text-[9/10/11px] across components — boost them globally */
-.text-\[9px\]  { font-size: 11px !important; }
-.text-\[10px\] { font-size: 11px !important; }
-.text-\[11px\] { font-size: 12px !important; }
+.print-only { display: none; }
 
 /* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeIn 0.2s ease-out; }
+.fade-in { animation: fadeIn 0.18s ease-out; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-up { animation: slideUp 0.22s ease-out; }
 
 /* ── Gradient accent text ─────────────────────────────────────────────────── */
 .text-gradient-gold {
@@ -160,7 +274,57 @@ table { border-collapse: collapse; width: 100%; }
   background-clip: text;
 }
 
-/* ── Light mode shadow — cards need depth on white bg ────────────────────── */
-[data-theme="light"] .shadow-card {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+/* ── Card elevation system ────────────────────────────────────────────────── */
+/* Dark: glow-border on hover */
+.card-hover {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.card-hover:hover {
+  border-color: rgb(var(--color-gold) / 0.3);
+  box-shadow: 0 0 0 1px rgb(var(--color-gold) / 0.1);
+}
+
+/* ── Mobile-specific layout helpers ──────────────────────────────────────── */
+
+/* Ensure full-bleed on mobile without horizontal scroll */
+@media (max-width: 1023px) {
+  body {
+    /* Prevent any child from causing horizontal scroll */
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Tables always scroll horizontally — never cause layout overflow */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    /* Show scroll shadow hint */
+    background:
+      linear-gradient(to right, rgb(var(--color-card)) 30%, transparent) left center,
+      linear-gradient(to left, rgb(var(--color-card)) 30%, transparent) right center;
+    background-repeat: no-repeat;
+    background-size: 40px 100%;
+    background-attachment: local, local;
+  }
+}
+
+/* ── Number input: hide spinners ──────────────────────────────────────────── */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] { -moz-appearance: textfield; }
+
+/* ── Tablet breakpoint helper (768–1023px) ────────────────────────────────── */
+/* At tablet: mobile layout but with more generous padding */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Give tablet cards more breathing room */
+  .px-4 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+
+  /* Tablet bottom nav */
+  .fixed.bottom-0 nav, nav.fixed.bottom-0 {
+    /* Slightly taller tap targets on tablet */
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 }

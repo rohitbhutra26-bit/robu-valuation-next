@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import {
@@ -20,6 +21,7 @@ interface ValuationEngineProps {
   company: Company;
   financials: FinancialYear[];
   assumptions: ValuationAssumptions;
+  compact?: boolean; // mobile: show only composite FV + stats, collapse method cards
 }
 
 // ─── Method card ─────────────────────────────────────────────────────────────
@@ -72,7 +74,8 @@ function StatPill({ label, value, color, sub }: {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function ValuationEngine({ company, financials, assumptions }: ValuationEngineProps) {
+export default function ValuationEngine({ company, financials, assumptions, compact = false }: ValuationEngineProps) {
+  const [showDetails, setShowDetails] = useState(false);
   if (!financials.length) return null;
 
   const profile = getCompanyProfile(company);
@@ -162,6 +165,114 @@ export default function ValuationEngine({ company, financials, assumptions }: Va
     model === 'ev_ebitda'? 'EV/EBITDA Model' :
     model === 'ev_sales' ? 'EV/Sales Model' :
                            'P/E Model';
+
+  // ── Compact mode (mobile) ─────────────────────────────────────────────────
+  if (compact) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        {/* Title + verdict */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-primary">Valuation Engine</h3>
+          <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${verdict.cls}`}>
+            {verdict.text}
+          </span>
+        </div>
+
+        {/* Big composite FV */}
+        <div className="bg-border/20 rounded-xl p-4">
+          <p className="text-xs text-muted mb-1">Composite Fair Value
+            <span className="text-muted/60 ml-1">
+              {model === 'pb' && gordonResult?.isValid ? '(P/B + Gordon blend)' : `(${allFVs.length} methods avg)`}
+            </span>
+          </p>
+          <div className="flex items-end gap-3 flex-wrap">
+            <p className="text-3xl font-bold font-mono text-gold leading-none">
+              {compositeFV > 0 ? `₹${compositeFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—'}
+            </p>
+            <div className="mb-1">
+              <p className={`text-xl font-bold font-mono leading-none ${compositeUp >= 0 ? 'text-gain' : 'text-loss'}`}>
+                {compositeUp >= 0 ? '+' : ''}{compositeUp.toFixed(1)}%
+              </p>
+              <p className={`text-xs font-mono mt-0.5 ${compositeCAGR >= 15 ? 'text-gain' : compositeCAGR >= 0 ? 'text-gold' : 'text-loss'}`}>
+                {compositeCAGR.toFixed(1)}% CAGR
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted mt-2">
+            Current ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+
+        {/* 4 key signals */}
+        <div className="grid grid-cols-2 gap-2">
+          <StatPill
+            label="Margin of Safety"
+            value={`${mos.toFixed(1)}%`}
+            color={mos >= 25 ? 'text-gain' : mos >= 0 ? 'text-gold' : 'text-loss'}
+            sub={mos >= 25 ? 'Good buffer' : mos >= 0 ? 'Thin buffer' : 'Overpriced'}
+          />
+          <StatPill
+            label="PEG Ratio"
+            value={currentPEG > 0 ? currentPEG.toFixed(2) : '—'}
+            color={currentPEG < 1 ? 'text-gain' : currentPEG < 2 ? 'text-gold' : 'text-loss'}
+            sub={currentPEG < 1 ? '< 1 = cheap' : currentPEG < 2 ? '1–2 = fair' : '> 2 = pricey'}
+          />
+          <StatPill
+            label="Earnings Yield"
+            value={`${eyResult.currentEY.toFixed(1)}%`}
+            color={eyResult.currentEY > RISK_FREE_RATE ? 'text-gain' : 'text-loss'}
+            sub={`vs ${RISK_FREE_RATE}% G-Sec`}
+          />
+          <StatPill
+            label="Quality Score"
+            value={`${quality.score}/100`}
+            color={quality.score >= 80 ? 'text-gain' : quality.score >= 60 ? 'text-gold' : quality.score >= 40 ? 'text-warning' : 'text-loss'}
+            sub={quality.label}
+          />
+        </div>
+
+        {/* Toggle for full method details */}
+        <button
+          onClick={() => setShowDetails(v => !v)}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-border text-xs text-muted hover:text-primary hover:border-gold/30 transition-all"
+        >
+          <span>{showDetails ? 'Hide method breakdown ▲' : 'Show all valuation methods ▾'}</span>
+        </button>
+
+        {/* Collapsible full detail */}
+        {showDetails && (
+          <div className="space-y-4 pt-1">
+            {/* Method cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <MethodCard method={primaryResult.model} desc={primaryResult.desc} fairValue={primaryResult.fairValue} currentPrice={company.currentPrice} primary />
+              {model === 'pb' && gordonResult?.isValid ? (
+                <MethodCard method="Gordon Growth P/B" desc={gordonResult.desc} fairValue={gordonResult.fairValue} currentPrice={company.currentPrice} />
+              ) : (
+                <MethodCard method={pegResult.model} desc={pegResult.desc} fairValue={pegResult.fairValue} currentPrice={company.currentPrice} />
+              )}
+              {peCheck ? (
+                <MethodCard method="Forward P/E (cross-check)" desc={peCheck.desc} fairValue={peCheck.fairValue} currentPrice={company.currentPrice} />
+              ) : sectorPECheck ? (
+                <MethodCard method="Sector P/E" desc={sectorPECheck.desc} fairValue={sectorPECheck.fairValue} currentPrice={company.currentPrice} />
+              ) : null}
+              <MethodCard method={eyResult.model} desc={eyResult.desc} fairValue={eyResult.fairValue} currentPrice={company.currentPrice} />
+            </div>
+            {/* Earnings quality */}
+            <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-primary mb-0.5">Earnings Quality</p>
+                <p className="text-[11px] text-muted leading-relaxed line-clamp-2">{quality.breakdown}</p>
+              </div>
+              <div className="flex-shrink-0 text-center">
+                <p className={`text-2xl font-bold font-mono ${quality.score >= 80 ? 'text-gain' : quality.score >= 60 ? 'text-gold' : quality.score >= 40 ? 'text-warning' : 'text-loss'}`}>{quality.score}</p>
+                <p className="text-[10px] text-muted">/ 100</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">

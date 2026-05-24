@@ -63,26 +63,29 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
     : `${upside.toFixed(1)}% downside`;
 
   return (
-    <div className={`${verdict.bg} border ${verdict.border} rounded-xl p-4 flex items-center gap-4`}>
+    <div className={`${verdict.bg} border ${verdict.border} rounded-xl p-4 flex flex-wrap items-center gap-3`}>
 
-      {/* Icon circle */}
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${verdict.color}`}
-        style={{ background: `${verdict.dot}18`, border: `1.5px solid ${verdict.dot}40` }}
-      >
-        <verdict.Icon size={20} className={verdict.color} />
+      {/* Icon + label — always on same row */}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Icon circle */}
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${verdict.color}`}
+          style={{ background: `${verdict.dot}18`, border: `1.5px solid ${verdict.dot}40` }}
+        >
+          <verdict.Icon size={18} className={verdict.color} />
+        </div>
+
+        {/* Text */}
+        <div className="min-w-0">
+          <p className={`text-sm font-semibold ${verdict.color} leading-tight`}>{verdict.label}</p>
+          <p className="text-xs text-muted mt-0.5 leading-snug line-clamp-2">{verdict.sub}</p>
+        </div>
       </div>
 
-      {/* Text */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold ${verdict.color} leading-tight`}>{verdict.label}</p>
-        <p className="text-xs text-muted mt-0.5 leading-snug">{verdict.sub}</p>
-      </div>
-
-      {/* Numbers */}
+      {/* Numbers — wraps below on very narrow screens */}
       <div className="text-right flex-shrink-0">
-        <p className={`text-xl font-bold font-mono ${verdict.color}`}>{upsideLabel}</p>
-        <div className="flex items-center justify-end gap-1.5 mt-0.5">
+        <p className={`text-base font-bold font-mono ${verdict.color}`}>{upsideLabel}</p>
+        <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
           <span className="text-xs text-muted">Target</span>
           <span className="text-xs font-mono text-primary">
             ₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}

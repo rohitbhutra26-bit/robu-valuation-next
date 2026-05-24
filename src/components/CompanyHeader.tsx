@@ -73,17 +73,17 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold font-mono text-primary">
+        <div className="text-right flex-shrink-0">
+          <div className="flex items-baseline gap-1.5 flex-wrap justify-end">
+            <span className="text-2xl font-bold font-mono text-primary">
               ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </span>
-            <span className={`text-base font-semibold font-mono ${isPositive ? 'text-gain' : 'text-loss'}`}>
-              {isPositive ? '+' : ''}{company.change.toFixed(2)} ({isPositive ? '+' : ''}{company.changePercent.toFixed(2)}%)
+            <span className={`text-sm font-semibold font-mono ${isPositive ? 'text-gain' : 'text-loss'}`}>
+              {isPositive ? '+' : ''}{company.changePercent.toFixed(2)}%
             </span>
           </div>
-          <p className="text-xs text-muted mt-1">
-            52W: ₹{company.week52Low.toLocaleString('en-IN')} — ₹{company.week52High.toLocaleString('en-IN')}
+          <p className="text-xs text-muted mt-0.5 whitespace-nowrap">
+            52W: ₹{company.week52Low.toLocaleString('en-IN')} – ₹{company.week52High.toLocaleString('en-IN')}
           </p>
         </div>
       </div>
