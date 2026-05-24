@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 
 const GEMINI_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -16,11 +17,19 @@ function buildPrompt(company: Record<string, unknown>, financials: Record<string
     ? (((latest.eps / oldest.eps) ** (1 / (years - 1))) - 1) * 100
     : 0;
 
+  // Use smart sector label so AI knows MCX is an Exchange, not a bank
+  const smartProfile = getCompanyProfile({
+    name:     String(company.name   ?? ''),
+    symbol:   String(company.symbol ?? ''),
+    sector:   String(company.sector ?? ''),
+    industry: company.industry ? String(company.industry) : undefined,
+  });
+
   return `You are a senior equity research analyst at an institutional fund covering Indian listed companies.
 Analyze this stock and produce a concise, institutional-grade assessment.
 
 COMPANY: ${company.name} (${company.symbol})
-SECTOR: ${company.sector}
+SECTOR: ${smartProfile.sectorLabel}
 CURRENT PRICE: ₹${company.currentPrice}
 MARKET CAP: ₹${company.marketCap} Cr
 
