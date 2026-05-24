@@ -67,6 +67,12 @@ export {
   ThumbsUp,
   Bookmark,
   RotateCcw,
+  Download,
+  Trash2,
+  Edit2,
+  Check,
+  Filter,
+  Briefcase,
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   Sun,

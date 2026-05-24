@@ -8,6 +8,11 @@ import DataQualityBanner from '@/components/DataQualityBanner';
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
 import WatchlistView from '@/components/WatchlistView';
+import PortfolioView from '@/components/PortfolioView';
+import StockScreener from '@/components/StockScreener';
+import QuarterlyFlash from '@/components/QuarterlyFlash';
+import ExportReport, { PrintableReport } from '@/components/ExportReport';
+import AddToPortfolioModal from '@/components/AddToPortfolioModal';
 import KeyMetrics from '@/components/KeyMetrics';
 import AIOverview from '@/components/AIOverview';
 import FinancialsTable from '@/components/FinancialsTable';
@@ -23,8 +28,9 @@ import PeerCompare from '@/components/PeerCompare';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark } from '@/lib/icons';
+import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Filter } from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
+import { getPortfolio, isInPortfolio, addToPortfolio } from '@/lib/portfolio';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit
@@ -34,15 +40,17 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist';
+type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist' | 'portfolio' | 'screener';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string }[] = [
+const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string; global?: boolean }[] = [
   { view: 'valuation',  Icon: Calculator, label: 'Valuation',    desc: "What's it worth?"          },
   { view: 'financials', Icon: Table2,     label: 'Financials',   desc: 'Revenue, profit & history'  },
   { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies'         },
-  { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks'               },
+  { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
+  { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
+  { view: 'screener',   Icon: Filter,     label: 'Screener',     desc: 'Filter stocks', global: true },
 ];
 
 export default function Home() {
@@ -91,6 +99,26 @@ export default function Home() {
     if (!company) return;
     const added = toggleWatchlist({ symbol: company.symbol, name: company.name, sector: company.sector });
     setIsWatchlisted(added);
+  }
+
+  // ── Portfolio state ──────────────────────────────────────────────────────
+  const [portfolioCount, setPortfolioCount] = useState(0);
+  const [isPortfolioStock, setIsPortfolioStock] = useState(false);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      setPortfolioCount(getPortfolio().length);
+      if (company) setIsPortfolioStock(isInPortfolio(company.symbol));
+    };
+    sync();
+    window.addEventListener('robu_portfolio_change', sync);
+    return () => window.removeEventListener('robu_portfolio_change', sync);
+  }, [company]);
+
+  function handlePortfolioToggle() {
+    if (!company) return;
+    setShowPortfolioModal(true);
   }
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
@@ -278,6 +306,16 @@ export default function Home() {
 
   return (
     <>
+    {/* ── Portfolio modal (global overlay) ── */}
+    {showPortfolioModal && company && (
+      <AddToPortfolioModal company={company} onClose={() => setShowPortfolioModal(false)} />
+    )}
+
+    {/* ── Printable report (hidden on screen, shown when printing) ── */}
+    {company && financials.length > 0 && (
+      <PrintableReport company={company} financials={financials} assumptions={assumptions} />
+    )}
+
     {/* ═══════════════════ MOBILE ═══════════════════ */}
     <MobileLayout
       company={company}
@@ -314,23 +352,30 @@ export default function Home() {
           )}
 
           <div className="flex items-center gap-2">
-            {/* Watchlist shortcut — always visible in header */}
-            <button
-              onClick={() => { setHomeMode(false); setActiveView('watchlist'); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                activeView === 'watchlist'
-                  ? 'bg-gold/10 border-gold/30 text-gold'
-                  : 'bg-transparent border-border text-muted hover:text-primary hover:border-gold/20'
-              }`}
-            >
-              <Bookmark size={12} />
-              Watchlist
-              {watchlistCount > 0 && (
-                <span className="bg-gold text-terminal text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                  {watchlistCount}
-                </span>
-              )}
-            </button>
+            {/* Global nav shortcuts */}
+            {([
+              { view: 'watchlist' as ActiveView, Icon: Bookmark,  label: 'Watchlist', count: watchlistCount },
+              { view: 'portfolio' as ActiveView, Icon: Briefcase, label: 'Portfolio',  count: portfolioCount },
+              { view: 'screener'  as ActiveView, Icon: Filter,    label: 'Screener',  count: 0              },
+            ]).map(({ view, Icon, label, count }) => (
+              <button
+                key={view}
+                onClick={() => { setHomeMode(false); setActiveView(view); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                  activeView === view
+                    ? 'bg-gold/10 border-gold/30 text-gold'
+                    : 'bg-transparent border-border text-muted hover:text-primary hover:border-gold/20'
+                }`}
+              >
+                <Icon size={12} />
+                {label}
+                {count > 0 && (
+                  <span className="bg-gold text-terminal text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
             <ThemeToggle />
           </div>
         </div>
@@ -475,18 +520,37 @@ export default function Home() {
                 </div>
               </div>
             ) : activeView === 'watchlist' ? (
-              <WatchlistView
-                onSelectSymbol={(sym) => { handleSelect(sym); }}
-                currentSymbol={selectedSymbol}
-              />
+              <div className="p-4">
+                <WatchlistView
+                  onSelectSymbol={(sym) => { handleSelect(sym); }}
+                  currentSymbol={selectedSymbol}
+                />
+              </div>
+            ) : activeView === 'portfolio' ? (
+              <div className="p-4">
+                <PortfolioView onSelectSymbol={(sym) => { handleSelect(sym); }} />
+              </div>
+            ) : activeView === 'screener' ? (
+              <div className="p-4">
+                <StockScreener onSelectSymbol={(sym) => { handleSelect(sym); }} />
+              </div>
             ) : company ? (
               <div className="p-4 space-y-4">
                 {/* Company header — always visible */}
-                <CompanyHeader
-                  company={company}
-                  isWatchlisted={isWatchlisted}
-                  onWatchlistToggle={handleWatchlistToggle}
-                />
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CompanyHeader
+                      company={company}
+                      isWatchlisted={isWatchlisted}
+                      onWatchlistToggle={handleWatchlistToggle}
+                      isInPortfolio={isPortfolioStock}
+                      onPortfolioToggle={handlePortfolioToggle}
+                    />
+                  </div>
+                  <div className="flex-shrink-0 pt-1">
+                    <ExportReport company={company} financials={financials} assumptions={assumptions} />
+                  </div>
+                </div>
 
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
@@ -611,6 +675,7 @@ export default function Home() {
                 {/* ── VIEW: FINANCIALS ── */}
                 {activeView === 'financials' && (
                   <>
+                    <QuarterlyFlash company={company} />
                     <KeyMetrics company={company} financials={financials} />
                     {financials.length > 0 && (
                       <>
