@@ -504,7 +504,40 @@ export const INDIA_SECTOR_CAGR: Record<string, number> = {
 
   // ── Other ──
   'Telecom':                  8,   // ARPU growth + 5G; subscriber base mature
+  'Telecom / Media':          8,
   'Conglomerate':            10,   // weighted average across verticals
+  'Conglomerate / Energy':    9,   // RELIANCE — O&G + Jio + Retail
+  'Conglomerate / Infra':    12,   // ADANI — ports + energy + data centres
+  'Conglomerate / FMCG':     10,   // ITC — FMCG + hotels + agri
+  'Oil & Gas':                7,   // Integrated O&G; refining margins cycle
+  'Oil & Gas / Refining':     7,
+  'Gas Utilities':            9,   // City gas distribution; volume-linked
+  'Infrastructure / EPC':    12,   // L&T, NCC — infra ordering cycle
+  'IT / Software':           11,   // maps to Information Technology
+  'Auto':                    10,
+  'Auto / Diversified':      10,
+  'Auto / Premium':          12,
+  'Auto Ancillaries':         9,
+  'Defence':                 18,   // PLI + indigenisation push
+  'Pharma':                  13,
+  'Specialty Chemicals':     14,
+  'Real Estate':             11,
+  'REIT':                     7,
+  'Power / Utilities':        7,
+  'Steel':                    6,
+  'Metals':                   6,
+  'Retail':                  13,
+  'Premium Consumer':        14,
+  'QSR / Food':              16,
+  'Capital Goods':           12,
+  'Industrials':             10,
+  'Electrical Equip':        13,
+  'Exchange / Capital Mkt':  15,
+  'Depository / Registrar':  12,
+  'Asset Management (AMC)':  14,
+  'Insurance':               18,
+  'Broking / Wealth Mgmt':   13,
+  'Electronics / EMS':       25,
 };
 
 export function getIndustryCagr(sector: string): number {

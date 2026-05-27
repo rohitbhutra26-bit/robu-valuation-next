@@ -42,36 +42,24 @@ interface ImportRow { symbol: string; qty: number; buyPrice: number; buyDate?: s
 
 /**
  * Parse a CSV text into ImportRow[].
- * Supported formats:
+ * Auto-detects broker formats:
  *  - Generic:  Symbol, Qty, Buy Price, [Date]
- *  - Zerodha:  symbol,quantity,average_price  (or tradingsymbol,quantity,average_price)
- *  - Groww:    Symbol Name,Quantity,Avg. Cost Price
+ *  - Zerodha:  tradingsymbol, quantity, average_price
+ *  - Groww:    Symbol Name, Quantity, Avg. Cost Price
+ *  - Kotak:    Instrument, Qty., Avg. cost, LTP, Invested, Cur. val, P&L…
+ *  - Upstox:   instrument_token / tradingsymbol, quantity, average_price
+ *  - ICICI:    Stock Symbol, Quantity, Average Cost
+ *  - HDFC Sec: SCRIP NAME, QTY, AVG COST
  */
 function parseImportCSV(text: string): ImportRow[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
 
-  // Normalize header
-  const headerRaw = lines[0];
-  const headers = headerRaw.split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '_'));
+  // Strip BOM if present
+  const headerRaw = lines[0].replace(/^﻿/, '');
 
-  // Column finders
-  const col = (keywords: string[]): number =>
-    headers.findIndex(h => keywords.some(k => h.includes(k)));
-
-  const symIdx = col(['symbol', 'tradingsymbol', 'stock', 'scrip', 'ticker']);
-  const qtyIdx = col(['qty', 'quantity', 'shares', 'units']);
-  const priceIdx = col(['avg', 'average', 'buy_price', 'purchase', 'cost', 'price']);
-  const dateIdx  = col(['date', 'purchase_date', 'buy_date']);
-
-  if (symIdx === -1 || qtyIdx === -1 || priceIdx === -1) return [];
-
-  const rows: ImportRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    // Respect quoted fields
+  // Parse quoted CSV header properly
+  function splitCSVLine(line: string): string[] {
     const cells: string[] = [];
     let cur = '', inQ = false;
     for (const ch of line + ',') {
@@ -79,13 +67,44 @@ function parseImportCSV(text: string): ImportRow[] {
       if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; continue; }
       cur += ch;
     }
+    return cells;
+  }
 
-    const sym   = cells[symIdx]?.toUpperCase().replace(/[^A-Z0-9&]/g, '') || '';
-    const qty   = parseFloat(cells[qtyIdx]?.replace(/,/g, '') || '');
-    const price = parseFloat(cells[priceIdx]?.replace(/[₹,\s]/g, '') || '');
+  // Normalize header: lowercase, collapse non-alphanumeric to underscore
+  const rawHeaders = splitCSVLine(headerRaw);
+  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''));
+
+  // Column finder: first header that includes ANY keyword
+  const col = (keywords: string[]): number =>
+    headers.findIndex(h => keywords.some(k => h === k || h.includes(k)));
+
+  // Symbol: Kotak "instrument", HDFC "scrip_name", ICICI "stock_symbol", Groww "symbol_name"
+  const symIdx = col([
+    'tradingsymbol', 'instrument_token', 'scrip_name', 'stock_symbol',
+    'instrument', 'symbol', 'stock', 'scrip', 'ticker', 'name',
+  ]);
+  // Qty: Kotak "qty_" (from "Qty."), standard "quantity"
+  const qtyIdx = col(['qty', 'quantity', 'shares', 'units', 'holding']);
+  // Price: "avg_cost", "average_price", "avg_cost_price" all match "avg" or "average" or "cost"
+  const priceIdx = col(['avg', 'average', 'buy_price', 'purchase_price', 'cost', 'price']);
+  const dateIdx  = col(['date', 'purchase_date', 'buy_date', 'trade_date']);
+
+  if (symIdx === -1 || qtyIdx === -1 || priceIdx === -1) return [];
+
+  const rows: ImportRow[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith('Total') || line.startsWith('Grand Total')) continue;
+
+    const cells = splitCSVLine(line);
+
+    // Keep letters, digits, & and - (for BAJAJ-AUTO, M&M etc.)
+    const sym   = (cells[symIdx] || '').toUpperCase().replace(/[^A-Z0-9&-]/g, '');
+    const qty   = parseFloat((cells[qtyIdx]   || '').replace(/[^0-9.]/g, ''));
+    const price = parseFloat((cells[priceIdx] || '').replace(/[^0-9.]/g, ''));
     const date  = dateIdx !== -1 ? cells[dateIdx] : undefined;
 
-    if (!sym || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0) continue;
+    if (!sym || sym.length < 2 || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0) continue;
     rows.push({ symbol: sym, qty, buyPrice: price, buyDate: date });
   }
   return rows;
@@ -129,7 +148,7 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
         <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-sm font-bold text-primary">Import Portfolio</h2>
-            <p className="text-[11px] text-muted mt-0.5">CSV · Excel · Zerodha · Groww</p>
+            <p className="text-[11px] text-muted mt-0.5">CSV · Zerodha · Groww · Kotak · Upstox · ICICI · HDFC Sec</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-primary hover:bg-border transition-all">
             <X size={15} />
@@ -162,7 +181,7 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
               TCS,5,3800.00,2023-03-20
             </code>
             <p className="text-[10px] text-muted mt-2">
-              Also auto-detects Zerodha (<span className="font-mono text-gold">tradingsymbol, quantity, average_price</span>) and Groww formats.
+              Auto-detects <span className="font-mono text-gold">Zerodha</span>, <span className="font-mono text-gold">Groww</span>, <span className="font-mono text-gold">Kotak</span>, <span className="font-mono text-gold">Upstox</span>, <span className="font-mono text-gold">ICICI</span> &amp; <span className="font-mono text-gold">HDFC Sec</span> — just paste or drop the exported file.
             </p>
           </div>
 

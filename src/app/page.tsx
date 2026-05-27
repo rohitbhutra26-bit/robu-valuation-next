@@ -213,7 +213,8 @@ export default function Home() {
   // → User sees pre-filled, intelligent numbers on load. Zero manual input needed.
   function _applyAssumptions(companyData: Company, fins: FinancialYear[]) {
     const sectorProfile = getCompanyProfile(companyData);
-    const industryCagr  = getIndustryCagr(companyData.sector);
+    // Use sectorLabel (clean: "Conglomerate / Energy") not raw sector (may be "ril.com")
+    const industryCagr  = getIndustryCagr(sectorProfile.sectorLabel);
 
     // Run data validator first — winsorise outlier years before feeding to model
     const dq = validateFinancials(fins, companyData);
@@ -604,7 +605,7 @@ export default function Home() {
                               label="Revenue Growth" value={assumptions.revenueGrowthRate}
                               min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
                               onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                              hint={`Fades to ${getIndustryCagr(company.sector)}% India ${company.sector} CAGR`}
+                              hint={`Fades to ${getIndustryCagr(sectorProfile.sectorLabel)}% India ${sectorProfile.sectorLabel} CAGR`}
                             />
                             {sectorProfile.model !== 'pb' && (
                               <SliderInput

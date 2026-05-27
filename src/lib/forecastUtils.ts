@@ -598,7 +598,7 @@ export function suggestAssumptions(
       rawCompanyGrowth = industryCagr;
       source = 'industry_fallback';
       confidence = 'Low';
-      rationale = `Insufficient history — using ${industryCagr}% India ${company.sector} sector CAGR`;
+      rationale = `Insufficient history — using ${industryCagr}% sector CAGR as baseline`;
     }
   }
 
