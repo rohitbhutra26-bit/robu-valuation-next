@@ -25,47 +25,58 @@ function buildPrompt(company: Record<string, unknown>, financials: Record<string
     industry: company.industry ? String(company.industry) : undefined,
   });
 
-  return `You are a senior equity research analyst at an institutional fund covering Indian listed companies.
-Analyze this stock and produce a concise, institutional-grade assessment.
+  // Derive extra context signals
+  const isHighPE    = typeof company.pe === 'number' && (company.pe as number) > 40;
+  const isHighDebt  = typeof company.debtToEquity === 'number' && (company.debtToEquity as number) > 2;
+  const isBank      = smartProfile.model === 'pb';
+  const isCyclical  = ['Metals & Mining','Oil & Gas','Cement','Chemicals','Energy / O&G','Oil & Gas / Refining'].some(
+    s => smartProfile.sectorLabel.includes(s.split('/')[0].trim())
+  );
+  const isConglom   = smartProfile.sectorLabel.toLowerCase().includes('conglomerate');
+
+  const marginTrend = (latest && oldest && oldest.netMargin > 0)
+    ? (((latest.netMargin ?? 0) - (oldest.netMargin ?? 0)) > 2 ? 'expanding' : ((oldest.netMargin ?? 0) - (latest.netMargin ?? 0)) > 2 ? 'compressing' : 'stable')
+    : 'unknown';
+
+  const extraContext = [
+    isHighPE    ? `HIGH VALUATION ALERT: P/E is ${company.pe}x — compute what revenue CAGR is priced in at this multiple.` : '',
+    isHighDebt  ? `LEVERAGE ALERT: D/E is ${company.debtToEquity}x — flag interest coverage risk explicitly.` : '',
+    isBank      ? `BANK/NBFC: anchor analysis on P/B ${company.pb}x and credit cycle, not P/E.` : '',
+    isCyclical  ? `CYCLICAL: warn if margins look near a cycle peak vs. historical range.` : '',
+    isConglom   ? `CONGLOMERATE: identify the 2-3 key business segments and their relative contribution to the investment thesis.` : '',
+    marginTrend === 'compressing' ? `MARGIN PRESSURE: net margin has compressed over the period — explain why and whether structural or temporary.` : '',
+  ].filter(Boolean).join('\n');
+
+  return `You are a senior equity analyst at an Indian institutional fund (like Motilal Oswal or Kotak AMC). Produce a crisp, data-backed equity assessment. Every sentence must cite a specific number.
 
 COMPANY: ${company.name} (${company.symbol})
 SECTOR: ${smartProfile.sectorLabel}
-CURRENT PRICE: ₹${company.currentPrice}
-MARKET CAP: ₹${company.marketCap} Cr
+PRICE: ₹${company.currentPrice} | MARKET CAP: ₹${company.marketCap} Cr
 
-VALUATION METRICS:
-- P/E: ${company.pe}x
-- P/B: ${company.pb}x
-- ROE: ${company.roe}%
-- Debt/Equity: ${company.debtToEquity}x
-- Dividend Yield: ${company.dividendYield}%
+VALUATION:
+P/E ${company.pe}x | P/B ${company.pb}x | ROE ${company.roe}% | D/E ${company.debtToEquity}x | Div Yield ${company.dividendYield}%
 
-FINANCIAL TRACK RECORD (${years} years):
-- Revenue CAGR: ${revCAGR.toFixed(1)}%
-- EPS CAGR: ${epsCAGR.toFixed(1)}%
-- Latest Net Margin: ${latest?.netMargin?.toFixed(1) ?? 'N/A'}%
-- Latest EBITDA Margin: ${latest?.ebitdaMargin?.toFixed(1) ?? 'N/A'}%
-- Latest Revenue: ₹${latest?.revenue ?? 'N/A'} Cr
-- Latest PAT: ₹${latest?.pat ?? 'N/A'} Cr
-- Latest EPS: ₹${latest?.eps ?? 'N/A'}
+FINANCIALS (${years} years):
+Revenue CAGR: ${revCAGR.toFixed(1)}% | EPS CAGR: ${epsCAGR.toFixed(1)}%
+Latest Revenue: ₹${latest?.revenue} Cr | PAT: ₹${latest?.pat} Cr | EPS: ₹${latest?.eps}
+Net Margin: ${latest?.netMargin?.toFixed(1)}% (trend: ${marginTrend}) | EBITDA Margin: ${latest?.ebitdaMargin?.toFixed(1)}%
+${extraContext ? `\nSPECIAL INSTRUCTIONS:\n${extraContext}` : ''}
 
-Return ONLY valid JSON — no markdown, no text outside the JSON object:
+OUTPUT RULES — mandatory:
+1. summary: 2-3 sentences. Open with a specific valuation observation (e.g. "At ₹X, the stock trades at Yx P/E, pricing in Zx% earnings growth..."). Second sentence on what the financials actually show. Third on risk/reward stance. NEVER use "strong fundamentals", "robust growth", "well-positioned" or generic phrases. Every claim needs a number.
+2. bull: 1-2 sentences. One specific, named catalyst — a product launch, margin recovery lever, regulatory tailwind, or market share gain. Quantify the upside if possible.
+3. bear: 1-2 sentences. The single most likely thesis-breaker — specific: margin erosion from X, debt refinancing risk at Y%, competition from Z, or cyclical peak in margins.
+4. verdict: based purely on margin of safety vs. current price
+5. confidence: High = 4+ years clean data, Medium = 2-3 years, Low = <2 years
+
+Return ONLY valid JSON — no markdown, no text outside the object:
 {
   "verdict": "Strong Buy" | "Buy" | "Accumulate" | "Hold" | "Reduce" | "Avoid",
   "confidence": "High" | "Medium" | "Low",
-  "summary": "2-3 sentences. Use specific numbers. Write like a CFA analyst — direct, analytical, no generic phrases like 'strong fundamentals' or 'robust growth'. Focus on what the current valuation implies about expectations.",
-  "bull": "1-2 sentences. Name the specific catalyst or operating lever that drives the upside case.",
-  "bear": "1-2 sentences. Name the specific risk that breaks the thesis — margin pressure, debt, competition, cyclicality."
-}
-
-Analytical rules:
-- Every claim must reference an actual number from the data above
-- For banks/NBFCs: anchor on P/B and credit cycle, not P/E
-- For cyclicals (metals, cement, chemicals): warn explicitly if margins/earnings appear near cycle peak
-- For high-PE stocks (>40x): note what growth rate is already priced in
-- Confidence = High if 4+ years of clean data, Medium if 2-3 years, Low if <2 years or contradictory signals
-- If D/E > 2: flag interest coverage risk explicitly
-- Tone: institutional, concise, probability-aware. Not promotional. Not a chatbot.`;
+  "summary": "...",
+  "bull": "...",
+  "bear": "..."
+}`;
 }
 
 export async function POST(req: NextRequest) {

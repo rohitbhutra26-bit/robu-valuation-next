@@ -263,6 +263,23 @@ const SYMBOL_OVERRIDES: Record<string, SectorProfile> = {
   '360ONE':  BROKER_PROFILE,  // 360 ONE WAM (wealth management)
   NUVAMA:    BROKER_PROFILE,  // Nuvama Wealth
 
+  // ── Energy / Conglomerates ────────────────────────────────────────────────
+  // RELIANCE is O&G + Jio (Telecom) + Retail — Screener sometimes returns
+  // the company website "ril.com" as sector; force a correct profile here.
+  RELIANCE:    evEbitdaProfile('Conglomerate / Energy', 8, 4, 18),
+  ADANIENT:    evEbitdaProfile('Conglomerate / Infra',  10, 5, 22),
+  ITC:         peProfile('Conglomerate / FMCG', 28),
+
+  // ── Oil & Gas ─────────────────────────────────────────────────────────────
+  ONGC:        evEbitdaProfile('Oil & Gas', 5, 2, 10),
+  IOC:         evEbitdaProfile('Oil & Gas / Refining', 6, 2, 12),
+  BPCL:        evEbitdaProfile('Oil & Gas / Refining', 6, 2, 12),
+  HPCL:        evEbitdaProfile('Oil & Gas / Refining', 5, 2, 10),
+  GAIL:        evEbitdaProfile('Gas Utilities', 8, 3, 15),
+
+  // ── Infrastructure / Engineering ──────────────────────────────────────────
+  LT:          evEbitdaProfile('Infrastructure / EPC', 12, 5, 25),
+
   // ── Auto companies tagged as "Consumer Cyclical" by Yahoo Finance ──
   // These stocks use Screener.in sector = "Consumer Cyclical" but should be Auto P/E
   MM:          peProfile('Auto / Diversified', 22),   // Mahindra & Mahindra
