@@ -1,8 +1,10 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Company } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { Bookmark, Briefcase } from '@/lib/icons';
+import { slideDown } from '@/lib/animations';
 
 interface CompanyHeaderProps {
   company: Company;
@@ -25,7 +27,14 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
   const smartSectorLabel = smartProfile.sectorLabel;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <motion.div
+      key={company.symbol}
+      variants={slideDown}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="bg-card border border-border rounded-xl p-4"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -118,6 +127,6 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
           <span className="text-xs font-semibold text-primary font-mono">{company.dividendYield.toFixed(2)}%</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

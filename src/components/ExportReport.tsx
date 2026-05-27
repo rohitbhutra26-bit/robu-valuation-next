@@ -183,7 +183,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                       <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>₹{f.pat.toLocaleString('en-IN')}</td>
                       <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{f.netMargin.toFixed(1)}%</td>
                       <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>₹{f.eps.toFixed(2)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{f.roe?.toFixed(1) ?? '—'}%</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>—</td>
                     </tr>
                   ))}
                 </tbody>

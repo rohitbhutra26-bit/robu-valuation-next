@@ -1,5 +1,6 @@
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
 import { ValuationAssumptions, ScenarioResult } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
@@ -186,12 +187,16 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
 
       {/* ── Three scenario cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {scenarios.map((s) => {
+        {scenarios.map((s, i) => {
           const isPositive = s.upside >= 0;
           return (
-            <div
+            <motion.div
               key={s.name}
-              className="rounded-xl p-4 border min-w-0 overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: i * 0.07, ease: [0.25, 0.1, 0.25, 1] }}
+              whileHover={{ y: -3, transition: { duration: 0.15 } }}
+              className="rounded-xl p-4 border min-w-0 overflow-hidden cursor-default"
               style={{ backgroundColor: `${s.color}08`, borderColor: `${s.color}30` }}
             >
               {/* Name + probability + upside */}
@@ -212,9 +217,18 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
               </div>
 
               {/* Fair value */}
-              <p className="text-2xl font-bold font-mono text-primary mb-0.5">
-                ₹{s.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-              </p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={Math.round(s.fairValue)}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-2xl font-bold font-mono text-primary mb-0.5"
+                >
+                  ₹{s.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </motion.p>
+              </AnimatePresence>
               <p className="text-sm text-muted mb-3">
                 CAGR{' '}
                 <span className="font-mono font-semibold" style={{ color: s.color }}>
@@ -245,12 +259,15 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
 
               {/* Probability bar */}
               <div className="mt-3 h-1 bg-border rounded-full overflow-hidden">
-                <div
+                <motion.div
                   className="h-full rounded-full"
-                  style={{ backgroundColor: s.color, width: `${s.probability * 2}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${s.probability * 2}%` }}
+                  transition={{ duration: 0.5, delay: i * 0.07 + 0.2, ease: 'easeOut' }}
+                  style={{ backgroundColor: s.color }}
                 />
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

@@ -525,7 +525,6 @@ export const INDIA_SECTOR_CAGR: Record<string, number> = {
   'REIT':                     7,
   'Power / Utilities':        7,
   'Steel':                    6,
-  'Metals':                   6,
   'Retail':                  13,
   'Premium Consumer':        14,
   'QSR / Food':              16,
@@ -535,7 +534,6 @@ export const INDIA_SECTOR_CAGR: Record<string, number> = {
   'Exchange / Capital Mkt':  15,
   'Depository / Registrar':  12,
   'Asset Management (AMC)':  14,
-  'Insurance':               18,
   'Broking / Wealth Mgmt':   13,
   'Electronics / EMS':       25,
 };

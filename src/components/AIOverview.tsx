@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Company, FinancialYear } from '@/lib/types';
 import { generateInsight, StockInsight } from '@/lib/aiInsight';
 import {
@@ -16,9 +17,12 @@ interface AIOverviewProps {
   financials?: FinancialYear[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LucideIcon = React.ComponentType<any>;
+
 const VERDICT_CONFIG: Record<string, {
   label: string;
-  Icon: React.FC<{ size: number; className?: string }>;
+  Icon: LucideIcon;
   color: string; bg: string; border: string;
 }> = {
   'Strong Buy': { label: 'Great opportunity',  Icon: TrendingUp,    color: 'text-gain', bg: 'bg-gain/10', border: 'border-gain/25' },
@@ -115,7 +119,15 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
       </div>
 
       {/* Verdict pill */}
-      <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${cfg.bg} ${cfg.border}`}>
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={insight.verdict}
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 8 }}
+        transition={{ duration: 0.22 }}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border ${cfg.bg} ${cfg.border}`}
+      >
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
           <cfg.Icon size={14} className={cfg.color} />
         </div>
@@ -126,7 +138,8 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
         <span className="text-[10px] text-muted/50 font-mono flex-shrink-0">
           {insight.confidence}
         </span>
-      </div>
+      </motion.div>
+      </AnimatePresence>
 
       {/* Summary */}
       <p className="text-[12px] text-muted leading-relaxed">{insight.summary}</p>

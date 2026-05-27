@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { FinancialYear } from '@/lib/types';
 import { Activity } from '@/lib/icons';
 
@@ -97,11 +98,11 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
 
       {/* CAGR metrics */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        {[
-          { label: 'Revenue', sublabel: `${years}Y CAGR`, value: revCAGR, g: revGrade, color: 'bg-accent', max: 40 },
-          { label: 'PAT', sublabel: `${years}Y CAGR`, value: patCAGR, g: patGrade, color: 'bg-gain', max: 50 },
-          { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade, color: 'bg-gold', max: 40 },
-        ].map(({ label, sublabel, value, g, color }) => (
+        {([
+          { label: 'Revenue', sublabel: `${years}Y CAGR`, value: revCAGR, g: revGrade as 'A'|'B'|'C'|'D', color: 'bg-accent', max: 40 },
+          { label: 'PAT', sublabel: `${years}Y CAGR`, value: patCAGR, g: patGrade as 'A'|'B'|'C'|'D', color: 'bg-gain', max: 50 },
+          { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade as 'A'|'B'|'C'|'D', color: 'bg-gold', max: 40 },
+        ] as Array<{ label: string; sublabel: string; value: number; g: 'A'|'B'|'C'|'D'; color: string; max: number }>).map(({ label, sublabel, value, g, color }) => (
           <div key={label} className="bg-border/20 rounded-lg p-3 min-w-0">
             <div className="flex items-center justify-between mb-0.5">
               <span className="text-xs font-semibold text-primary truncate">{label}</span>
@@ -127,9 +128,11 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
             return (
               <div key={f.year} className="flex-1 flex flex-col items-center gap-1">
                 <span className="text-xs font-mono text-muted">{f.eps > 0 ? f.eps.toFixed(0) : '—'}</span>
-                <div
-                  className={`w-full rounded-t transition-all ${isLatest ? 'bg-gold' : isPositive ? 'bg-gain/60' : 'bg-loss/60'}`}
-                  style={{ height: `${h}%` }}
+                <motion.div
+                  className={`w-full rounded-t ${isLatest ? 'bg-gold' : isPositive ? 'bg-gain/60' : 'bg-loss/60'}`}
+                  initial={{ height: 0 }}
+                  animate={{ height: `${h}%` }}
+                  transition={{ duration: 0.5, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <span className="text-xs text-muted font-mono">{f.year}</span>
               </div>
@@ -140,12 +143,12 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
 
       {/* Margin quality */}
       <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: 'Net Margin (FY24)', value: latest.netMargin, suffix: '%', g: marginGrade, threshold: '15% = A' },
-          { label: 'EBITDA Margin (FY24)', value: latest.ebitdaMargin, suffix: '%', g: ebitdaGrade, threshold: '25% = A' },
-          { label: 'Margin Consistency', value: marginStdDev, suffix: '% σ', g: consistencyGrade, threshold: 'Low σ = stable', invert: true },
-          { label: 'Avg Net Margin', value: avgMargin, suffix: '%', g: grade(avgMargin, [12, 6, 2]), threshold: '12% = A' },
-        ].map(({ label, value, suffix, g, threshold }) => (
+        {([
+          { label: 'Net Margin (FY24)', value: latest.netMargin, suffix: '%', g: marginGrade as 'A'|'B'|'C'|'D', threshold: '15% = A' },
+          { label: 'EBITDA Margin (FY24)', value: latest.ebitdaMargin, suffix: '%', g: ebitdaGrade as 'A'|'B'|'C'|'D', threshold: '25% = A' },
+          { label: 'Margin Consistency', value: marginStdDev, suffix: '% σ', g: consistencyGrade as 'A'|'B'|'C'|'D', threshold: 'Low σ = stable' },
+          { label: 'Avg Net Margin', value: avgMargin, suffix: '%', g: grade(avgMargin, [12, 6, 2]) as 'A'|'B'|'C'|'D', threshold: '12% = A' },
+        ] as Array<{ label: string; value: number; suffix: string; g: 'A'|'B'|'C'|'D'; threshold: string }>).map(({ label, value, suffix, g, threshold }) => (
           <div key={label} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/50 last:border-0">
             <div className="min-w-0">
               <p className="text-xs text-muted truncate">{label}</p>

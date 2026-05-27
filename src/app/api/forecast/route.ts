@@ -62,7 +62,10 @@ export async function GET(request: NextRequest) {
     if (!company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
-    const latestFin = company.financials[company.financials.length - 1];
+    const latestFin = company.financials?.[company.financials.length - 1];
+    if (!latestFin) {
+      return NextResponse.json({ error: 'No financial data available' }, { status: 404 });
+    }
     if (latestRevenue === null) latestRevenue = latestFin.revenue;
     if (shares === null) shares = latestFin.shares;
     if (currentPrice === null) currentPrice = company.currentPrice;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Company } from '@/lib/types';
 import { Sparkles } from '@/lib/icons';
 
@@ -153,11 +154,14 @@ export default function PeerCompare({ company }: { company: Company }) {
             </tr>
           </thead>
           <tbody>
-            {peers.map((peer) => {
+            {peers.map((peer, i) => {
               const isSelf = peer.isSelf;
               return (
-                <tr
+                <motion.tr
                   key={peer.symbol}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.22, delay: i * 0.05 }}
                   className={`border-b border-border/40 transition-colors ${
                     isSelf
                       ? 'bg-gold/5 border-l-2 border-l-gold'
@@ -198,7 +202,7 @@ export default function PeerCompare({ company }: { company: Company }) {
                       </td>
                     );
                   })}
-                </tr>
+                </motion.tr>
               );
             })}
           </tbody>

@@ -1,6 +1,8 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Company, FinancialYear } from '@/lib/types';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 
 interface KeyMetricsProps {
   company: Company;
@@ -21,7 +23,11 @@ function MetricCard({
   trend?: 'up' | 'down' | 'neutral';
 }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-3 flex-1 min-w-0">
+    <motion.div
+      variants={staggerItem}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      className="bg-card border border-border rounded-xl p-3 flex-1 min-w-0"
+    >
       <p className="text-xs text-muted uppercase tracking-wide mb-1 truncate">{label}</p>
       <p className={`text-lg font-bold font-mono ${color}`}>{value}</p>
       {subValue && (
@@ -31,7 +37,7 @@ function MetricCard({
           {subValue}
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -51,7 +57,12 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
   const epsCAGR = calcCAGR(first.eps, latest.eps, years);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-wrap gap-2"
+    >
       <MetricCard
         label="Revenue (FY24)"
         value={`₹${(latest.revenue / 1000).toFixed(0)}K Cr`}
@@ -91,6 +102,6 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
         subValue={company.debtToEquity < 1 ? 'Low leverage' : company.debtToEquity < 3 ? 'Moderate' : 'High leverage'}
         color={company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}
       />
-    </div>
+    </motion.div>
   );
 }

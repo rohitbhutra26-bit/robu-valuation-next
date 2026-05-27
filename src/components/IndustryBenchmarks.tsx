@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Company, FinancialYear } from '@/lib/types';
 import { BarChart3, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
 import { QuestionTooltip } from '@/components/Tooltip';
@@ -138,7 +139,12 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
     : 0;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+      className="bg-card border border-border rounded-xl p-4"
+    >
       <div className="flex items-center justify-between mb-1 gap-2">
         <div className="flex items-start gap-2">
           <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -239,6 +245,6 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
           ) : 'P/E data not available for this stock'}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

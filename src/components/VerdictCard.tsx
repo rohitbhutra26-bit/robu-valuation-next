@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
+import { scaleIn } from '@/lib/animations';
 
 interface Props {
   company: Company;
@@ -62,38 +64,66 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
     ? `+${upside.toFixed(1)}% upside`
     : `${upside.toFixed(1)}% downside`;
 
-  return (
-    <div className={`${verdict.bg} border ${verdict.border} rounded-xl p-4`}>
+  const fvKey = Math.round(fairValue);
 
+  return (
+    <motion.div
+      variants={scaleIn}
+      initial="hidden"
+      animate="visible"
+      className={`${verdict.bg} border ${verdict.border} rounded-xl p-4`}
+    >
       {/* Row 1: icon + label + upside — always horizontal */}
       <div className="flex items-center gap-3">
-        <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0`}
+        <motion.div
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: `${verdict.dot}18`, border: `1.5px solid ${verdict.dot}40` }}
+          animate={{ rotate: [0, -6, 6, 0] }}
+          transition={{ duration: 0.4, ease: 'easeInOut', delay: 0.1 }}
         >
           <verdict.Icon size={18} className={verdict.color} />
-        </div>
+        </motion.div>
         <div className="flex-1 overflow-hidden">
           <p className={`text-sm font-semibold ${verdict.color} leading-tight truncate`}>{verdict.label}</p>
           <p className="text-xs text-muted mt-0.5 leading-snug truncate">{verdict.sub}</p>
         </div>
-        <div className="flex-shrink-0 text-right">
-          <p className={`text-sm font-bold font-mono ${verdict.color} whitespace-nowrap`}>{upsideLabel}</p>
+        <div className="flex-shrink-0 text-right overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={upsideLabel}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className={`text-sm font-bold font-mono ${verdict.color} whitespace-nowrap`}
+            >
+              {upsideLabel}
+            </motion.p>
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Row 2: target vs current price */}
       <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-current/10 text-xs flex-wrap">
         <span className="text-muted">Target</span>
-        <span className={`font-mono font-semibold ${verdict.color}`}>
-          ₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-        </span>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={fvKey}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className={`font-mono font-semibold ${verdict.color}`}
+          >
+            ₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+          </motion.span>
+        </AnimatePresence>
         <span className="text-muted">·</span>
         <span className="text-muted">Now</span>
         <span className="font-mono text-primary">
           ₹{current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
