@@ -96,42 +96,33 @@ export default function PricingPage() {
   const plan = BILLING.find(b => b.id === selected)!;
 
   return (
-    <div style={{
-        '--pricing-bg':     '#131722',
-        '--pricing-text':   '#d1d4dc',
-        '--pricing-card':   '#1e222d',
-        '--pricing-border': 'rgba(255,255,255,0.08)',
-        '--pricing-muted':  'rgba(255,255,255,0.4)',
-        '--pricing-green':  '#26a69a',
-        '--pricing-blue':   '#2962ff',
-        background:  'var(--pricing-bg)',
-        color:       'var(--pricing-text)',
-        fontFamily:  'var(--font-sans)',
-        minHeight:   '100vh',
-        overflowY:   'auto',
-        overflowX:   'hidden',
-      } as React.CSSProperties}
-    >
-      {/* Ensure page is scrollable — globals.css can trap scroll on some routes */}
-      <style>{`html, body { overflow-y: auto !important; overflow-x: hidden !important; }`}</style>
-
-      {/* Light mode: override CSS vars directly on root element */}
+    <>
+      {/* Scroll fix + light mode overrides */}
       <style>{`
-        [data-theme="light"] #pricing-root {
-          --pricing-bg:     #f2f3f7 !important;
-          --pricing-text:   #131722 !important;
-          --pricing-card:   #ffffff !important;
-          --pricing-border: rgba(0,0,0,0.09) !important;
-          --pricing-muted:  rgba(0,0,0,0.5) !important;
-        }
-        [data-theme="light"] .pricing-hero-chart { opacity: 0.35; }
-        [data-theme="light"] .pricing-glow { display: none; }
-        [data-theme="light"] .pricing-toggle { background: rgba(0,0,0,0.06) !important; }
-        [data-theme="light"] .pricing-card-free { background: #ffffff !important; }
-        [data-theme="light"] .pricing-card-pro { background: linear-gradient(135deg, #eaf3ff 0%, #f0fdf9 100%) !important; }
+        html, body { overflow-y: auto !important; overflow-x: hidden !important; }
+        body { background: #0f121b !important; }
+        [data-theme="light"] body { background: #f1f3f9 !important; }
+        [data-theme="light"] #pricing-root { --p-bg:#f1f3f9; --p-text:#0f121b; --p-card:#ffffff; --p-border:rgba(0,0,0,0.09); --p-muted:rgba(0,0,0,0.5); }
+        [data-theme="light"] .p-card-free  { background:#ffffff !important; }
+        [data-theme="light"] .p-card-pro   { background:linear-gradient(135deg,#eaf3ff,#f0fdf9) !important; }
+        [data-theme="light"] .p-toggle     { background:rgba(0,0,0,0.06) !important; }
+        [data-theme="light"] .p-hero-chart { opacity:0.3; }
+        [data-theme="light"] .p-glow       { display:none !important; }
       `}</style>
-
-      <div id="pricing-root">
+      <div id="pricing-root" style={{
+          '--p-bg':     '#0f121b',
+          '--p-text':   '#e8eaed',
+          '--p-card':   '#161b2a',
+          '--p-border': 'rgba(255,255,255,0.09)',
+          '--p-muted':  'rgba(255,255,255,0.45)',
+          '--p-green':  '#00c9a7',
+          '--p-blue':   '#4d8eff',
+          background:   'var(--p-bg)',
+          color:        'var(--p-text)',
+          minHeight:    '100vh',
+        } as React.CSSProperties}
+      >
+      <div>
 
         {/* ── Nav ────────────────────────────────────────────────────── */}
         <nav className="sticky top-0 z-50 border-b border-white/8 pricing-footer-border"
@@ -486,7 +477,8 @@ export default function PricingPage() {
           </div>
         </footer>
 
-      </div>
-    </div>
+      </div>{/* inner */}
+      </div>{/* #pricing-root */}
+    </>
   );
 }

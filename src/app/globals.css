@@ -2,20 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme tokens — TradingView-matched color palette ──────────────────────── */
+/* ── Theme tokens — vibrant dark palette (TradingView-inspired, more pop) ──── */
 /* RGB triplets so Tailwind opacity modifiers (bg-card/50) work               */
 :root {
-  /* TradingView dark: #131722 bg, #1e222d card, #363a45 border */
-  --color-terminal: 19 23 34;      /* #131722 — TradingView exact bg */
-  --color-card:     30 34 45;      /* #1e222d — TradingView card surface */
-  --color-border:   54 58 69;      /* #363a45 — TradingView border */
-  --color-gold:     41 98 255;     /* #2962ff — TradingView blue accent */
-  --color-gain:     38 166 154;    /* #26a69a — TradingView teal-green */
-  --color-loss:     239 83 80;     /* #ef5350 — TradingView red */
-  --color-primary:  209 212 220;   /* #d1d4dc — TradingView primary text */
-  --color-muted:    120 123 134;   /* #787b86 — TradingView muted text */
-  --color-accent:   41 98 255;     /* #2962ff — TradingView interactive blue */
-  --color-warning:  255 193 7;     /* #ffc107 — caution amber */
+  --color-terminal: 15 18 27;      /* #0f121b — deep rich bg (darker than TV) */
+  --color-card:     22 27 42;      /* #161b2a — card surface with blue tint */
+  --color-border:   42 49 68;      /* #2a3144 — visible but subtle border */
+  --color-gold:     77 142 255;    /* #4d8eff — bright readable blue accent */
+  --color-gain:     0 201 167;     /* #00c9a7 — vivid teal-green (pops!) */
+  --color-loss:     255 82 82;     /* #ff5252 — punchy red */
+  --color-primary:  232 234 237;   /* #e8eaed — near-white, high contrast */
+  --color-muted:    148 152 163;   /* #9498a3 — readable secondary text */
+  --color-accent:   77 142 255;    /* #4d8eff — bright interactive blue */
+  --color-warning:  255 193 7;     /* #ffc107 — amber caution */
 
   /* Font — DM Sans matches TradingView's geometric clean style */
   --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
@@ -23,14 +22,14 @@
 }
 
 [data-theme="light"] {
-  --color-terminal: 242 243 247;   /* #f2f3f7 — TradingView light bg */
+  --color-terminal: 241 243 249;   /* #f1f3f9 — clean white-blue bg */
   --color-card:     255 255 255;   /* #ffffff */
-  --color-border:   224 227 235;   /* #e0e3eb — TradingView light border */
-  --color-gold:     41 98 255;     /* #2962ff — same blue in light */
-  --color-gain:     9 132 115;     /* #098473 — darker teal for light mode */
-  --color-loss:     198 46 43;     /* #c62e2b — darker red for light mode */
-  --color-primary:  19 23 34;      /* #131722 — near-black */
-  --color-muted:    106 109 120;   /* #6a6d78 */
+  --color-border:   213 218 232;   /* #d5dae8 — visible light border */
+  --color-gold:     41 98 255;     /* #2962ff — strong blue in light */
+  --color-gain:     0 148 122;     /* #00947a — darker vivid teal */
+  --color-loss:     220 38 38;     /* #dc2626 — strong red */
+  --color-primary:  15 18 27;      /* #0f121b — near-black text */
+  --color-muted:    90 96 115;     /* #5a6073 — readable grey */
   --color-accent:   41 98 255;     /* #2962ff */
   --color-warning:  180 83 9;      /* #b45309 */
 }
