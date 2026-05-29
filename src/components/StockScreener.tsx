@@ -199,6 +199,14 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
 
     try {
       const res = await fetch(`/api/screener-v2?${params}`);
+      if (res.status === 503) {
+        // Cache still warming up on server — retry after 8 seconds
+        setError('⏳ Stock data is loading on the server (first start takes ~60s). Retrying automatically…');
+        setResults([]);
+        setLoading(false);
+        setTimeout(() => { runScreener(); }, 8000);
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { error?: string }).error || `Error ${res.status}`);
