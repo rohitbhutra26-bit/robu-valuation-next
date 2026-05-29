@@ -719,6 +719,13 @@ export default function MobileLayout({
                 </div>
               </>
             )}
+            <a
+              href="/pricing"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
+              style={{ background: 'linear-gradient(135deg,#2962ff,#1565c0)', color: '#fff', boxShadow: '0 2px 6px rgba(41,98,255,0.4)' }}
+            >
+              ⚡ Pro
+            </a>
             <ThemeToggle />
           </div>
         </div>

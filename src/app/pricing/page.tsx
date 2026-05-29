@@ -96,46 +96,39 @@ export default function PricingPage() {
   const plan = BILLING.find(b => b.id === selected)!;
 
   return (
-    <div className="bg-[var(--pricing-bg)] text-[var(--pricing-text)] min-h-screen font-sans"
-      style={{
-        '--pricing-bg':           'var(--tw-pricing-bg, #131722)',
-        '--pricing-text':         'var(--tw-pricing-text, #d1d4dc)',
-        '--pricing-card':         'var(--tw-pricing-card, #1e222d)',
-        '--pricing-border':       'var(--tw-pricing-border, rgba(255,255,255,0.08))',
-        '--pricing-muted':        'var(--tw-pricing-muted, rgba(255,255,255,0.4))',
-        '--pricing-green':        '#26a69a',
-        '--pricing-blue':         '#2962ff',
+    <div style={{
+        '--pricing-bg':     '#131722',
+        '--pricing-text':   '#d1d4dc',
+        '--pricing-card':   '#1e222d',
+        '--pricing-border': 'rgba(255,255,255,0.08)',
+        '--pricing-muted':  'rgba(255,255,255,0.4)',
+        '--pricing-green':  '#26a69a',
+        '--pricing-blue':   '#2962ff',
+        background:  'var(--pricing-bg)',
+        color:       'var(--pricing-text)',
+        fontFamily:  'var(--font-sans)',
+        minHeight:   '100vh',
+        overflowY:   'auto',
+        overflowX:   'hidden',
       } as React.CSSProperties}
     >
-      {/* Light mode overrides via CSS */}
+      {/* Light mode: override CSS vars directly on root element */}
       <style>{`
-        [data-theme="light"] .pricing-page {
-          --tw-pricing-bg: #f2f3f7;
-          --tw-pricing-text: #131722;
-          --tw-pricing-card: #ffffff;
-          --tw-pricing-border: rgba(0,0,0,0.08);
-          --tw-pricing-muted: rgba(0,0,0,0.45);
+        [data-theme="light"] #pricing-root {
+          --pricing-bg:     #f2f3f7 !important;
+          --pricing-text:   #131722 !important;
+          --pricing-card:   #ffffff !important;
+          --pricing-border: rgba(0,0,0,0.09) !important;
+          --pricing-muted:  rgba(0,0,0,0.5) !important;
         }
-        [data-theme="light"] .pricing-hero-chart { opacity: 0.4; }
-        [data-theme="light"] .pricing-card-free { background: #ffffff; border-color: rgba(0,0,0,0.1); }
-        [data-theme="light"] .pricing-card-pro { background: linear-gradient(135deg, #e8f8f6 0%, #ffffff 100%); }
-        [data-theme="light"] .pricing-table-row-alt { background: rgba(0,0,0,0.02); }
-        [data-theme="light"] .pricing-stat-num { -webkit-text-fill-color: transparent; }
-        [data-theme="light"] .pricing-badge { background: rgba(41,98,255,0.1); color: #2962ff; border-color: rgba(41,98,255,0.25); }
-        [data-theme="light"] .pricing-faq { border-color: rgba(0,0,0,0.1); }
-        [data-theme="light"] .pricing-faq:hover { background: rgba(0,0,0,0.02); }
-        [data-theme="light"] .pricing-toggle { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.08); }
-        [data-theme="light"] .pricing-toggle-btn-active { background: #2962ff !important; color: #ffffff !important; }
-        [data-theme="light"] .pricing-toggle-btn-save { color: #098473 !important; }
-        [data-theme="light"] .pricing-hero-chip { background: #ffffff; border-color: rgba(38,166,154,0.3); color: #098473; }
-        [data-theme="light"] .pricing-free-feat { color: rgba(0,0,0,0.65); }
-        [data-theme="light"] .pricing-free-feat-dim { color: rgba(0,0,0,0.3); }
-        [data-theme="light"] .pricing-pro-feat { color: rgba(0,0,0,0.75); }
-        [data-theme="light"] .pricing-footer-border { border-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .pricing-hero-chart { opacity: 0.35; }
         [data-theme="light"] .pricing-glow { display: none; }
+        [data-theme="light"] .pricing-toggle { background: rgba(0,0,0,0.06) !important; }
+        [data-theme="light"] .pricing-card-free { background: #ffffff !important; }
+        [data-theme="light"] .pricing-card-pro { background: linear-gradient(135deg, #eaf3ff 0%, #f0fdf9 100%) !important; }
       `}</style>
 
-      <div className="pricing-page">
+      <div id="pricing-root">
 
         {/* ── Nav ────────────────────────────────────────────────────── */}
         <nav className="sticky top-0 z-50 border-b border-white/8 pricing-footer-border"

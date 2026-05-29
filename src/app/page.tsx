@@ -379,7 +379,13 @@ export default function Home() {
             ))}
             <a
               href="/pricing"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#22d3a5]/30 bg-[#22d3a5]/8 text-xs font-semibold text-[#22d3a5] hover:bg-[#22d3a5]/15 transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #2962ff 0%, #1565c0 100%)',
+                color: '#ffffff',
+                boxShadow: '0 2px 8px rgba(41,98,255,0.35)',
+                border: 'none',
+              }}
             >
               ⚡ Pro
             </a>
