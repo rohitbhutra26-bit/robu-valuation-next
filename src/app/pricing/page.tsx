@@ -4,481 +4,282 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Check, X, Zap, BarChart2, Brain, FileText, Search, TrendingUp, ShieldCheck, Star } from 'lucide-react';
 
-// ── Plan data ─────────────────────────────────────────────────────────────────
 const BILLING = [
-  { id: '1m',  label: '1 Month',  price: 99,  perMonth: 99,  save: null,  popular: false },
-  { id: '3m',  label: '3 Months', price: 259, perMonth: 86,  save: '13%', popular: false },
-  { id: '6m',  label: '6 Months', price: 499, perMonth: 83,  save: '17%', popular: true  },
-  { id: '1y',  label: '1 Year',   price: 999, perMonth: 83,  save: '17%', popular: false },
+  { id: '1m', label: '1 Month',  price: 99,  perMonth: 99,  save: null,  popular: false },
+  { id: '3m', label: '3 Months', price: 259, perMonth: 86,  save: '13%', popular: false },
+  { id: '6m', label: '6 Months', price: 499, perMonth: 83,  save: '17%', popular: true  },
+  { id: '1y', label: '1 Year',   price: 999, perMonth: 83,  save: '17%', popular: false },
 ] as const;
 type BillingId = typeof BILLING[number]['id'];
 
 const FEATURES = [
-  { icon: <TrendingUp size={15}/>, label: 'Stock Analysis',     desc: 'Deep-dive valuation for any NSE/BSE stock', free: 'Unlimited',      pro: 'Unlimited' },
-  { icon: <BarChart2  size={15}/>, label: 'Valuation Engine',   desc: 'DCF, P/E, PEG, Earnings Yield models',      free: 'All models',     pro: 'All models' },
-  { icon: <Search     size={15}/>, label: 'Stock Screener',     desc: 'Filter all NSE stocks by ROE, P/E & more',  free: 'Top 5 results',  pro: '60+ results' },
-  { icon: <Brain      size={15}/>, label: 'AI Analysis',        desc: 'Bull/Bear thesis powered by Gemini AI',     free: 'Rule-based',     pro: 'Full Gemini AI' },
-  { icon: <FileText   size={15}/>, label: 'Export PDF Report',  desc: 'Download full analysis report',             free: false,            pro: true },
-  { icon: <BarChart2  size={15}/>, label: 'Historical Chart',   desc: 'P/E & P/B going back 5+ years',             free: true,             pro: true },
-  { icon: <ShieldCheck size={15}/>,label: 'Peer Compare',       desc: 'AI-identified competitors side-by-side',    free: true,             pro: true },
-  { icon: <Star       size={15}/>, label: 'Watchlist & Portfolio', desc: 'Track stocks, import from brokers',      free: true,             pro: true },
+  { icon: <TrendingUp size={15}/>,  label: 'Stock Analysis',      desc: 'Deep-dive valuation for any NSE/BSE stock', free: 'Unlimited',   pro: 'Unlimited'      },
+  { icon: <BarChart2 size={15}/>,   label: 'Valuation Engine',    desc: 'DCF, P/E, PEG, Earnings Yield models',      free: 'All models',  pro: 'All models'     },
+  { icon: <Search size={15}/>,      label: 'Stock Screener',      desc: 'Filter all NSE stocks by fundamentals',     free: 'Top 5 only',  pro: '60+ results'    },
+  { icon: <Brain size={15}/>,       label: 'AI Analysis',         desc: 'Bull/Bear thesis via Gemini AI',            free: 'Rule-based',  pro: 'Full Gemini AI' },
+  { icon: <FileText size={15}/>,    label: 'Export PDF',          desc: 'Download full analysis report',             free: false,         pro: true             },
+  { icon: <BarChart2 size={15}/>,   label: 'Historical Chart',    desc: 'P/E & P/B going back 5+ years',             free: true,          pro: true             },
+  { icon: <ShieldCheck size={15}/>, label: 'Peer Compare',        desc: 'AI-identified competitors side-by-side',    free: true,          pro: true             },
+  { icon: <Star size={15}/>,        label: 'Watchlist & Portfolio',desc: 'Track stocks, import from brokers',        free: true,          pro: true             },
 ];
 
 const FAQS = [
-  { q: 'What payment methods are accepted?', a: 'UPI, Debit/Credit Card, Net Banking, and Wallets via Razorpay. All payments are in ₹ INR.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. No auto-renewals. Pay once, access for the full duration you chose.' },
-  { q: 'Is this SEBI registered investment advice?', a: 'No. Robu Terminal is a research and analysis tool for personal use. All valuations are models — not buy/sell recommendations.' },
-  { q: 'What data sources does Robu use?', a: 'NSE Bhavcopy for live prices, Screener.in for fundamentals, and Gemini AI for analysis. All Indian market data.' },
-  { q: 'Do I need an account to use the free plan?', a: 'No signup needed for the free plan. Open the app and start analysing any stock instantly.' },
+  { q: 'What payment methods are accepted?', a: 'UPI, Debit/Credit Card, Net Banking via Razorpay. All payments in ₹ INR.' },
+  { q: 'Can I cancel anytime?', a: 'No auto-renewals. Pay once, access the full duration you chose.' },
+  { q: 'Is this SEBI registered advice?', a: 'No. Robu Terminal is a research tool for personal use. All valuations are models — not buy/sell recommendations.' },
+  { q: 'What data sources does Robu use?', a: 'NSE Bhavcopy for live prices, Yahoo Finance & Screener.in for fundamentals, Gemini AI for analysis.' },
+  { q: 'Do I need an account for the free plan?', a: 'No signup needed. Open the app and start analysing any stock instantly.' },
 ];
 
-function Cell({ value }: { value: string | boolean }) {
-  if (value === true)  return <Check size={16} className="text-[#26a69a] mx-auto" />;
-  if (value === false) return <X    size={16} className="mx-auto opacity-25" />;
-  return <span className="text-sm font-semibold">{value}</span>;
-}
-
-// ── Hero chart SVG (TradingView-style candlestick/line) ───────────────────────
+// Hero SVG chart
 function HeroChart() {
   return (
-    <div className="relative w-full max-w-2xl mx-auto h-48 sm:h-64 mt-10 mb-2 opacity-60">
-      <svg viewBox="0 0 800 220" className="w-full h-full" preserveAspectRatio="none">
-        {/* Grid lines */}
-        {[40, 80, 120, 160].map(y => (
-          <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="currentColor" strokeWidth="0.5" className="text-[#2a2e39]" strokeDasharray="4 6"/>
-        ))}
-        {/* Area fill */}
+    <div className="relative w-full max-w-2xl mx-auto mt-10 mb-2" style={{ height: '220px', opacity: 0.7 }}>
+      <svg viewBox="0 0 800 200" className="w-full h-full" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#26a69a" stopOpacity="0.3"/>
-            <stop offset="100%" stopColor="#26a69a" stopOpacity="0"/>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#00c9a7" stopOpacity="0.35"/>
+            <stop offset="100%" stopColor="#00c9a7" stopOpacity="0"/>
           </linearGradient>
         </defs>
-        <path
-          d="M0,180 L40,165 L80,155 L120,160 L160,145 L200,130 L240,120 L280,125 L320,105 L360,90 L400,95 L440,80 L480,70 L520,75 L560,60 L600,50 L640,55 L680,40 L720,35 L760,25 L800,20 L800,220 L0,220 Z"
-          fill="url(#chartGrad)"
-        />
-        {/* Main line */}
-        <path
-          d="M0,180 L40,165 L80,155 L120,160 L160,145 L200,130 L240,120 L280,125 L320,105 L360,90 L400,95 L440,80 L480,70 L520,75 L560,60 L600,50 L640,55 L680,40 L720,35 L760,25 L800,20"
-          fill="none" stroke="#26a69a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-        />
-        {/* Glow dot at end */}
-        <circle cx="800" cy="20" r="5" fill="#26a69a"/>
-        <circle cx="800" cy="20" r="9" fill="#26a69a" fillOpacity="0.2"/>
-        {/* Price labels */}
-        <text x="10" y="38" fill="#787b86" fontSize="10" fontFamily="monospace">₹4,250</text>
-        <text x="10" y="128" fill="#787b86" fontSize="10" fontFamily="monospace">₹3,800</text>
-        <text x="10" y="178" fill="#787b86" fontSize="10" fontFamily="monospace">₹3,400</text>
-        {/* Volume bars at bottom */}
-        {[0,40,80,120,160,200,240,280,320,360,400,440,480,520,560,600,640,680,720,760].map((x, i) => (
-          <rect key={x} x={x+2} y={195 + (i % 3 === 0 ? 0 : 5)} width="28" height={i % 3 === 0 ? 20 : 15}
-            fill="#26a69a" fillOpacity="0.15" rx="1"/>
+        {[40,80,120,160].map(y => <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="#2a3144" strokeWidth="1"/>)}
+        <path d="M0,170 L40,158 L80,148 L120,153 L160,138 L200,122 L240,112 L280,118 L320,98 L360,82 L400,88 L440,72 L480,62 L520,68 L560,52 L600,42 L640,48 L680,32 L720,26 L760,18 L800,14 L800,200 L0,200Z" fill="url(#g1)"/>
+        <path d="M0,170 L40,158 L80,148 L120,153 L160,138 L200,122 L240,112 L280,118 L320,98 L360,82 L400,88 L440,72 L480,62 L520,68 L560,52 L600,42 L640,48 L680,32 L720,26 L760,18 L800,14" fill="none" stroke="#00c9a7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="800" cy="14" r="5" fill="#00c9a7"/>
+        <circle cx="800" cy="14" r="10" fill="#00c9a7" fillOpacity="0.2"/>
+        {[0,40,80,120,160,200,240,280,320,360,400,440,480,520,560,600,640,680,720,760].map((x,i) => (
+          <rect key={x} x={x+2} y={185+(i%3===0?0:4)} width="28" height={i%3===0?14:10} fill="#00c9a7" fillOpacity="0.12" rx="1"/>
         ))}
+        <text x="12" y="38"  fill="#9498a3" fontSize="10" fontFamily="monospace">₹4,250</text>
+        <text x="12" y="120" fill="#9498a3" fontSize="10" fontFamily="monospace">₹3,800</text>
+        <text x="12" y="168" fill="#9498a3" fontSize="10" fontFamily="monospace">₹3,400</text>
       </svg>
-      {/* Floating metric chips */}
-      <div className="absolute top-2 right-4 flex flex-col gap-1.5">
-        <div className="bg-[#1e222d] border border-[#26a69a]/30 rounded-lg px-3 py-1.5 text-xs font-bold font-mono text-[#26a69a] shadow-lg">
-          +34.2% ↑
-        </div>
-        <div className="bg-[#1e222d] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-[#d1d4dc] shadow-lg">
-          PE 22.4x
-        </div>
+      <div style={{ position:'absolute', top:'8px', right:'16px', display:'flex', flexDirection:'column', gap:'6px' }}>
+        <div style={{ background:'#161b2a', border:'1px solid rgba(0,201,167,0.35)', borderRadius:'8px', padding:'6px 12px', fontSize:'12px', fontWeight:700, fontFamily:'monospace', color:'#00c9a7' }}>+34.2% ↑</div>
+        <div style={{ background:'#161b2a', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', padding:'6px 12px', fontSize:'12px', fontFamily:'monospace', color:'#e8eaed' }}>PE 22.4x</div>
       </div>
     </div>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
 export default function PricingPage() {
   const [selected, setSelected] = useState<BillingId>('6m');
-  const [openFaq, setOpenFaq]   = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const plan = BILLING.find(b => b.id === selected)!;
 
+  const C = {
+    bg:      'var(--color-terminal)',
+    card:    'var(--color-card)',
+    border:  'rgba(var(--color-border) / 0.6)',
+    text:    'var(--color-primary)',
+    muted:   'var(--color-muted)',
+    green:   'var(--color-gain)',
+    blue:    'var(--color-accent)',
+  };
+
   return (
-    <>
-      {/* Scroll fix + light mode overrides */}
-      <style>{`
-        html, body { overflow-y: auto !important; overflow-x: hidden !important; }
-        body { background: #0f121b !important; }
-        [data-theme="light"] body { background: #f1f3f9 !important; }
-        [data-theme="light"] #pricing-root { --p-bg:#f1f3f9; --p-text:#0f121b; --p-card:#ffffff; --p-border:rgba(0,0,0,0.09); --p-muted:rgba(0,0,0,0.5); }
-        [data-theme="light"] .p-card-free  { background:#ffffff !important; }
-        [data-theme="light"] .p-card-pro   { background:linear-gradient(135deg,#eaf3ff,#f0fdf9) !important; }
-        [data-theme="light"] .p-toggle     { background:rgba(0,0,0,0.06) !important; }
-        [data-theme="light"] .p-hero-chart { opacity:0.3; }
-        [data-theme="light"] .p-glow       { display:none !important; }
-      `}</style>
-      <div id="pricing-root" style={{
-          '--p-bg':     '#0f121b',
-          '--p-text':   '#e8eaed',
-          '--p-card':   '#161b2a',
-          '--p-border': 'rgba(255,255,255,0.09)',
-          '--p-muted':  'rgba(255,255,255,0.45)',
-          '--p-green':  '#00c9a7',
-          '--p-blue':   '#4d8eff',
-          background:   'var(--p-bg)',
-          color:        'var(--p-text)',
-          minHeight:    '100vh',
-        } as React.CSSProperties}
-      >
-      <div>
+    <div style={{ background: C.bg, color: C.text, fontFamily: 'var(--font-sans)', minHeight: '100vh' }}>
 
-        {/* ── Nav ────────────────────────────────────────────────────── */}
-        <nav className="sticky top-0 z-50 border-b border-white/8 pricing-footer-border"
-          style={{ background: 'var(--pricing-bg)', backdropFilter: 'blur(16px)' }}>
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(41,98,255,0.15)', border: '1px solid rgba(41,98,255,0.3)' }}>
-                <Zap size={14} style={{ color: '#2962ff' }} />
-              </div>
-              <span className="text-sm font-black tracking-tight" style={{ color: 'var(--pricing-text)' }}>Robu Terminal</span>
-            </Link>
-            <Link href="/" className="text-sm font-semibold transition-colors"
-              style={{ color: 'var(--pricing-muted)' }}>
-              ← Back to app
-            </Link>
-          </div>
-        </nav>
-
-        {/* ── Hero ───────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden pt-16 pb-4 px-6 text-center">
-          {/* Background glow */}
-          <div className="pricing-glow absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full blur-[140px]"
-              style={{ background: 'radial-gradient(ellipse, rgba(41,98,255,0.12) 0%, transparent 70%)' }}/>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] rounded-full blur-[100px]"
-              style={{ background: 'radial-gradient(ellipse, rgba(38,166,154,0.1) 0%, transparent 70%)' }}/>
-          </div>
-
-          <div className="relative max-w-3xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold tracking-widest uppercase mb-7 pricing-badge"
-              style={{ background: 'rgba(41,98,255,0.12)', border: '1px solid rgba(41,98,255,0.25)', color: '#2962ff' }}>
-              <Zap size={11}/> Simple pricing · No hidden fees
+      {/* ── Fixed nav ──────────────────────────────────────────────────── */}
+      <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:50, borderBottom:'1px solid rgba(var(--color-border)/0.4)', backdropFilter:'blur(16px)', background:'rgba(var(--color-terminal)/0.92)' }}>
+        <div style={{ maxWidth:'1100px', margin:'0 auto', padding:'0 24px', height:'56px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <Link href="/" style={{ display:'flex', alignItems:'center', gap:'10px', textDecoration:'none' }}>
+            <div style={{ width:'28px', height:'28px', borderRadius:'8px', background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Zap size={14} color="#4d8eff"/>
             </div>
+            <span style={{ fontWeight:800, fontSize:'14px', color: C.text }}>Robu Terminal</span>
+          </Link>
+          <Link href="/" style={{ fontSize:'13px', fontWeight:600, color: C.muted, textDecoration:'none' }}>← Back to app</Link>
+        </div>
+      </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black leading-[1.05] tracking-tighter mb-5">
-              Free, until you&apos;re<br/>
-              <span style={{ background: 'linear-gradient(135deg, #26a69a 0%, #2962ff 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                ready to go Pro
-              </span>
-            </h1>
+      {/* ── Page content (padded for fixed nav) ────────────────────────── */}
+      <div style={{ paddingTop:'56px' }}>
 
-            <p className="text-base sm:text-lg leading-relaxed max-w-xl mx-auto font-medium"
-              style={{ color: 'var(--pricing-muted)' }}>
-              Analyse any Indian stock for free. Unlock the full screener,
-              Gemini AI analysis, and PDF exports when you need more.
-            </p>
-
-            {/* Hero chart */}
-            <div className="pricing-hero-chart">
-              <HeroChart />
-            </div>
+        {/* Hero */}
+        <div style={{ textAlign:'center', padding:'64px 24px 16px', maxWidth:'800px', margin:'0 auto' }}>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:'rgba(77,142,255,0.12)', border:'1px solid rgba(77,142,255,0.25)', borderRadius:'999px', padding:'6px 16px', fontSize:'11px', fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:'#4d8eff', marginBottom:'28px' }}>
+            <Zap size={11}/> Simple pricing · No hidden fees
           </div>
-        </section>
+          <h1 style={{ fontSize:'clamp(36px,6vw,60px)', fontWeight:900, lineHeight:1.05, letterSpacing:'-0.03em', marginBottom:'20px' }}>
+            Free, until you&apos;re<br/>
+            <span style={{ background:'linear-gradient(135deg,#00c9a7,#4d8eff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+              ready to go Pro
+            </span>
+          </h1>
+          <p style={{ fontSize:'16px', lineHeight:1.7, color: C.muted, maxWidth:'500px', margin:'0 auto' }}>
+            Analyse any Indian stock for free. Unlock the full screener, Gemini AI, and PDF exports when you need more.
+          </p>
+          <HeroChart/>
+        </div>
 
-        {/* ── Billing toggle ──────────────────────────────────────────── */}
-        <section className="px-6 pb-6 pt-2">
-          <div className="max-w-lg mx-auto">
-            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl pricing-toggle"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--pricing-border)' }}>
-              {BILLING.map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelected(b.id)}
-                  className={`relative py-2.5 rounded-lg text-xs font-bold transition-all pricing-toggle-btn-${selected === b.id ? 'active' : 'inactive'}`}
-                  style={selected === b.id
-                    ? { background: '#2962ff', color: '#ffffff' }
-                    : { color: 'var(--pricing-muted)' }
-                  }
-                >
-                  {b.popular && selected !== b.id && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[8px] font-black bg-[#26a69a] text-white px-1.5 py-0.5 rounded-full whitespace-nowrap uppercase tracking-wide">
-                      Best
-                    </span>
-                  )}
-                  <div>{b.label}</div>
-                  {b.save && (
-                    <div className={`text-[9px] font-bold mt-0.5 pricing-toggle-btn-save`}
-                      style={selected === b.id ? { color: 'rgba(255,255,255,0.7)' } : { color: '#26a69a' }}>
-                      Save {b.save}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Plan cards ─────────────────────────────────────────────── */}
-        <section className="px-6 pb-16">
-          <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-5">
-
-            {/* Free */}
-            <div className="rounded-2xl p-7 flex flex-col pricing-card-free"
-              style={{ border: '1px solid var(--pricing-border)', background: 'var(--pricing-card)' }}>
-              <div className="mb-6">
-                <p className="text-xs font-black uppercase tracking-widest mb-3"
-                  style={{ color: 'var(--pricing-muted)' }}>Free</p>
-                <div className="flex items-end gap-1.5 mb-2">
-                  <span className="text-5xl font-black tracking-tighter"
-                    style={{ color: 'var(--pricing-text)' }}>₹0</span>
-                  <span className="text-sm font-semibold mb-2" style={{ color: 'var(--pricing-muted)' }}>forever</span>
-                </div>
-                <p className="text-sm font-medium" style={{ color: 'var(--pricing-muted)' }}>
-                  Start analysing stocks right now. No signup needed.
-                </p>
-              </div>
-
-              <div className="space-y-3 mb-8 flex-1">
-                {[
-                  { label: 'Unlimited stock analysis', ok: true },
-                  { label: 'All valuation models', ok: true },
-                  { label: 'Historical P/E chart', ok: true },
-                  { label: 'Peer comparison', ok: true },
-                  { label: 'Watchlist & Portfolio', ok: true },
-                  { label: 'Screener — top 5 only', ok: false },
-                  { label: 'Rule-based AI only', ok: false },
-                  { label: 'No PDF export', ok: false },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-2.5">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: f.ok ? 'rgba(38,166,154,0.15)' : 'rgba(128,128,128,0.1)' }}>
-                      {f.ok
-                        ? <Check size={9} style={{ color: '#26a69a' }} />
-                        : <X    size={9} style={{ color: 'rgba(128,128,128,0.5)' }} />
-                      }
-                    </div>
-                    <span className={`text-sm font-medium pricing-free-feat${f.ok ? '' : '-dim'}`}
-                      style={{ color: f.ok ? 'var(--pricing-text)' : 'var(--pricing-muted)', opacity: f.ok ? 0.85 : 0.45 }}>
-                      {f.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/" className="block text-center py-3.5 rounded-xl text-sm font-bold transition-all"
-                style={{ border: '1px solid var(--pricing-border)', color: 'var(--pricing-muted)' }}>
-                Start for free →
-              </Link>
-            </div>
-
-            {/* Pro */}
-            <div className="relative rounded-2xl p-7 flex flex-col pricing-card-pro overflow-hidden"
-              style={{ border: '1px solid rgba(41,98,255,0.4)',
-                background: 'linear-gradient(135deg, rgba(41,98,255,0.08) 0%, rgba(38,166,154,0.05) 100%)' }}>
-              <div className="pricing-glow absolute -top-20 -right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none"
-                style={{ background: 'rgba(41,98,255,0.12)' }} />
-
-              <div className="relative mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: '#2962ff' }}>Pro</p>
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full"
-                    style={{ background: 'rgba(41,98,255,0.12)', color: '#2962ff', border: '1px solid rgba(41,98,255,0.25)' }}>
-                    Unlock all
-                  </span>
-                </div>
-                <div className="flex items-end gap-1.5 mb-1">
-                  <span className="text-5xl font-black tracking-tighter" style={{ color: 'var(--pricing-text)' }}>
-                    ₹{plan.price}
-                  </span>
-                  <span className="text-sm font-semibold mb-2" style={{ color: 'var(--pricing-muted)' }}>
-                    / {plan.label.toLowerCase()}
-                  </span>
-                </div>
-                {plan.perMonth < 99 ? (
-                  <p className="text-sm font-bold" style={{ color: '#26a69a' }}>
-                    ₹{plan.perMonth}/month ·{' '}
-                    <span className="font-medium" style={{ color: 'var(--pricing-muted)' }}>
-                      save {plan.save} vs monthly
-                    </span>
-                  </p>
-                ) : (
-                  <p className="text-sm font-medium" style={{ color: 'var(--pricing-muted)' }}>
-                    Billed once · No auto-renewal
-                  </p>
+        {/* Billing toggle */}
+        <div style={{ padding:'0 24px 24px', maxWidth:'500px', margin:'0 auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'4px', padding:'4px', background:'rgba(var(--color-border)/0.3)', border:'1px solid rgba(var(--color-border)/0.5)', borderRadius:'12px' }}>
+            {BILLING.map(b => (
+              <button key={b.id} onClick={() => setSelected(b.id)}
+                style={{ position:'relative', padding:'10px 4px', borderRadius:'8px', fontSize:'11px', fontWeight:700, border:'none', cursor:'pointer', transition:'all 0.15s',
+                  background: selected===b.id ? '#4d8eff' : 'transparent',
+                  color: selected===b.id ? '#fff' : C.muted }}>
+                {b.popular && selected!==b.id && (
+                  <span style={{ position:'absolute', top:'-10px', left:'50%', transform:'translateX(-50%)', fontSize:'8px', fontWeight:900, background:'#00c9a7', color:'#0f121b', padding:'2px 6px', borderRadius:'99px', whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'0.05em' }}>Best</span>
                 )}
-              </div>
-
-              <div className="relative space-y-3 mb-8 flex-1">
-                {[
-                  'Unlimited stock analysis',
-                  'All valuation models',
-                  'Historical P/E chart',
-                  'AI-powered peer comparison',
-                  'Watchlist & Portfolio',
-                  'Full screener — 60+ stocks',
-                  'Gemini AI analysis',
-                  'PDF export reports',
-                ].map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(41,98,255,0.15)' }}>
-                      <Check size={9} style={{ color: '#2962ff' }} />
-                    </div>
-                    <span className="text-sm font-semibold pricing-pro-feat"
-                      style={{ color: 'var(--pricing-text)', opacity: 0.9 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              <button className="relative w-full py-4 rounded-xl text-sm font-black tracking-wide transition-all active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #2962ff 0%, #1565c0 100%)',
-                  color: '#ffffff', boxShadow: '0 8px 32px rgba(41,98,255,0.35)' }}>
-                Get Pro — ₹{plan.price}
+                <div>{b.label}</div>
+                {b.save && <div style={{ fontSize:'9px', fontWeight:800, color: selected===b.id ? 'rgba(255,255,255,0.7)' : '#00c9a7', marginTop:'2px' }}>Save {b.save}</div>}
               </button>
-              <p className="relative text-center text-xs font-medium mt-2.5"
-                style={{ color: 'var(--pricing-muted)' }}>
-                One-time · No subscription · No auto-renewal
-              </p>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
 
-        {/* ── Feature table ───────────────────────────────────────────── */}
-        <section className="px-6 pb-20">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-center mb-2"
-              style={{ color: 'var(--pricing-text)' }}>Everything in the box</h2>
-            <p className="text-sm font-medium text-center mb-10" style={{ color: 'var(--pricing-muted)' }}>
-              Free vs Pro — side by side
-            </p>
+        {/* Plan cards */}
+        <div style={{ padding:'0 24px 80px', maxWidth:'800px', margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))', gap:'20px' }}>
 
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--pricing-border)' }}>
-              <div className="grid grid-cols-[1fr_100px_100px] px-6 py-3"
-                style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--pricing-border)' }}>
-                <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--pricing-muted)' }}>Feature</span>
-                <span className="text-xs font-black uppercase tracking-widest text-center" style={{ color: 'var(--pricing-muted)' }}>Free</span>
-                <span className="text-xs font-black uppercase tracking-widest text-center" style={{ color: '#2962ff' }}>Pro</span>
-              </div>
-              {FEATURES.map((f, i) => (
-                <div key={f.label}
-                  className={`grid grid-cols-[1fr_100px_100px] px-6 py-4 pricing-table-row-alt`}
-                  style={{ borderBottom: '1px solid var(--pricing-border)', background: i % 2 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex-shrink-0" style={{ color: 'var(--pricing-muted)' }}>{f.icon}</div>
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: 'var(--pricing-text)' }}>{f.label}</p>
-                      <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--pricing-muted)' }}>{f.desc}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center" style={{ color: 'var(--pricing-text)' }}>
-                    <Cell value={f.free} />
-                  </div>
-                  <div className="flex items-center justify-center" style={{ color: 'var(--pricing-text)' }}>
-                    <Cell value={f.pro} />
-                  </div>
+          {/* Free */}
+          <div style={{ borderRadius:'20px', border:'1px solid rgba(var(--color-border)/0.5)', background: C.card, padding:'28px', display:'flex', flexDirection:'column' }}>
+            <p style={{ fontSize:'11px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color: C.muted, marginBottom:'12px' }}>Free</p>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:'6px', marginBottom:'8px' }}>
+              <span style={{ fontSize:'48px', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color: C.text }}>₹0</span>
+              <span style={{ fontSize:'14px', color: C.muted, marginBottom:'8px' }}>forever</span>
+            </div>
+            <p style={{ fontSize:'13px', color: C.muted, marginBottom:'24px', lineHeight:1.6 }}>Start analysing stocks instantly. No signup needed.</p>
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'10px', marginBottom:'24px' }}>
+              {['Unlimited stock analysis','All valuation models','Historical P/E chart','Peer comparison','Watchlist & Portfolio'].map(f => (
+                <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                  <div style={{ width:'16px', height:'16px', borderRadius:'50%', background:'rgba(0,201,167,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Check size={9} color="#00c9a7"/></div>
+                  <span style={{ fontSize:'13px', fontWeight:500, color: C.text, opacity:0.85 }}>{f}</span>
+                </div>
+              ))}
+              {['Screener — top 5 only','Rule-based AI only','No PDF export'].map(f => (
+                <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                  <div style={{ width:'16px', height:'16px', borderRadius:'50%', background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><X size={9} color="rgba(255,255,255,0.25)"/></div>
+                  <span style={{ fontSize:'13px', fontWeight:500, color: C.muted, opacity:0.6 }}>{f}</span>
                 </div>
               ))}
             </div>
+            <Link href="/" style={{ display:'block', textAlign:'center', padding:'14px', borderRadius:'12px', border:'1px solid rgba(var(--color-border)/0.6)', fontSize:'13px', fontWeight:700, color: C.muted, textDecoration:'none', transition:'all 0.15s' }}>
+              Start for free →
+            </Link>
           </div>
-        </section>
 
-        {/* ── Stats bar ─────────────────────────────────────────────────── */}
-        <section className="px-6 py-14 mb-4" style={{ borderTop: '1px solid var(--pricing-border)', borderBottom: '1px solid var(--pricing-border)' }}>
-          <div className="max-w-3xl mx-auto grid grid-cols-3 gap-6 text-center">
-            {[
-              { num: '5,000+', label: 'Stocks tracked' },
-              { num: 'NSE + BSE', label: 'Exchange coverage' },
-              { num: '10+ models', label: 'Valuation methods' },
-            ].map(s => (
-              <div key={s.label}>
-                <p className="text-2xl sm:text-4xl font-black tracking-tighter pricing-stat-num"
-                  style={{ background: 'linear-gradient(135deg, #26a69a 0%, #2962ff 100%)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  {s.num}
-                </p>
-                <p className="text-xs sm:text-sm font-semibold mt-1.5" style={{ color: 'var(--pricing-muted)' }}>{s.label}</p>
+          {/* Pro */}
+          <div style={{ borderRadius:'20px', border:'1px solid rgba(77,142,255,0.4)', background:`linear-gradient(135deg, rgba(77,142,255,0.08), rgba(0,201,167,0.04))`, padding:'28px', display:'flex', flexDirection:'column', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:'-40px', right:'-40px', width:'180px', height:'180px', borderRadius:'50%', background:'rgba(77,142,255,0.1)', filter:'blur(40px)', pointerEvents:'none' }}/>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
+              <p style={{ fontSize:'11px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color:'#4d8eff', margin:0 }}>Pro</p>
+              <span style={{ fontSize:'9px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', background:'rgba(77,142,255,0.15)', color:'#4d8eff', border:'1px solid rgba(77,142,255,0.3)', borderRadius:'99px', padding:'4px 10px' }}>Unlock All</span>
+            </div>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:'6px', marginBottom:'4px' }}>
+              <span style={{ fontSize:'48px', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color: C.text }}>₹{plan.price}</span>
+              <span style={{ fontSize:'14px', color: C.muted, marginBottom:'8px' }}>/ {plan.label.toLowerCase()}</span>
+            </div>
+            {plan.perMonth < 99
+              ? <p style={{ fontSize:'13px', fontWeight:700, color:'#00c9a7', marginBottom:'20px' }}>₹{plan.perMonth}/month · <span style={{ fontWeight:400, color: C.muted }}>save {plan.save} vs monthly</span></p>
+              : <p style={{ fontSize:'13px', color: C.muted, marginBottom:'20px' }}>Billed once · No auto-renewal</p>
+            }
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'10px', marginBottom:'24px' }}>
+              {['Unlimited stock analysis','All valuation models','Historical P/E chart','AI-powered peer comparison','Watchlist & Portfolio','Full screener — 60+ stocks','Gemini AI analysis','PDF export reports'].map(f => (
+                <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                  <div style={{ width:'16px', height:'16px', borderRadius:'50%', background:'rgba(77,142,255,0.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Check size={9} color="#4d8eff"/></div>
+                  <span style={{ fontSize:'13px', fontWeight:500, color: C.text, opacity:0.9 }}>{f}</span>
+                </div>
+              ))}
+            </div>
+            <button style={{ width:'100%', padding:'16px', borderRadius:'12px', background:'linear-gradient(135deg,#4d8eff,#2962ff)', color:'#fff', fontSize:'14px', fontWeight:900, letterSpacing:'0.02em', border:'none', cursor:'pointer', boxShadow:'0 8px 28px rgba(77,142,255,0.4)', transition:'all 0.15s' }}>
+              Get Pro — ₹{plan.price}
+            </button>
+            <p style={{ textAlign:'center', fontSize:'11px', color: C.muted, marginTop:'10px' }}>One-time · No auto-renewal</p>
+          </div>
+        </div>
+
+        {/* Feature comparison */}
+        <div style={{ padding:'0 24px 80px', maxWidth:'800px', margin:'0 auto' }}>
+          <h2 style={{ fontSize:'32px', fontWeight:900, letterSpacing:'-0.03em', textAlign:'center', marginBottom:'8px' }}>Everything in the box</h2>
+          <p style={{ textAlign:'center', color: C.muted, fontSize:'14px', marginBottom:'32px' }}>Free vs Pro</p>
+          <div style={{ borderRadius:'16px', border:'1px solid rgba(var(--color-border)/0.5)', overflow:'hidden' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 100px 100px', padding:'12px 24px', background:'rgba(var(--color-border)/0.2)', borderBottom:'1px solid rgba(var(--color-border)/0.4)' }}>
+              <span style={{ fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color: C.muted }}>Feature</span>
+              <span style={{ fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color: C.muted, textAlign:'center' }}>Free</span>
+              <span style={{ fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color:'#4d8eff', textAlign:'center' }}>Pro</span>
+            </div>
+            {FEATURES.map((f, i) => (
+              <div key={f.label} style={{ display:'grid', gridTemplateColumns:'1fr 100px 100px', padding:'16px 24px', borderBottom:'1px solid rgba(var(--color-border)/0.3)', background: i%2 ? 'rgba(255,255,255,0.015)' : 'transparent' }}>
+                <div style={{ display:'flex', alignItems:'flex-start', gap:'12px' }}>
+                  <span style={{ color: C.muted, marginTop:'2px', flexShrink:0 }}>{f.icon}</span>
+                  <div>
+                    <p style={{ fontSize:'13px', fontWeight:700, color: C.text, margin:0 }}>{f.label}</p>
+                    <p style={{ fontSize:'11px', color: C.muted, margin:'2px 0 0', lineHeight:1.4 }}>{f.desc}</p>
+                  </div>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', color: C.text }}>
+                  {f.free===true ? <Check size={16} color="#00c9a7"/> : f.free===false ? <X size={16} color="rgba(255,255,255,0.2)"/> : <span style={{ fontSize:'12px', fontWeight:600 }}>{f.free}</span>}
+                </div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', color: C.text }}>
+                  {f.pro===true ? <Check size={16} color="#4d8eff"/> : f.pro===false ? <X size={16} color="rgba(255,255,255,0.2)"/> : <span style={{ fontSize:'12px', fontWeight:600 }}>{f.pro}</span>}
+                </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
 
-        {/* ── FAQ ──────────────────────────────────────────────────────── */}
-        <section className="px-6 py-16">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl font-black tracking-tighter text-center mb-10"
-              style={{ color: 'var(--pricing-text)' }}>
-              Frequently asked questions
-            </h2>
-            <div className="space-y-2">
-              {FAQS.map((faq, i) => (
-                <div key={i} className="rounded-xl overflow-hidden pricing-faq"
-                  style={{ border: '1px solid var(--pricing-border)' }}>
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors"
-                  >
-                    <span className="text-sm font-bold" style={{ color: 'var(--pricing-text)' }}>{faq.q}</span>
-                    <span className="text-xl font-bold flex-shrink-0 transition-transform"
-                      style={{ color: 'var(--pricing-muted)', transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)' }}>
-                      +
-                    </span>
-                  </button>
-                  {openFaq === i && (
-                    <div className="px-5 pb-5" style={{ borderTop: '1px solid var(--pricing-border)' }}>
-                      <p className="text-sm font-medium leading-relaxed pt-4" style={{ color: 'var(--pricing-muted)' }}>{faq.a}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Footer CTA ───────────────────────────────────────────────── */}
-        <section className="relative px-6 pb-16 pt-8 text-center overflow-hidden">
-          <div className="pricing-glow absolute inset-0 pointer-events-none">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] rounded-full blur-[100px]"
-              style={{ background: 'rgba(41,98,255,0.08)' }}/>
-          </div>
-          <div className="relative max-w-lg mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mb-3"
-              style={{ color: 'var(--pricing-text)' }}>
-              Start analysing smarter
-            </h2>
-            <p className="text-sm font-medium mb-8" style={{ color: 'var(--pricing-muted)' }}>
-              Free forever for core analysis. Go Pro for the full picture.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/"
-                className="px-8 py-4 rounded-xl text-sm font-black tracking-wide transition-all active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #2962ff 0%, #1565c0 100%)',
-                  color: '#ffffff', boxShadow: '0 8px 24px rgba(41,98,255,0.3)' }}>
-                Try for free →
-              </Link>
-              <button
-                onClick={() => window.scrollTo({ top: 400, behavior: 'smooth' })}
-                className="px-8 py-4 rounded-xl text-sm font-bold transition-all"
-                style={{ border: '1px solid var(--pricing-border)', color: 'var(--pricing-muted)' }}>
-                See Pro plans
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Footer ────────────────────────────────────────────────────── */}
-        <footer className="px-6 py-8 pricing-footer-border" style={{ borderTop: '1px solid var(--pricing-border)' }}>
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md flex items-center justify-center"
-                style={{ background: 'rgba(41,98,255,0.15)', border: '1px solid rgba(41,98,255,0.3)' }}>
-                <Zap size={11} style={{ color: '#2962ff' }} />
+        {/* Stats */}
+        <div style={{ borderTop:'1px solid rgba(var(--color-border)/0.4)', borderBottom:'1px solid rgba(var(--color-border)/0.4)', padding:'56px 24px', marginBottom:'60px' }}>
+          <div style={{ maxWidth:'700px', margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'24px', textAlign:'center' }}>
+            {[['5,000+','Stocks tracked'],['NSE + BSE','Exchange coverage'],['10+ models','Valuation methods']].map(([n,l]) => (
+              <div key={l}>
+                <p style={{ fontSize:'clamp(24px,4vw,40px)', fontWeight:900, letterSpacing:'-0.03em', background:'linear-gradient(135deg,#00c9a7,#4d8eff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', margin:0 }}>{n}</p>
+                <p style={{ fontSize:'13px', color: C.muted, marginTop:'6px' }}>{l}</p>
               </div>
-              <span className="text-sm font-black" style={{ color: 'var(--pricing-text)' }}>Robu Terminal</span>
-            </div>
-            <p className="text-xs font-medium text-center" style={{ color: 'var(--pricing-muted)' }}>
-              Not SEBI registered · For personal research only · Data from NSE, Yahoo Finance
-            </p>
-            <p className="text-xs font-medium" style={{ color: 'var(--pricing-muted)' }}>© 2025 Robu Terminal</p>
+            ))}
           </div>
-        </footer>
+        </div>
 
-      </div>{/* inner */}
-      </div>{/* #pricing-root */}
-    </>
+        {/* FAQ */}
+        <div style={{ padding:'0 24px 80px', maxWidth:'680px', margin:'0 auto' }}>
+          <h2 style={{ fontSize:'32px', fontWeight:900, letterSpacing:'-0.03em', textAlign:'center', marginBottom:'32px' }}>FAQ</h2>
+          {FAQS.map((faq, i) => (
+            <div key={i} style={{ borderRadius:'12px', border:'1px solid rgba(var(--color-border)/0.4)', marginBottom:'8px', overflow:'hidden' }}>
+              <button onClick={() => setOpenFaq(openFaq===i ? null : i)}
+                style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'16px', padding:'16px 20px', textAlign:'left', background:'transparent', border:'none', cursor:'pointer', color: C.text }}>
+                <span style={{ fontSize:'14px', fontWeight:700 }}>{faq.q}</span>
+                <span style={{ fontSize:'20px', fontWeight:300, flexShrink:0, transform: openFaq===i ? 'rotate(45deg)' : 'none', transition:'transform 0.2s', color: C.muted }}>+</span>
+              </button>
+              {openFaq===i && (
+                <div style={{ padding:'0 20px 16px', borderTop:'1px solid rgba(var(--color-border)/0.3)' }}>
+                  <p style={{ fontSize:'13px', lineHeight:1.7, color: C.muted, paddingTop:'12px', margin:0 }}>{faq.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div style={{ textAlign:'center', padding:'0 24px 80px' }}>
+          <h2 style={{ fontSize:'32px', fontWeight:900, letterSpacing:'-0.03em', marginBottom:'12px' }}>Start analysing smarter</h2>
+          <p style={{ fontSize:'14px', color: C.muted, marginBottom:'28px' }}>Free forever. Go Pro when you need the full picture.</p>
+          <div style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap' }}>
+            <Link href="/" style={{ padding:'14px 32px', borderRadius:'12px', background:'linear-gradient(135deg,#4d8eff,#2962ff)', color:'#fff', fontSize:'14px', fontWeight:900, textDecoration:'none', boxShadow:'0 8px 24px rgba(77,142,255,0.35)' }}>
+              Try for free →
+            </Link>
+            <button onClick={() => window.scrollTo({ top: 500, behavior:'smooth' })}
+              style={{ padding:'14px 32px', borderRadius:'12px', border:'1px solid rgba(var(--color-border)/0.5)', background:'transparent', color: C.muted, fontSize:'14px', fontWeight:700, cursor:'pointer' }}>
+              See plans
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ borderTop:'1px solid rgba(var(--color-border)/0.4)', padding:'24px', display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:'12px', maxWidth:'1100px', margin:'0 auto' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+            <div style={{ width:'24px', height:'24px', borderRadius:'6px', background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Zap size={11} color="#4d8eff"/>
+            </div>
+            <span style={{ fontSize:'13px', fontWeight:900, color: C.text }}>Robu Terminal</span>
+          </div>
+          <p style={{ fontSize:'11px', color: C.muted, textAlign:'center', margin:0 }}>Not SEBI registered · Personal research only · Data from NSE, Yahoo Finance</p>
+          <p style={{ fontSize:'11px', color: C.muted, margin:0 }}>© 2025 Robu Terminal</p>
+        </div>
+
+      </div>{/* end paddingTop wrapper */}
+    </div>
   );
 }
