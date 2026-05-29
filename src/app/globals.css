@@ -54,16 +54,20 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-html, body {
+html {
+  /* Allow vertical scroll — never set overflow-x:hidden on html, it kills page scroll */
+  overflow-y: auto;
+}
+
+body {
   background-color: rgb(var(--color-terminal));
   color: rgb(var(--color-primary));
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Inter's optimal line height */
   line-height: 1.5;
   overscroll-behavior: none;
-  /* Prevent horizontal overflow on mobile */
+  /* Prevent horizontal scroll on mobile — on body only, NOT html */
   overflow-x: hidden;
   max-width: 100vw;
 }

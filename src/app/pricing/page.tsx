@@ -112,6 +112,9 @@ export default function PricingPage() {
         overflowX:   'hidden',
       } as React.CSSProperties}
     >
+      {/* Ensure page is scrollable — globals.css can trap scroll on some routes */}
+      <style>{`html, body { overflow-y: auto !important; overflow-x: hidden !important; }`}</style>
+
       {/* Light mode: override CSS vars directly on root element */}
       <style>{`
         [data-theme="light"] #pricing-root {
