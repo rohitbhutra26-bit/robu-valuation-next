@@ -701,7 +701,27 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              /* No company loaded — show prompt based on active view */
+              <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-border/40 flex items-center justify-center">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted/40">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary mb-1">
+                    {activeView === 'valuation' ? 'Search a stock to see valuation' :
+                     activeView === 'financials' ? 'Search a stock to see financials' :
+                     activeView === 'peers' ? 'Search a stock to compare peers' :
+                     'Search any Indian stock above'}
+                  </p>
+                  <p className="text-xs text-muted max-w-xs">
+                    Type a company name or NSE symbol in the search bar to start your analysis.
+                  </p>
+                </div>
+              </div>
+            )}
           </main>
 
           {/* ── RIGHT PANEL — AI + Historical (only at xl: 1280px+) ── */}

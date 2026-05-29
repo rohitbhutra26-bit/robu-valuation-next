@@ -54,11 +54,11 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   const isExpensive   = upside < -30;
 
   const verdict =
-    isStrongBuy   ? { label: 'Looks very undervalued',  sub: 'Strong potential upside based on your assumptions', color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', Icon: ChevronsUp   } :
-    isUndervalued ? { label: 'Looks undervalued',       sub: 'Stock may be trading below fair value',             color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: '#34d399', Icon: ChevronUp    } :
-    isFair        ? { label: 'Fairly priced',           sub: 'Trading close to estimated fair value',             color: 'text-gold', bg: 'bg-gold/5', border: 'border-gold/20', dot: '#f59e0b', Icon: Minus        } :
-    isExpensive   ? { label: 'Looks very expensive',    sub: 'Significant downside to estimated fair value',      color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', Icon: ChevronsDown } :
-                    { label: 'Looks overvalued',         sub: 'May be trading above fair value',                  color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: '#f87171', Icon: ChevronDown  };
+    isStrongBuy   ? { label: 'Looks very undervalued',  sub: 'Strong potential upside based on your assumptions', color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: 'rgb(var(--color-gain))', Icon: ChevronsUp   } :
+    isUndervalued ? { label: 'Looks undervalued',       sub: 'Stock may be trading below fair value',             color: 'text-gain', bg: 'bg-gain/5', border: 'border-gain/20', dot: 'rgb(var(--color-gain))', Icon: ChevronUp    } :
+    isFair        ? { label: 'Fairly priced',           sub: 'Trading close to estimated fair value',             color: 'text-gold', bg: 'bg-gold/5', border: 'border-gold/20', dot: 'rgb(var(--color-gold))', Icon: Minus        } :
+    isExpensive   ? { label: 'Looks very expensive',    sub: 'Significant downside to estimated fair value',      color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: 'rgb(var(--color-loss))', Icon: ChevronsDown } :
+                    { label: 'Looks overvalued',         sub: 'May be trading above fair value',                  color: 'text-loss', bg: 'bg-loss/5', border: 'border-loss/20', dot: 'rgb(var(--color-loss))', Icon: ChevronDown  };
 
   const upsideLabel = upside >= 0
     ? `+${upside.toFixed(1)}% upside`

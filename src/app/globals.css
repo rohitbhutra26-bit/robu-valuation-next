@@ -191,18 +191,13 @@ input[type='range']:focus { outline: none; }
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 table { border-collapse: collapse; width: 100%; }
 
-/* ── Text size overrides — Inter is crisp so we can use the actual sizes ──── */
-/* Small UI labels stay readable — floor at 11px on mobile, 11px on desktop */
-.text-\[9px\]  { font-size: 11px !important; }
-.text-\[10px\] { font-size: 11px !important; }
-.text-\[11px\] { font-size: 12px !important; }
-
-/* On mobile, nudge everything up 1px for finger-friendliness */
-@media (max-width: 768px) {
+/* ── Text size overrides — mobile only, desktop uses actual Tailwind sizes ── */
+/* On mobile, bump tiny labels up for finger-friendliness */
+@media (max-width: 767px) {
   .text-\[9px\]  { font-size: 12px !important; }
   .text-\[10px\] { font-size: 12px !important; }
   .text-\[11px\] { font-size: 13px !important; }
-  .text-xs  { font-size: 13px !important; }
+  .text-xs       { font-size: 13px !important; }
 }
 
 /* ── Light mode: boost muted text contrast ───────────────────────────────── */
@@ -320,15 +315,12 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='number'] { -moz-appearance: textfield; }
 
 /* ── Tablet breakpoint helper (768–1023px) ────────────────────────────────── */
-/* At tablet: mobile layout but with more generous padding */
 @media (min-width: 768px) and (max-width: 1023px) {
-  /* Give tablet cards more breathing room */
-  .px-4 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
-
-  /* Tablet bottom nav */
+  /* Slightly taller tap targets on tablet bottom nav */
   .fixed.bottom-0 nav, nav.fixed.bottom-0 {
-    /* Slightly taller tap targets on tablet */
     padding-top: 10px;
     padding-bottom: 10px;
   }
+  /* Screener table: allow horizontal scroll instead of overflowing */
+  .screener-table-wrap { overflow-x: auto; }
 }

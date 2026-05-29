@@ -54,10 +54,13 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
     setAiLoading(true);
     setAiInsight(null);
 
+    const controller = new AbortController();
+
     fetch('/api/ai-analysis', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ company, financials }),
+      signal:  controller.signal,
     })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
@@ -74,10 +77,13 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
           setAiInsight(upgraded);
         }
       })
-      .catch(() => {
-        // Silent fallback — rule-based stays visible, no error shown
+      .catch((e) => {
+        // Silent fallback — rule-based stays visible; ignore abort errors
+        if (e?.name === 'AbortError') return;
       })
       .finally(() => setAiLoading(false));
+
+    return () => controller.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company.symbol]);
 

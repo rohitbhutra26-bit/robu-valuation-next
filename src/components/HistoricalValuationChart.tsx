@@ -220,15 +220,18 @@ export default function HistoricalValuationChart({ company }: Props) {
   const defaultMetric: 'pe' | 'pb' = profile.model === 'pb' ? 'pb' : 'pe';
 
   useEffect(() => {
+    const controller = new AbortController();
     setActiveMetric(defaultMetric);
     setLoading(true);
     setError(null);
     setData(null);
 
-    fetch(`/api/historical/${company.symbol}`, { cache: 'no-store' })
+    fetch(`/api/historical/${company.symbol}`, { cache: 'no-store', signal: controller.signal })
       .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.error || 'Failed'); }))
       .then(d => { setData(d); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
+      .catch(e => { if (e?.name !== 'AbortError') { setError(e.message); setLoading(false); } });
+
+    return () => controller.abort();
   }, [company.symbol, defaultMetric]);
 
   const { peValues, pbValues, dates } = useMemo(() => {

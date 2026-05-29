@@ -137,7 +137,7 @@ function SkeletonRow({ delay }: { delay: number }) {
 
 // ── Quality bar ───────────────────────────────────────────────────────────────
 function QualityBar({ score }: { score: number }) {
-  const color = score >= 70 ? '#34d399' : score >= 50 ? '#f59e0b' : '#9ca3af';
+  const color = score >= 70 ? 'rgb(var(--color-gain))' : score >= 50 ? 'rgb(var(--color-gold))' : 'rgb(var(--color-muted))';
   const pct = Math.min(100, score);
   return (
     <div className="flex items-center gap-1.5">
@@ -213,8 +213,9 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
   }
 
   function handleClickResult(r: ScreenerResult) {
-    // Prefer the Screener URL slug — it's the most reliable identifier
-    const sym = r.screenerSlug || r.symbol;
+    // Use NSE symbol for company lookup (maps to NSE Bhavcopy + Screener data)
+    // screenerSlug is kept for display only — NSE symbol is the reliable lookup key
+    const sym = r.symbol || r.screenerSlug;
     onSelectSymbol(sym);
   }
 
@@ -421,9 +422,9 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
             <p className="text-[10px] text-muted">Screener.in</p>
           </div>
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden screener-table-wrap">
             {/* Column headers */}
-            <div className="hidden sm:grid grid-cols-[1fr_90px_52px_56px_60px_50px_80px] gap-x-3 px-4 py-2 bg-border/20 border-b border-border">
+            <div className="hidden sm:grid grid-cols-[1fr_90px_52px_56px_60px_50px_80px] gap-x-3 px-4 py-2 bg-border/20 border-b border-border min-w-[530px]">
               {[
                 { label: 'Company',    col: null },
                 { label: 'Mkt Cap',    col: 'marketCap'    as keyof ScreenerResult },
@@ -468,7 +469,7 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
                     className="w-full text-left transition-colors active:scale-[0.998]"
                   >
                     {/* Desktop row */}
-                    <div className="hidden sm:grid grid-cols-[1fr_90px_52px_56px_60px_50px_80px] gap-x-3 px-4 py-3 items-center">
+                    <div className="hidden sm:grid grid-cols-[1fr_90px_52px_56px_60px_50px_80px] gap-x-3 px-4 py-3 items-center min-w-[530px]">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[11px] font-bold font-mono text-gold">{r.screenerSlug || r.symbol}</span>

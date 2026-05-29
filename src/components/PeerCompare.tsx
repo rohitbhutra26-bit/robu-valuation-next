@@ -73,17 +73,19 @@ export default function PeerCompare({ company }: { company: Company }) {
   const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
     setData(null);
-    fetch(`/api/peers/${company.symbol}`)
+    fetch(`/api/peers/${company.symbol}`, { signal: controller.signal })
       .then(r => r.json())
       .then(d => {
         if (d.error) throw new Error(d.error);
         setData(d);
       })
-      .catch(e => setError(e.message))
+      .catch(e => { if (e.name !== 'AbortError') setError(e.message); })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [company.symbol]);
 
   if (loading) {
