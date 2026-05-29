@@ -377,6 +377,12 @@ export default function Home() {
                 )}
               </button>
             ))}
+            <a
+              href="/pricing"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#22d3a5]/30 bg-[#22d3a5]/8 text-xs font-semibold text-[#22d3a5] hover:bg-[#22d3a5]/15 transition-all"
+            >
+              ⚡ Pro
+            </a>
             <ThemeToggle />
           </div>
         </div>
@@ -724,20 +730,21 @@ export default function Home() {
             )}
           </main>
 
-          {/* ── RIGHT PANEL — AI + Historical (only at xl: 1280px+) ── */}
-          <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto flex-col">
-            {company ? (
-              <div className="p-3 space-y-3">
-                <AIOverview company={company} financials={financials} />
-                <HistoricalValuationChart company={company} />
-                <IndustryBenchmarks company={company} financials={financials} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-sm text-muted px-4 text-center">Select a company to view analysis</p>
-              </div>
-            )}
-          </aside>
+          {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
+          {!['screener', 'watchlist', 'portfolio'].includes(activeView) && (
+            <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto flex-col">
+              {company ? (
+                <div className="p-3 space-y-3">
+                  <AIOverview company={company} financials={financials} />
+                  <IndustryBenchmarks company={company} financials={financials} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-muted px-4 text-center">Select a company to view analysis</p>
+                </div>
+              )}
+            </aside>
+          )}
 
         </div>
       )}

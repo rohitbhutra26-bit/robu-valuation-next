@@ -2,35 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme tokens — RGB triplets so Tailwind opacity modifiers (bg-card/50) work ── */
+/* ── Theme tokens — TradingView-matched color palette ──────────────────────── */
+/* RGB triplets so Tailwind opacity modifiers (bg-card/50) work               */
 :root {
-  --color-terminal: 7 17 31;       /* #07111f deep navy bg */
-  --color-card:     14 30 50;      /* #0e1e32 card surface */
-  --color-border:   31 53 88;      /* #1f3558 visible border */
-  --color-gold:     96 165 250;    /* #60a5fa blue accent */
-  --color-gain:     74 222 128;    /* #4ade80 green profit */
-  --color-loss:     248 113 113;   /* #f87171 red loss */
-  --color-primary:  240 246 255;   /* #f0f6ff near-white text */
-  --color-muted:    147 180 212;   /* #93b4d4 secondary text */
-  --color-accent:   125 211 252;   /* #7dd3fc sky blue highlights */
-  --color-warning:  253 224 71;    /* #fde047 yellow-300 — caution on dark */
+  /* TradingView dark: #131722 bg, #1e222d card, #363a45 border */
+  --color-terminal: 19 23 34;      /* #131722 — TradingView exact bg */
+  --color-card:     30 34 45;      /* #1e222d — TradingView card surface */
+  --color-border:   54 58 69;      /* #363a45 — TradingView border */
+  --color-gold:     41 98 255;     /* #2962ff — TradingView blue accent */
+  --color-gain:     38 166 154;    /* #26a69a — TradingView teal-green */
+  --color-loss:     239 83 80;     /* #ef5350 — TradingView red */
+  --color-primary:  209 212 220;   /* #d1d4dc — TradingView primary text */
+  --color-muted:    120 123 134;   /* #787b86 — TradingView muted text */
+  --color-accent:   41 98 255;     /* #2962ff — TradingView interactive blue */
+  --color-warning:  255 193 7;     /* #ffc107 — caution amber */
 
-  /* Font family tokens */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  /* Font — DM Sans matches TradingView's geometric clean style */
+  --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
 }
 
 [data-theme="light"] {
-  --color-terminal: 241 245 249;   /* #f1f5f9 soft slate bg */
-  --color-card:     255 255 255;   /* #ffffff white cards */
-  --color-border:   203 213 225;   /* #cbd5e1 light border */
-  --color-gold:     37 99 235;     /* #2563eb rich blue accent */
-  --color-gain:     22 163 74;     /* #16a34a dark green */
-  --color-loss:     220 38 38;     /* #dc2626 dark red */
-  --color-primary:  15 23 42;      /* #0f172a near-black text */
-  --color-muted:    71 85 105;     /* #475569 medium slate */
-  --color-accent:   59 130 246;    /* #3b82f6 blue */
-  --color-warning:  180 83 9;      /* #b45309 amber-700 — caution on light, WCAG AA */
+  --color-terminal: 242 243 247;   /* #f2f3f7 — TradingView light bg */
+  --color-card:     255 255 255;   /* #ffffff */
+  --color-border:   224 227 235;   /* #e0e3eb — TradingView light border */
+  --color-gold:     41 98 255;     /* #2962ff — same blue in light */
+  --color-gain:     9 132 115;     /* #098473 — darker teal for light mode */
+  --color-loss:     198 46 43;     /* #c62e2b — darker red for light mode */
+  --color-primary:  19 23 34;      /* #131722 — near-black */
+  --color-muted:    106 109 120;   /* #6a6d78 */
+  --color-accent:   41 98 255;     /* #2962ff */
+  --color-warning:  180 83 9;      /* #b45309 */
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
