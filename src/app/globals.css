@@ -167,50 +167,46 @@ input[type='range'] {
   background: transparent;
   cursor: pointer;
   width: 100%;
-  /* Touch: make hit area large enough for fingers */
-  height: 28px;
-  padding: 8px 0;
+  /* Invisible tall hit area for easy touch — keeps visual track thin */
+  height: 24px;
+  padding: 10px 0;
   touch-action: pan-x;
   -webkit-tap-highlight-color: transparent;
 }
 
 input[type='range']::-webkit-slider-runnable-track {
   background: rgb(var(--color-border));
-  height: 4px;
+  height: 3px;
   border-radius: 2px;
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  /* Vertically center within the 28px input height */
-  margin-top: -8px;
+  margin-top: -5px;
   background-color: rgb(var(--color-gold));
-  height: 20px;
-  width: 20px;
+  height: 13px;
+  width: 13px;
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgb(var(--color-gold) / 0.15);
-  transition: box-shadow 0.15s, transform 0.1s;
-  cursor: grab;
+  transition: box-shadow 0.15s;
 }
 
 input[type='range']:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 6px rgb(var(--color-gold) / 0.25);
-  transform: scale(1.15);
-  cursor: grabbing;
+  box-shadow: 0 0 0 5px rgb(var(--color-gold) / 0.25);
 }
 
 /* Firefox */
 input[type='range']::-moz-range-track {
   background: rgb(var(--color-border));
-  height: 4px;
+  height: 3px;
   border-radius: 2px;
 }
 input[type='range']::-moz-range-thumb {
   border: none;
   background-color: rgb(var(--color-gold));
-  height: 20px;
-  width: 20px;
+  height: 13px;
+  width: 13px;
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgb(var(--color-gold) / 0.15);
 }

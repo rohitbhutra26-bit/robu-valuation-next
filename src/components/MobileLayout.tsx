@@ -26,7 +26,7 @@ import PortfolioView from './PortfolioView';
 import StockScreener from './StockScreener';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type MainTab  = 'home' | 'screener' | 'watchlist' | 'portfolio' | 'stock';
+type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
 type StockTab = 'overview' | 'valuation' | 'ai' | 'peers' | 'financials';
 
 interface Props {
@@ -72,11 +72,7 @@ function BottomNav({
       label: 'Home',
       icon: <Search size={20} strokeWidth={active === 'home' ? 2.2 : 1.8} className={active === 'home' ? 'text-gold' : 'text-muted'} />,
     },
-    {
-      id: 'screener',
-      label: 'Screen',
-      icon: <Filter size={20} strokeWidth={active === 'screener' ? 2.2 : 1.8} className={active === 'screener' ? 'text-gold' : 'text-muted'} />,
-    },
+
     {
       id: 'watchlist',
       label: 'Watchlist',
@@ -162,7 +158,7 @@ function MobileHeader({
 
   const pageTitle: Record<MainTab, string> = {
     home:      'Robu Terminal',
-    screener:  'Screener',
+    
     watchlist: 'Watchlist',
     portfolio: 'Portfolio',
     stock:     '',
@@ -701,7 +697,7 @@ export default function MobileLayout({
               </div>
             ) : (
               <span className="text-sm font-bold text-primary tracking-tight">
-                {{ home: 'Robu Terminal', screener: 'Screener', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab]}
+                {{ home: 'Robu Terminal', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab as string] || 'Robu Terminal'}
               </span>
             )}
           </div>
@@ -760,13 +756,6 @@ export default function MobileLayout({
         <div className={mainTab === 'home' ? '' : 'hidden'}>
           <HomeView onSelect={handleSelect} selectedSymbol={selectedSymbol} onGoTo={handleMainTab} />
         </div>
-
-        {/* ── Screener ── */}
-        {mountedMain.current.has('screener') && (
-          <div className={mainTab === 'screener' ? '' : 'hidden'}>
-            <StockScreener onSelectSymbol={handleScreenerSelect} />
-          </div>
-        )}
 
         {/* ── Watchlist ── */}
         {mountedMain.current.has('watchlist') && (
