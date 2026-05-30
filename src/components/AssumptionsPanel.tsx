@@ -71,11 +71,7 @@ function SliderRow({
           value={Math.min(value, max)}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full appearance-none cursor-pointer"
-          style={{
-            background: beyondSlider
-              ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-              : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)`,
-          }}
+          style={{ '--fill': beyondSlider ? '100%' : `${pct}%` } as React.CSSProperties}
         />
         <div className="flex justify-between mt-1">
           <span className="text-xs text-muted font-mono">{min}{suffix}</span>

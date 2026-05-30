@@ -895,9 +895,7 @@ function SliderInput({
         type="range" min={min} max={max} step={step} value={Math.min(value, max)}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
-        style={{ background: beyondSlider
-          ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)` }}
+        style={{ '--fill': beyondSlider ? '100%' : `${pct}%` } as React.CSSProperties}
       />
       {beyondSlider && (
         <p className="text-[10px] text-gold font-mono mt-0.5">▲ beyond {max}{suffix} — custom value</p>

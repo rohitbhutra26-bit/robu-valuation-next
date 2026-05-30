@@ -24,6 +24,10 @@ import VerdictCard from './VerdictCard';
 import WatchlistView from './WatchlistView';
 import PortfolioView from './PortfolioView';
 import StockScreener from './StockScreener';
+import ROBUScoreCard from './ROBUScoreCard';
+import ScenarioBuilder from './ScenarioBuilder';
+import AnnouncementsFeed from './AnnouncementsFeed';
+import SectorAlternatives from './SectorAlternatives';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -456,12 +460,8 @@ function MobileSlider({
       <input
         type="range" min={min} max={max} step={step} value={Math.min(value, max)}
         onChange={e => onChange(parseFloat(e.target.value))}
-        className="w-full appearance-none cursor-pointer"
-        style={{
-          background: beyondSlider
-            ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-            : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)`,
-        }}
+        className="w-full appearance-none cursor-pointer robu-slider"
+        style={{ '--fill': `${pct}%` } as React.CSSProperties}
       />
       <div className="flex justify-between mt-1">
         <span className="text-[10px] text-muted font-mono">{min}{suffix}</span>
@@ -562,6 +562,10 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <ForecastChart financials={financials} assumptions={assumptions} />
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} compact />
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} compact />
+      {financials.length >= 3 && <ROBUScoreCard company={company} financials={financials} />}
+      <ScenarioBuilder company={company} financials={financials} />
+      <AnnouncementsFeed company={company} />
+      <SectorAlternatives company={company} onSelectSymbol={() => {}} />
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
     </div>
   );

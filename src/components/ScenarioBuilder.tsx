@@ -45,10 +45,7 @@ function SliderRow({
         value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
         className="w-full h-2 rounded-full appearance-none cursor-pointer touch-pan-x"
-        style={{
-          background: `linear-gradient(to right, currentColor 0%, currentColor ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)`,
-          WebkitAppearance: 'none',
-        }}
+        style={{ '--fill': `${pct}%` } as React.CSSProperties}
       />
     </div>
   );
