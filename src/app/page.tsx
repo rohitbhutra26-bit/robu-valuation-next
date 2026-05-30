@@ -24,7 +24,7 @@ import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
-import PeerCompare from '@/components/PeerCompare';
+import SectorAlternatives from '@/components/SectorAlternatives';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -40,14 +40,13 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist' | 'portfolio';
+type ActiveView = 'valuation' | 'financials' | 'watchlist' | 'portfolio';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string; global?: boolean }[] = [
   { view: 'valuation',  Icon: Calculator, label: 'Valuation',    desc: "What's it worth?"          },
   { view: 'financials', Icon: Table2,     label: 'Financials',   desc: 'Revenue, profit & history'  },
-  { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies'         },
   { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
   { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
 
@@ -703,8 +702,8 @@ export default function Home() {
                 )}
 
                 {/* ── VIEW: PEERS ── */}
-                {activeView === 'peers' && (
-                  <PeerCompare company={company} />
+                {activeView === 'valuation' && company && (
+                  <SectorAlternatives company={company} onSelectSymbol={handleSelect} />
                 )}
 
                 {/* ── At lg (1024–1279px): inline AI panel below main content since right panel is hidden ── */}
@@ -728,7 +727,7 @@ export default function Home() {
                   <p className="text-sm font-semibold text-primary mb-1">
                     {activeView === 'valuation' ? 'Search a stock to see valuation' :
                      activeView === 'financials' ? 'Search a stock to see financials' :
-                     activeView === 'peers' ? 'Search a stock to compare peers' :
+
                      'Search any Indian stock above'}
                   </p>
                   <p className="text-xs text-muted max-w-xs">
