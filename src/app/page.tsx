@@ -26,6 +26,7 @@ import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
 import ScenarioBuilder from '@/components/ScenarioBuilder';
+import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
@@ -705,6 +706,9 @@ export default function Home() {
                 )}
 
                 {/* ── VIEW: PEERS ── */}
+                {activeView === 'valuation' && company && financials.length >= 3 && (
+                  <ROBUScoreCard company={company} financials={financials} />
+                )}
                 {activeView === 'valuation' && company && financials.length > 0 && (
                   <ScenarioBuilder company={company} financials={financials} />
                 )}
