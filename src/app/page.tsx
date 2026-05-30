@@ -383,9 +383,10 @@ export default function Home() {
               </button>
             ))}
             <a
-              href="/pricing" hidden
+              href="/pricing"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
               style={{
+                display: 'none',
                 background: 'linear-gradient(135deg, #2962ff 0%, #1565c0 100%)',
                 color: '#ffffff',
                 boxShadow: '0 2px 8px rgba(41,98,255,0.35)',
@@ -418,7 +419,7 @@ export default function Home() {
             <div className="w-full mt-8 grid grid-cols-3 gap-3">
               {([
                 { Icon: BarChart3,  color: 'text-accent',  bg: 'bg-accent/10',  title: 'Value it',       body: 'Is the stock cheap or expensive?' },
-                { Icon: Users,      color: 'text-gold',    bg: 'bg-gold/10',    title: 'Compare peers',  body: 'How does it stack up vs rivals?' },
+
                 { Icon: Sparkles,   color: 'text-gain',    bg: 'bg-gain/10',    title: 'AI analysis',    body: 'Plain-English bull & bear case' },
               ] as const).map(tile => (
                 <div key={tile.title} className="bg-card border border-border rounded-xl p-4 text-center">

@@ -45,35 +45,27 @@ interface Props {
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 export function RobuLogo({ size = 32 }: { size?: number }) {
+  // No gradient IDs — solid colors only to avoid SVG ID conflicts when multiple instances on page
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bgG" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#0a1628"/>
-          <stop offset="100%" stopColor="#0d1f3c"/>
-        </linearGradient>
-        <linearGradient id="rG" x1="7" y1="7" x2="31" y2="33" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#f5c842"/>
-          <stop offset="100%" stopColor="#e09b1a"/>
-        </linearGradient>
-      </defs>
-      {/* Background */}
-      <rect width="40" height="40" rx="10" fill="url(#bgG)"/>
-      {/* Border glow */}
-      <rect x="0.5" y="0.5" width="39" height="39" rx="9.5" stroke="#f5c842" strokeWidth="0.75" strokeOpacity="0.35" fill="none"/>
-      {/* R stem */}
-      <rect x="7" y="7" width="5.5" height="26" rx="1.5" fill="url(#rG)"/>
-      {/* R top bar */}
-      <rect x="7" y="7" width="18" height="5.5" rx="1.5" fill="url(#rG)"/>
-      {/* R bowl right */}
-      <rect x="19.5" y="7" width="5" height="12" rx="1.5" fill="url(#rG)"/>
-      {/* R mid bar */}
-      <rect x="7" y="13" width="18" height="5" rx="1.5" fill="url(#rG)"/>
-      {/* R leg */}
-      <path d="M13.5 18 L20 18 L28.5 33 L22.5 33 Z" fill="url(#rG)"/>
-      {/* Teal chart bars — bullish accent */}
-      <rect x="29" y="26" width="3.5" height="7" rx="1" fill="#00c9a7" opacity="0.9"/>
-      <rect x="24.5" y="29" width="3.5" height="4" rx="1" fill="#00c9a7" opacity="0.6"/>
+      {/* Dark navy background — self-contained, looks good on any bg */}
+      <rect width="40" height="40" rx="10" fill="#0b1829"/>
+      {/* Subtle gold border */}
+      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="9.25" stroke="#f5c842" strokeWidth="0.75" strokeOpacity="0.5" fill="none"/>
+      {/* R — gold, solid */}
+      {/* Stem */}
+      <rect x="7" y="7" width="5.5" height="26" rx="1.5" fill="#f5c842"/>
+      {/* Top bar */}
+      <rect x="7" y="7" width="18" height="5.5" rx="1.5" fill="#f5c842"/>
+      {/* Bowl right side */}
+      <rect x="19.5" y="7" width="5" height="12" rx="1.5" fill="#f5c842"/>
+      {/* Mid bar */}
+      <rect x="7" y="13" width="18" height="5" rx="1.5" fill="#f5c842"/>
+      {/* Diagonal leg */}
+      <path d="M13.5 18 L20.5 18 L29 33 L22.5 33 Z" fill="#f5c842"/>
+      {/* Teal chart bars bottom-right — terminal data feel */}
+      <rect x="29" y="25" width="3.5" height="8" rx="1" fill="#00c9a7"/>
+      <rect x="24.5" y="29" width="3.5" height="4" rx="1" fill="#00c9a7" opacity="0.7"/>
     </svg>
   );
 }
