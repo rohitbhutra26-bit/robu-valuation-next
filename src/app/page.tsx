@@ -25,6 +25,8 @@ import WhatMustHappen from '@/components/WhatMustHappen';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
+import ScenarioBuilder from '@/components/ScenarioBuilder';
+import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -703,6 +705,12 @@ export default function Home() {
                 )}
 
                 {/* ── VIEW: PEERS ── */}
+                {activeView === 'valuation' && company && financials.length > 0 && (
+                  <ScenarioBuilder company={company} financials={financials} />
+                )}
+                {activeView === 'valuation' && company && (
+                  <AnnouncementsFeed company={company} />
+                )}
                 {activeView === 'valuation' && company && (
                   <SectorAlternatives company={company} onSelectSymbol={handleSelect} />
                 )}
