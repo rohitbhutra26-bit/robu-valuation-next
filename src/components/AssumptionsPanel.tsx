@@ -70,11 +70,11 @@ function SliderRow({
           step={step}
           value={Math.min(value, max)}
           onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="w-full h-1 rounded-full appearance-none cursor-pointer"
+          className="w-full appearance-none cursor-pointer"
           style={{
             background: beyondSlider
               ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-              : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)`,
+              : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)`,
           }}
         />
         <div className="flex justify-between mt-1">

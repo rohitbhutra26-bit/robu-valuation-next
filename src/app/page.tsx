@@ -897,7 +897,7 @@ function SliderInput({
         className="w-full h-1 rounded-full appearance-none cursor-pointer"
         style={{ background: beyondSlider
           ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)` }}
+          : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)` }}
       />
       {beyondSlider && (
         <p className="text-[10px] text-gold font-mono mt-0.5">▲ beyond {max}{suffix} — custom value</p>

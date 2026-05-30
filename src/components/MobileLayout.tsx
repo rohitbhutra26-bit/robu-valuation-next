@@ -456,11 +456,11 @@ function MobileSlider({
       <input
         type="range" min={min} max={max} step={step} value={Math.min(value, max)}
         onChange={e => onChange(parseFloat(e.target.value))}
-        className="w-full h-2 rounded-full appearance-none cursor-pointer"
+        className="w-full appearance-none cursor-pointer"
         style={{
           background: beyondSlider
             ? 'linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) 100%)'
-            : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgb(var(--color-border)) ${pct}%, rgb(var(--color-border)) 100%)`,
+            : `linear-gradient(to right, rgb(var(--color-gold)) 0%, rgb(var(--color-gold)) ${pct}%, rgba(128,128,128,0.2) ${pct}%, rgba(128,128,128,0.2) 100%)`,
         }}
       />
       <div className="flex justify-between mt-1">
@@ -712,13 +712,7 @@ export default function MobileLayout({
                 </div>
               </>
             )}
-            <a
-              href="/pricing"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold"
-              style={{ background: 'linear-gradient(135deg,#2962ff,#1565c0)', color: '#fff', boxShadow: '0 2px 6px rgba(41,98,255,0.4)' }}
-            >
-              ⚡ Pro
-            </a>
+
             <ThemeToggle />
           </div>
         </div>
