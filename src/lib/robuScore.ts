@@ -217,12 +217,17 @@ function scoreMoat(fin: FinancialYear[], company: Company): DimensionScore {
   const secondHalf = margins.slice(Math.floor(margins.length / 2));
   const marginDrift = avg(secondHalf) - avg(firstHalf); // positive = widening moat
 
-  // ROIC proxy: ROE adjusted for leverage (ROE / (1 + D/E))
-  const roic = company.debtToEquity > 0
-    ? company.roe / (1 + company.debtToEquity)
-    : company.roe;
+  // ROIC proxy: ROE adjusted for leverage
+  // If D/E is 0 (data gap), estimate from PB and ROE (DuPont: ROIC ≈ ROE × BV/EV)
+  const de = company.debtToEquity > 0
+    ? company.debtToEquity
+    : company.pb > 0 && company.pe > 0
+      // Estimate leverage: high PB + low ROE = likely leveraged
+      ? Math.max(0, (company.pb / 2) - 0.5)
+      : 0;
+  const roic = de > 0 ? company.roe / (1 + de) : company.roe;
 
-  // WACC proxy: 7% risk-free + beta premium
+  // WACC proxy: 7% risk-free + beta premium (default beta=1 if missing)
   const waccProxy = 7 + (company.beta ?? 1) * 5;
   const roicWaccSpread = roic - waccProxy;
 
