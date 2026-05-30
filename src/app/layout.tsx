@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Robu Terminal',
+  title: 'Robu Terminal® | Indian Stock Analysis',
   description: 'Institutional-grade stock valuation for Indian equities — NSE & BSE',
   icons: {
     icon: '/favicon.svg',

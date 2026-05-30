@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, TrendingUp, Search, AlertCircle, ChevronDown, ChevronUp, Zap, ArrowRight } from '@/lib/icons';
+import { Filter, TrendingUp, Search, AlertCircle, ChevronDown, ChevronUp, Zap } from '@/lib/icons';
 import { staggerContainer, staggerItem, fadeUp, scaleIn } from '@/lib/animations';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -533,7 +533,7 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
                             ₹{r.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                           </p>
                           <p className="text-[10px] text-muted font-mono">{r.pe ? `PE ${r.pe.toFixed(1)}x` : ''}</p>
-                          <ArrowRight size={12} className="text-muted/40" />
+                          <span style={{ color:'rgba(var(--color-muted)/0.4)', fontSize:12 }}>›</span>
                         </div>
                       </div>
                       <div className="mt-2.5 space-y-1.5">

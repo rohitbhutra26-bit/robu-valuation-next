@@ -59,9 +59,23 @@ export default function PricingPage() {
   return (
     <div style={scrollContainer}>
 
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 600px) {
+          .p-cards { grid-template-columns: 1fr !important; }
+          .p-hero h1 { font-size: 32px !important; }
+          .p-billing { max-width: 100% !important; }
+          .p-table-wrap { overflow-x: auto; }
+          .p-table-inner { min-width: 460px; }
+          .p-stats { grid-template-columns: repeat(3,1fr) !important; gap: 12px !important; }
+          .p-cta-btns { flex-direction: column !important; }
+          .p-footer-inner { flex-direction: column !important; text-align: center; gap: 8px !important; }
+        }
+      `}</style>
+
       {/* Nav */}
       <div style={{ position:'sticky', top:0, zIndex:50, background:'rgba(15,18,27,0.92)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${border}` }}>
-        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 16px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
             <div style={{ width:28, height:28, borderRadius:8, background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <Zap size={14} color={blue}/>
@@ -73,7 +87,7 @@ export default function PricingPage() {
       </div>
 
       {/* Hero */}
-      <div style={{ textAlign:'center', padding:'72px 24px 24px', maxWidth:780, margin:'0 auto' }}>
+      <div className="p-hero" style={{ textAlign:'center', padding:'72px 16px 24px', maxWidth:780, margin:'0 auto' }}>
         <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(77,142,255,0.12)', border:'1px solid rgba(77,142,255,0.25)', borderRadius:999, padding:'6px 16px', fontSize:11, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:blue, marginBottom:28 }}>
           <Zap size={11}/> Simple pricing · No hidden fees
         </div>
@@ -126,7 +140,7 @@ export default function PricingPage() {
       </div>
 
       {/* Cards */}
-      <div style={{ padding:'0 24px 80px', maxWidth:800, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20 }}>
+      <div className="p-cards" style={{ padding:'0 16px 80px', maxWidth:800, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:20 }}>
         {/* Free */}
         <div style={{ borderRadius:20, border:`1px solid ${border}`, background:card, padding:28, display:'flex', flexDirection:'column' }}>
           <p style={{ fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color:muted, margin:'0 0 12px' }}>Free</p>
@@ -136,13 +150,13 @@ export default function PricingPage() {
           </div>
           <p style={{ fontSize:13, color:muted, marginBottom:24, lineHeight:1.6 }}>Start analysing stocks instantly. No signup needed.</p>
           <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, marginBottom:24 }}>
-            {['Unlimited stock analysis','All valuation models','Historical P/E chart','Peer comparison','Watchlist & Portfolio'].map(f=>(
+            {['Basic stock analysis (5 stocks/day)','Limited valuation tools','Historical P/E chart','Peer comparison (basic)','Watchlist (up to 10 stocks)'].map(f=>(
               <div key={f} style={{ display:'flex', alignItems:'center', gap:10 }}>
                 <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(0,201,167,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Check size={9} color={green}/></div>
                 <span style={{ fontSize:13, color:'#e8eaed', opacity:0.85 }}>{f}</span>
               </div>
             ))}
-            {['Screener — top 5 only','Rule-based AI','No PDF export'].map(f=>(
+            {['Screener — top 5 results only','Rule-based AI (no Gemini)','No PDF export'].map(f=>(
               <div key={f} style={{ display:'flex', alignItems:'center', gap:10 }}>
                 <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><X size={9} color="rgba(255,255,255,0.2)"/></div>
                 <span style={{ fontSize:13, color:muted, opacity:0.6 }}>{f}</span>
