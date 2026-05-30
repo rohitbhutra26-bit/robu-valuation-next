@@ -47,7 +47,6 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" rx="20" fill="#0b1829"/>
       <rect x="10" y="10" width="27" height="80" fill="#2462E8"/>
       <path fillRule="evenodd" fill="#2462E8"
         d="M37,10 L62,10 A26,20 0 0,1 62,50 L37,50 Z M37,19 L57,19 A16,12 0 0,1 57,43 L47,43 A10,10 0 0,1 37,53 Z"/>
