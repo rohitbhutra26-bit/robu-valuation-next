@@ -167,6 +167,30 @@ export default function AssumptionsPanel({
         </div>
       </div>
 
+      <SliderRow
+        label="WACC (Discount Rate)"
+        value={assumptions.wacc}
+        min={6}
+        max={20}
+        inputMax={30}
+        step={0.5}
+        onChange={(v) => update('wacc', v)}
+        suffix="%"
+        color="text-loss"
+      />
+
+      <SliderRow
+        label="Margin of Safety"
+        value={assumptions.marginOfSafety}
+        min={0}
+        max={50}
+        inputMax={70}
+        step={5}
+        onChange={(v) => update('marginOfSafety', v)}
+        suffix="%"
+        color="text-accent"
+      />
+
       <div className="mt-4 pt-3 border-t border-border space-y-1.5">
         <p className="text-xs text-muted font-medium mb-2">Reference (FY24 Actual)</p>
         <div className="flex justify-between text-xs">

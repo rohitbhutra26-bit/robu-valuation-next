@@ -47,6 +47,8 @@ export interface ValuationAssumptions {
   exitPE: number;           // kept for cross-check methods (PEG, Earnings Yield)
   exitMultiple: number;     // sector-appropriate: P/E for FMCG/IT, EV/EBITDA for Metals, P/B for Banks
   years: number;
+  wacc: number;             // Weighted Avg Cost of Capital — used for DCF discount rate (%)
+  marginOfSafety: number;   // Min discount to fair value before considering buy (%)
 }
 
 export interface ValuationResult {

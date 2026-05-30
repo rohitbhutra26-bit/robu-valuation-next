@@ -40,7 +40,7 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist' | 'portfolio' | 'screener';
+type ActiveView = 'valuation' | 'financials' | 'peers' | 'watchlist' | 'portfolio';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +50,7 @@ const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; bad
   { view: 'peers',      Icon: Users,      label: 'Peer Compare', desc: 'vs other companies'         },
   { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
   { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
-  { view: 'screener',   Icon: Filter,     label: 'Screener',     desc: 'Filter stocks', global: true },
+
 ];
 
 export default function Home() {
@@ -69,6 +69,8 @@ export default function Home() {
     exitPE: 25,
     exitMultiple: 25,
     years: 5,
+    wacc: 12,
+    marginOfSafety: 25,
   });
   // Store the suggested defaults so Reset always goes back to what the algorithm picked
   const defaultAssumptionsRef = useRef<ValuationAssumptions>({
@@ -77,6 +79,8 @@ export default function Home() {
     exitPE: 25,
     exitMultiple: 25,
     years: 5,
+    wacc: 12,
+    marginOfSafety: 25,
   });
   const defaultAutoFillLabelRef = useRef<string | null>(null);
 
@@ -237,6 +241,8 @@ export default function Home() {
       netMarginAssumption: suggested.netMarginAssumption,
       exitPE:  Math.min(Math.max(Math.round(companyData.pe || 25), 5), 100),
       exitMultiple: suggested.exitMultiple,
+      wacc: 12,
+      marginOfSafety: 25,
       years: 5,
     };
     setAssumptions(freshAssumptions);
@@ -357,7 +363,7 @@ export default function Home() {
             {([
               { view: 'watchlist' as ActiveView, Icon: Bookmark,  label: 'Watchlist', count: watchlistCount },
               { view: 'portfolio' as ActiveView, Icon: Briefcase, label: 'Portfolio',  count: portfolioCount },
-              { view: 'screener'  as ActiveView, Icon: Filter,    label: 'Screener',  count: 0              },
+
             ]).map(({ view, Icon, label, count }) => (
               <button
                 key={view}
@@ -378,7 +384,7 @@ export default function Home() {
               </button>
             ))}
             <a
-              href="/pricing"
+              href="/pricing" hidden
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
               style={{
                 background: 'linear-gradient(135deg, #2962ff 0%, #1565c0 100%)',
@@ -543,10 +549,7 @@ export default function Home() {
               <div className="p-4">
                 <PortfolioView onSelectSymbol={(sym) => { handleSelect(sym); }} />
               </div>
-            ) : activeView === 'screener' ? (
-              <div className="p-4">
-                <StockScreener onSelectSymbol={(sym) => { handleSelect(sym); }} />
-              </div>
+
             ) : company ? (
               <div className="p-4 space-y-4">
                 {/* Company header — always visible */}
@@ -737,7 +740,7 @@ export default function Home() {
           </main>
 
           {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
-          {!['screener', 'watchlist', 'portfolio'].includes(activeView) && (
+          {!['watchlist', 'portfolio'].includes(activeView) && (
             <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto flex-col">
               {company ? (
                 <div className="p-3 space-y-3">

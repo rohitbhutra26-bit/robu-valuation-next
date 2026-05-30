@@ -12,6 +12,9 @@ import {
   impliedGrowthRate,
   gordonGrowthPB,
   earningsQualityScore,
+  evEbitdaModel,
+  dcfModel,
+  grahamNumber,
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
 import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
@@ -27,12 +30,16 @@ interface ValuationEngineProps {
 
 // ─── Method card ─────────────────────────────────────────────────────────────
 function MethodCard({
-  method, desc, fairValue, currentPrice, primary = false,
+  method, desc, fairValue, currentPrice, marginOfSafety = 0, primary = false,
 }: {
-  method: string; desc: string; fairValue: number; currentPrice: number; primary?: boolean;
+  method: string; desc: string; fairValue: number; currentPrice: number; marginOfSafety?: number; primary?: boolean;
 }) {
-  const upside  = fairValue > 0 ? (fairValue / currentPrice - 1) * 100 : 0;
-  const isUp    = upside >= 0;
+  const upside    = fairValue > 0 ? (fairValue / currentPrice - 1) * 100 : 0;
+  const isUp      = upside >= 0;
+  const buyPrice  = fairValue > 0 ? fairValue * (1 - marginOfSafety / 100) : 0;
+  const verdict   = upside >= 20 ? { label: 'UNDERVALUED', cls: 'text-gain bg-gain/10 border-gain/20' }
+                  : upside <= -15 ? { label: 'OVERVALUED',  cls: 'text-loss bg-loss/10 border-loss/20' }
+                  :                 { label: 'FAIR VALUE',  cls: 'text-gold bg-gold/10 border-gold/20' };
 
   return (
     <div className={`rounded-xl p-3 border transition-all ${
@@ -42,11 +49,9 @@ function MethodCard({
     }`}>
       <div className="flex items-start justify-between mb-1.5 gap-1">
         <span className={`text-[11px] font-semibold leading-tight ${primary ? 'text-gold' : 'text-muted'}`}>{method}</span>
-        {primary && (
-          <span className="text-[9px] font-bold text-terminal bg-gold px-1.5 py-0.5 rounded tracking-wide flex-shrink-0">
-            PRIMARY
-          </span>
-        )}
+        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border tracking-wide flex-shrink-0 ${verdict.cls}`}>
+          {verdict.label}
+        </span>
       </div>
       <p className="text-base font-bold font-mono text-primary mb-0.5">
         {fairValue > 0
@@ -56,6 +61,11 @@ function MethodCard({
       <p className={`text-sm font-semibold font-mono mb-1 ${isUp ? 'text-gain' : 'text-loss'}`}>
         {fairValue > 0 ? `${isUp ? '+' : ''}${upside.toFixed(1)}%` : '—'}
       </p>
+      {buyPrice > 0 && marginOfSafety > 0 && (
+        <p className="text-[10px] text-accent font-mono mb-1">
+          Buy ≤ ₹{buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({marginOfSafety}% MoS)
+        </p>
+      )}
       <p className="text-[10px] text-muted leading-relaxed line-clamp-3">{desc}</p>
     </div>
   );
@@ -85,67 +95,55 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   // ── Intelligence layer ────────────────────────────────────────────────────
   const quality = earningsQualityScore(financials);
 
-  // ── Primary model (sector-appropriate) ───────────────────────────────────
-  const primaryResult = runPrimaryModel(
-    model,
-    financials,
-    company,
+  // ── The 4 fixed valuation models (always shown regardless of sector) ────────
+  const wacc = assumptions.wacc ?? 12;
+  const mos_input = assumptions.marginOfSafety ?? 25;
+
+  // 1. DCF — discounted cash flows at WACC
+  const dcfResult = dcfModel(
+    financials, company,
     assumptions.revenueGrowthRate,
-    assumptions.netMarginAssumption,
+    wacc,
     assumptions.exitMultiple,
     assumptions.years,
   );
 
-  // ── Gordon Growth P/B (for banks/NBFCs — institutionally the correct model) ──
-  const gordonResult = (model === 'pb')
-    ? gordonGrowthPB(company, assumptions.revenueGrowthRate)
-    : null;
+  // 2. Graham Number — √(22.5 × EPS × BVPS)
+  const grahamResult = grahamNumber(financials, company);
 
-  // ── Cross-check: always run PE for non-banking sectors, for reference ─────
+  // 3. PE-based — forward earnings × exit PE
+  const peResult = peModel(
+    financials, company,
+    assumptions.revenueGrowthRate,
+    assumptions.netMarginAssumption,
+    assumptions.exitPE,
+    assumptions.years,
+  );
+
+  // 4. EV/EBITDA — enterprise value approach
+  const evResult = evEbitdaModel(
+    financials, company,
+    assumptions.revenueGrowthRate,
+    assumptions.exitMultiple,
+    assumptions.years,
+  );
+
+  // ── Keep legacy models for quality score + other signals ──────────────────
   const bench = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
   const latest = financials[financials.length - 1];
-
-  // Forward PE cross-check (always shown, even if not primary)
-  const peCheck = model !== 'pe'
-    ? peModel(financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitPE, assumptions.years)
-    : null;
-
-  // PEG ratio
   const pegResult = pegModel(financials, company);
-
-  // Earnings yield
   const eyResult  = earningsYieldModel(financials, company);
 
-  // Sector PE check (what it would be worth at the industry P/E)
-  const validEPS      = financials.filter(f => f.eps > 0);
-  const lastValidEPS  = validEPS[validEPS.length - 1];
-  const sectorPECheck = lastValidEPS
-    ? { fairValue: lastValidEPS.eps * bench.pe, desc: `EPS × ${bench.label} median P/E (${bench.pe}x)` }
-    : null;
-
-  // ── Composite fair value ─────────────────────────────────────────────────
-  // For banks: weight the Gordon Growth model more heavily (it's the institutional standard)
-  // and use it instead of the PEG / sector-PE cross-checks (which don't apply to banks)
-  let allFVs: number[];
-  if (model === 'pb' && gordonResult?.isValid) {
-    // Banking composite: 50% Gordon Growth + 50% P/B model (PEG/EY not meaningful for banks)
-    allFVs = [primaryResult.fairValue, gordonResult.fairValue, gordonResult.fairValue].filter(v => v > 0);
-  } else {
-    allFVs = [
-      primaryResult.fairValue,
-      pegResult.fairValue,
-      eyResult.fairValue,
-      sectorPECheck?.fairValue ?? 0,
-    ].filter(v => v > 0);
-  }
-
+  // ── Composite fair value — average of all 4 models ───────────────────────
+  const allFVs = [dcfResult.fairValue, grahamResult.fairValue, peResult.fairValue, evResult.fairValue].filter(v => v > 0);
   const compositeFV   = allFVs.length > 0 ? allFVs.reduce((a, b) => a + b, 0) / allFVs.length : 0;
   const compositeUp   = compositeFV > 0 ? (compositeFV / company.currentPrice - 1) * 100 : 0;
   const compositeCAGR = compositeFV > 0
     ? (Math.pow(Math.max(compositeFV / company.currentPrice, 0.001), 1 / assumptions.years) - 1) * 100
     : 0;
 
-  // Margin of safety
+  // MoS-adjusted buy price
+  const buyPrice = compositeFV > 0 ? compositeFV * (1 - mos_input / 100) : 0;
   const mos = compositeFV > 0 ? ((compositeFV - company.currentPrice) / compositeFV) * 100 : 0;
 
   // Implied growth baked into current price
@@ -183,7 +181,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         <div className="bg-border/20 rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Composite Fair Value
             <span className="text-muted/60 ml-1">
-              {model === 'pb' && gordonResult?.isValid ? '(P/B + Gordon blend)' : `(${allFVs.length} methods avg)`}
+              {`(avg of ${allFVs.length} methods)`}
             </span>
           </p>
           <div className="flex items-end gap-3 flex-wrap">
@@ -242,20 +240,12 @@ export default function ValuationEngine({ company, financials, assumptions, comp
 
         {/* Vaul bottom-sheet drawer */}
         <MethodsDrawer open={showDetails} onClose={() => setShowDetails(false)}>
-          {/* Method cards */}
+          {/* 4 Valuation Models */}
           <div className="grid grid-cols-2 gap-3">
-            <MethodCard method={primaryResult.model} desc={primaryResult.desc} fairValue={primaryResult.fairValue} currentPrice={company.currentPrice} primary />
-            {model === 'pb' && gordonResult?.isValid ? (
-              <MethodCard method="Gordon Growth P/B" desc={gordonResult.desc} fairValue={gordonResult.fairValue} currentPrice={company.currentPrice} />
-            ) : (
-              <MethodCard method={pegResult.model} desc={pegResult.desc} fairValue={pegResult.fairValue} currentPrice={company.currentPrice} />
-            )}
-            {peCheck ? (
-              <MethodCard method="Forward P/E (cross-check)" desc={peCheck.desc} fairValue={peCheck.fairValue} currentPrice={company.currentPrice} />
-            ) : sectorPECheck ? (
-              <MethodCard method="Sector P/E" desc={sectorPECheck.desc} fairValue={sectorPECheck.fairValue} currentPrice={company.currentPrice} />
-            ) : null}
-            <MethodCard method={eyResult.model} desc={eyResult.desc} fairValue={eyResult.fairValue} currentPrice={company.currentPrice} />
+            <MethodCard method="DCF" desc={dcfResult.desc} fairValue={dcfResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} primary />
+            <MethodCard method="Graham Number" desc={grahamResult.desc} fairValue={grahamResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
+            <MethodCard method="PE-Based" desc={peResult.desc} fairValue={peResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
+            <MethodCard method="EV/EBITDA" desc={evResult.desc} fairValue={evResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
           </div>
           {/* Earnings quality */}
           <div className="bg-border/20 rounded-xl p-3 flex items-center justify-between gap-3">
@@ -315,9 +305,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
           <p className="text-xs text-muted mb-1">
             Composite Fair Value
             <span className="text-muted/60 ml-1">
-              {model === 'pb' && gordonResult?.isValid
-                ? '(P/B + Gordon Growth blend)'
-                : `(avg of ${allFVs.length} methods)`}
+              {`(avg of ${allFVs.length} methods)`}
             </span>
           </p>
           <p className="text-2xl font-bold font-mono text-gold">
@@ -328,6 +316,11 @@ export default function ValuationEngine({ company, financials, assumptions, comp
           <p className="text-xs text-muted mt-1">
             Current ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
+          {buyPrice > 0 && mos_input > 0 && (
+            <p className="text-xs text-accent font-mono mt-1">
+              Buy ≤ ₹{buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({mos_input}% MoS)
+            </p>
+          )}
         </div>
         <div className="text-right space-y-2">
           <div>
@@ -345,58 +338,36 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         </div>
       </div>
 
-      {/* ── Method cards ── */}
+      {/* ── 4 Valuation Models — always shown ── */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Primary sector model — always first, always highlighted */}
         <MethodCard
-          method={primaryResult.model}
-          desc={primaryResult.desc}
-          fairValue={primaryResult.fairValue}
+          method="DCF"
+          desc={dcfResult.desc}
+          fairValue={dcfResult.fairValue}
           currentPrice={company.currentPrice}
+          marginOfSafety={mos_input}
           primary={true}
         />
-
-        {/* Banking: show Gordon Growth P/B (institutional model) instead of PEG */}
-        {model === 'pb' && gordonResult?.isValid ? (
-          <MethodCard
-            method="Gordon Growth P/B"
-            desc={gordonResult.desc}
-            fairValue={gordonResult.fairValue}
-            currentPrice={company.currentPrice}
-            primary={false}
-          />
-        ) : (
-          <MethodCard
-            method={pegResult.model}
-            desc={pegResult.desc}
-            fairValue={pegResult.fairValue}
-            currentPrice={company.currentPrice}
-          />
-        )}
-
-        {/* For non-PE sectors, show the PE cross-check; otherwise show sector PE */}
-        {peCheck ? (
-          <MethodCard
-            method="Forward P/E (cross-check)"
-            desc={peCheck.desc}
-            fairValue={peCheck.fairValue}
-            currentPrice={company.currentPrice}
-          />
-        ) : sectorPECheck ? (
-          <MethodCard
-            method="Sector P/E"
-            desc={sectorPECheck.desc}
-            fairValue={sectorPECheck.fairValue}
-            currentPrice={company.currentPrice}
-          />
-        ) : null}
-
-        {/* Earnings yield */}
         <MethodCard
-          method={eyResult.model}
-          desc={eyResult.desc}
-          fairValue={eyResult.fairValue}
+          method="Graham Number"
+          desc={grahamResult.desc}
+          fairValue={grahamResult.fairValue}
           currentPrice={company.currentPrice}
+          marginOfSafety={mos_input}
+        />
+        <MethodCard
+          method="PE-Based"
+          desc={peResult.desc}
+          fairValue={peResult.fairValue}
+          currentPrice={company.currentPrice}
+          marginOfSafety={mos_input}
+        />
+        <MethodCard
+          method="EV/EBITDA"
+          desc={evResult.desc}
+          fairValue={evResult.fairValue}
+          currentPrice={company.currentPrice}
+          marginOfSafety={mos_input}
         />
       </div>
 
@@ -426,22 +397,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         </div>
       </div>
 
-      {/* ── Gordon Growth insight (banks only) ── */}
-      {model === 'pb' && gordonResult && (
-        <div className="bg-border/20 rounded-xl p-3">
-          <p className="text-xs font-semibold text-primary mb-1">Gordon Growth Model — Why banks need a different formula</p>
-          <p className="text-[11px] text-muted leading-relaxed">
-            Banks are valued on <span className="text-gold">book value</span>, not earnings.
-            The Gordon Growth formula says: a bank deserves to trade above book value
-            ONLY if its <span className="text-gold">ROE ({company.roe.toFixed(1)}%)</span> beats its
-            {' '}<span className="text-accent">cost of equity ({gordonResult.coe.toFixed(1)}%)</span>.
-            The bigger the gap, the higher the fair P/B.
-            {gordonResult.isValid
-              ? ` At current ROE, the math supports ~${gordonResult.fairPB.toFixed(1)}x P/B — vs today's ${company.pb.toFixed(1)}x.`
-              : ' Lower your growth assumption to bring g below cost of equity.'}
-          </p>
-        </div>
-      )}
+
 
       {/* ── Key signals ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -474,16 +430,13 @@ export default function ValuationEngine({ company, financials, assumptions, comp
       {/* ── Legend ── */}
       <div className="text-[11px] text-muted border-t border-border pt-3 space-y-1 leading-relaxed">
         <p>
-          <span className="text-primary font-medium">{primaryResult.model}</span>
+          <span className="text-primary font-medium">DCF</span>
           {' '}— primary model for {profile.sectorLabel} sector
           {model === 'pb' && '; banks valued on book value, not earnings'}
           {model === 'ev_ebitda' && '; removes D&A distortion in asset-heavy businesses'}
           {model === 'ev_sales' && '; revenue multiple for pre-profit / high-growth companies'}
         </p>
-        {model === 'pb'
-          ? <p><span className="text-primary font-medium">Gordon Growth P/B</span> — institutional bank model: Fair P/B = (ROE − g) / (CoE − g); used by Goldman, JPMorgan</p>
-          : <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, fair P/E ≈ 20x (PEG = 1); penalises stocks growing slower than their P/E implies</p>
-        }
+        <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, fair P/E ≈ 20x (PEG = 1)</p>
         <p><span className="text-primary font-medium">Earnings Yield</span> — compares stock earnings vs Indian G-Sec rate ({RISK_FREE_RATE}%)</p>
         <p><span className="text-primary font-medium">Earnings Quality</span> — scores 0-100: profit consistency + margin stability + revenue momentum → adjusts exit multiple</p>
         <p><span className="text-primary font-medium">Composite</span> — {model === 'pb' ? '50% Gordon Growth + 50% P/B — banks weighted toward institutional model' : 'avg of all valid methods; reduces single-model bias'}</p>

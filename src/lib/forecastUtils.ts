@@ -666,3 +666,81 @@ export function impliedGrowthRate(
     return 0;
   }
 }
+
+// ─── DCF Model ────────────────────────────────────────────────────────────────
+// Uses OCF (Operating Cash Flow) as FCF proxy — discounted at WACC
+// Terminal value = Year-N FCF × terminal multiple / (WACC - terminal growth)
+export function dcfModel(
+  financials: FinancialYear[],
+  company: Company,
+  growthRate: number,    // revenue/FCF growth % for projection years
+  wacc: number,          // discount rate %
+  terminalMultiple: number, // exit EV multiple
+  years: number,
+): ModelOutput {
+  // Use OCF from latest year, fallback to PAT if no OCF
+  const withOCF = financials.filter(f => f.ocf && f.ocf > 0);
+  const latest  = financials[financials.length - 1];
+  const baseFCF = withOCF.length > 0
+    ? withOCF[withOCF.length - 1].ocf!
+    : latest.pat;
+
+  if (baseFCF <= 0) {
+    return { fairValue: 0, model: 'DCF', desc: 'Insufficient OCF data for DCF' };
+  }
+
+  const g    = growthRate / 100;
+  const disc = wacc / 100;
+  const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+
+  // Project and discount each year's FCF
+  let pvSum = 0;
+  for (let yr = 1; yr <= years; yr++) {
+    const fcf = baseFCF * Math.pow(1 + g, yr);
+    pvSum += fcf / Math.pow(1 + disc, yr);
+  }
+
+  // Terminal value: Year-N FCF × terminal multiple, discounted back
+  const terminalFCF = baseFCF * Math.pow(1 + g, years);
+  const terminalValue = (terminalFCF * terminalMultiple) / Math.pow(1 + disc, years);
+
+  const totalEV   = pvSum + terminalValue;
+  const netDebt   = estimateNetDebt(company);
+  const equityVal = Math.max(totalEV - netDebt, 0);
+  const fairValue = equityVal / shares;
+
+  return {
+    fairValue,
+    model: 'DCF',
+    desc: `OCF ₹${fmtCr(baseFCF)} → ${years}Y @ ${growthRate}% growth, ${wacc}% WACC, ${terminalMultiple}x terminal`,
+  };
+}
+
+// ─── Graham Number ────────────────────────────────────────────────────────────
+// Benjamin Graham's formula: √(22.5 × EPS × Book Value Per Share)
+// Classic value investing — buy below this, sell above
+export function grahamNumber(
+  financials: FinancialYear[],
+  company: Company,
+): ModelOutput {
+  // Get latest valid EPS
+  const validEPS = financials.filter(f => f.eps > 0);
+  const eps = validEPS.length > 0
+    ? validEPS[validEPS.length - 1].eps
+    : (company.eps ?? 0);
+
+  // Book Value Per Share = Price / PB ratio
+  const bvps = company.pb > 0 ? company.currentPrice / company.pb : 0;
+
+  if (eps <= 0 || bvps <= 0) {
+    return { fairValue: 0, model: 'Graham Number', desc: 'Insufficient EPS or book value data' };
+  }
+
+  const fairValue = Math.sqrt(22.5 * eps * bvps);
+
+  return {
+    fairValue,
+    model: 'Graham Number',
+    desc: `√(22.5 × EPS ₹${eps.toFixed(1)} × BVPS ₹${bvps.toFixed(0)}) — Graham's classic formula`,
+  };
+}
