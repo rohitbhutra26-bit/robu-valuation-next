@@ -47,13 +47,33 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="9" fill="rgb(var(--color-card))"/>
-      <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25" stroke="rgb(var(--color-gold))" strokeWidth="1" strokeOpacity="0.4" fill="none"/>
-      <rect x="7" y="7" width="7" height="26" rx="2" fill="rgb(var(--color-gold))"/>
-      <rect x="7" y="7" width="21" height="7" rx="2" fill="rgb(var(--color-gold))"/>
-      <rect x="22" y="7" width="6" height="14" rx="2" fill="rgb(var(--color-gold))"/>
-      <rect x="7" y="14" width="21" height="7" rx="2" fill="rgb(var(--color-gold))"/>
-      <path d="M14 21 L21 21 L31 33 L24 33 Z" fill="rgb(var(--color-gold))"/>
+      <defs>
+        <linearGradient id="bgG" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#0a1628"/>
+          <stop offset="100%" stopColor="#0d1f3c"/>
+        </linearGradient>
+        <linearGradient id="rG" x1="7" y1="7" x2="31" y2="33" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f5c842"/>
+          <stop offset="100%" stopColor="#e09b1a"/>
+        </linearGradient>
+      </defs>
+      {/* Background */}
+      <rect width="40" height="40" rx="10" fill="url(#bgG)"/>
+      {/* Border glow */}
+      <rect x="0.5" y="0.5" width="39" height="39" rx="9.5" stroke="#f5c842" strokeWidth="0.75" strokeOpacity="0.35" fill="none"/>
+      {/* R stem */}
+      <rect x="7" y="7" width="5.5" height="26" rx="1.5" fill="url(#rG)"/>
+      {/* R top bar */}
+      <rect x="7" y="7" width="18" height="5.5" rx="1.5" fill="url(#rG)"/>
+      {/* R bowl right */}
+      <rect x="19.5" y="7" width="5" height="12" rx="1.5" fill="url(#rG)"/>
+      {/* R mid bar */}
+      <rect x="7" y="13" width="18" height="5" rx="1.5" fill="url(#rG)"/>
+      {/* R leg */}
+      <path d="M13.5 18 L20 18 L28.5 33 L22.5 33 Z" fill="url(#rG)"/>
+      {/* Teal chart bars — bullish accent */}
+      <rect x="29" y="26" width="3.5" height="7" rx="1" fill="#00c9a7" opacity="0.9"/>
+      <rect x="24.5" y="29" width="3.5" height="4" rx="1" fill="#00c9a7" opacity="0.6"/>
     </svg>
   );
 }
