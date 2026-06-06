@@ -143,7 +143,7 @@ function StockSubNav({
           className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
             active === id
               ? 'bg-gold text-terminal'
-              : 'bg-border/50 text-muted hover:text-primary hover:bg-border'
+              : 'bg-border/50 text-primary/70 hover:text-primary'
           }`}
         >
           {label}
@@ -554,7 +554,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
                 key={y}
                 onClick={() => setAssumptions(a => ({ ...a, years: y }))}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold font-mono transition-all active:scale-95 ${
-                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted'
+                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-primary/70'
                 }`}
               >
                 {y}Y
