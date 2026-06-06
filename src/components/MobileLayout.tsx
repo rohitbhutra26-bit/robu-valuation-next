@@ -50,11 +50,11 @@ interface Props {
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="10" y="10" width="27" height="80" fill="#2462E8"/>
-      <path fillRule="evenodd" fill="#2462E8"
-        d="M37,10 L62,10 A26,20 0 0,1 62,50 L37,50 Z M37,19 L57,19 A16,12 0 0,1 57,43 L47,43 A10,10 0 0,1 37,53 Z"/>
-      <polygon points="37,58 60,58 88,90 64,90" fill="#2462E8"/>
+    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <text x="50" y="79"
+        fontFamily="Lora, Georgia, 'Times New Roman', serif"
+        fontSize="82" fontWeight="700" fill="#C4511A"
+        textAnchor="middle" dominantBaseline="auto">R</text>
     </svg>
   );
 }
@@ -99,7 +99,7 @@ function BottomNav({
       className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="bg-card/98 backdrop-blur-xl border-t border-border flex">
+      <div className="bg-card backdrop-blur-xl border-t border-border flex">
         {tabs.map(({ id, label, icon }) => {
           const disabled = id === 'stock' && !hasCompany;
           const isOn = active === id;
@@ -294,10 +294,15 @@ function HomeView({
   return (
     <div className="flex flex-col px-4 pb-32">
       {/* Hero */}
-      <div className="flex flex-col items-center pt-8 pb-6">
-        <RobuLogo size={52} />
-        <h1 className="text-2xl font-bold text-primary mt-4 tracking-tight">Robu Terminal</h1>
-        <p className="text-sm text-muted mt-1 text-center px-4">Is any Indian stock cheap, fair, or expensive?</p>
+      <div className="flex flex-col items-center pt-12 pb-6 px-4">
+        <RobuLogo size={60} />
+        <h1 className="text-3xl font-bold text-primary mt-4 tracking-tight font-serif">Robu Terminal</h1>
+        <p className="text-sm text-muted mt-2 text-center leading-relaxed">
+          Find out if any Indian stock is{' '}
+          <span className="font-semibold text-primary">cheap</span>,{' '}
+          <span className="font-semibold text-primary">fair</span>, or{' '}
+          <span className="font-semibold text-primary">expensive</span>.
+        </p>
       </div>
 
       {/* Search */}
@@ -332,10 +337,10 @@ function HomeView({
           <button
             key={sym}
             onClick={() => onSelect(sym)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all active:scale-95 ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold border transition-all active:scale-95 ${
               selectedSymbol === sym
-                ? 'bg-gold text-terminal'
-                : 'bg-card border border-border text-muted'
+                ? 'bg-gold border-gold text-white'
+                : 'bg-transparent border-border text-muted'
             }`}
           >
             {sym}
@@ -675,7 +680,7 @@ export default function MobileLayout({
 
       {/* Sticky header — includes stock sub-tabs when on stock view */}
       <header
-        className="sticky top-0 z-40 bg-card/98 backdrop-blur-xl border-b border-border flex-shrink-0"
+        className="sticky top-0 z-40 bg-card backdrop-blur-xl border-b border-border flex-shrink-0"
         style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' }}
       >
         {/* Main header row */}

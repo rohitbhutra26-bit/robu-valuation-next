@@ -15,44 +15,38 @@ export const metadata: Metadata = {
     maximumScale: 1,
     viewportFit: 'cover',
   },
-  themeColor: '#131722',
+  themeColor: '#EDE9E3',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Robu Terminal',
   },
 };
 
-// Inline script runs synchronously before first paint — prevents flash of wrong theme
+// Anti-flash: applies saved theme before first paint
 const antiFlashScript = `
 (function(){
   try {
-    var t = localStorage.getItem('robu-theme') || 'dark';
+    var t = localStorage.getItem('robu-theme') || 'light';
     document.documentElement.setAttribute('data-theme', t);
   } catch(e) {
-    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'light');
   }
 })();
 `;
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="light">
       <head>
-        {/* Anti-flash: set theme before paint so there's no white flicker */}
         <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Inter — industry standard for professional data UIs (Bloomberg, Stripe, Linear) */}
-        {/* IBM Plex Mono — tabular numbers, designed for data display */}
-        {/* DM Sans — TradingView-style geometric sans-serif */}
+        {/* Lora — editorial serif for headings and logo */}
+        {/* DM Sans — clean geometric sans for UI */}
         {/* IBM Plex Mono — tabular numbers for financial data */}
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>

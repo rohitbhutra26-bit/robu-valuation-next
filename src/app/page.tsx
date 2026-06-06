@@ -347,9 +347,9 @@ export default function Home() {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex-shrink-0">
         <div className="flex items-center justify-between px-5 py-2.5">
           <button onClick={goHome} className="flex items-center gap-3 group">
-            <RobuLogo size={28} />
+            <RobuLogo size={30} />
             <div className="text-left">
-              <p className="text-sm font-bold text-primary tracking-tight group-hover:text-gold transition-colors">Robu Terminal</p>
+              <p className="text-sm font-bold text-primary tracking-tight font-serif group-hover:text-gold transition-colors">Robu Terminal</p>
               <p className="text-[11px] text-muted leading-none">Indian Equities Research</p>
             </div>
           </button>
@@ -370,10 +370,10 @@ export default function Home() {
               <button
                 key={view}
                 onClick={() => { setHomeMode(false); setActiveView(view); }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
                   activeView === view
                     ? 'bg-gold/10 border-gold/30 text-gold'
-                    : 'bg-transparent border-border text-muted hover:text-primary hover:border-gold/20'
+                    : 'bg-transparent border-border text-muted hover:text-primary hover:border-gold/30'
                 }`}
               >
                 <Icon size={12} />
@@ -406,51 +406,82 @@ export default function Home() {
       {/* ── Home landing ──────────────────────────────────── */}
       {homeMode && (
         <main className="flex-1 flex items-center justify-center overflow-y-auto">
-          <div className="w-full max-w-[740px] px-8 py-12 flex flex-col items-center">
-            <RobuLogo size={72} />
-            <h1 className="mt-6 text-4xl font-bold text-primary tracking-tight">Robu Terminal</h1>
-            <p className="mt-3 text-base text-muted text-center">
-              Search any Indian stock and instantly find out if it's cheap, fair, or expensive
+          <div className="w-full max-w-[680px] px-8 py-14 flex flex-col items-center">
+
+            {/* Logo — serif R in terracotta */}
+            <RobuLogo size={76} />
+
+            {/* Heading — editorial serif */}
+            <h1 className="mt-5 text-5xl font-bold text-primary tracking-tight font-serif">
+              Robu Terminal
+            </h1>
+            <p className="mt-3 text-base text-muted text-center leading-relaxed">
+              Search any Indian stock and instantly find out if it&apos;s{' '}
+              <em className="not-italic font-medium text-primary">cheap</em>,{' '}
+              <em className="not-italic font-medium text-primary">fair</em>, or{' '}
+              <em className="not-italic font-medium text-primary">expensive</em>.
             </p>
 
-            {/* Search box */}
-            <div className="w-full mt-10 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-xl [&_svg]:w-5 [&_svg]:h-5">
+            {/* Search — pill shape */}
+            <div className="w-full mt-10 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-2xl [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
 
-            {/* Feature tiles — "how it works" at a glance */}
-            <div className="w-full mt-8 grid grid-cols-3 gap-3">
+            {/* Feature cards — left-aligned, editorial style */}
+            <div className="w-full mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
-                { Icon: BarChart3,  color: 'text-accent',  bg: 'bg-accent/10',  title: 'Value it',       body: 'Is the stock cheap or expensive?' },
-
-                { Icon: Sparkles,   color: 'text-gain',    bg: 'bg-gain/10',    title: 'AI analysis',    body: 'Plain-English bull & bear case' },
-              ] as const).map(tile => (
-                <div key={tile.title} className="bg-card border border-border rounded-xl p-4 text-center">
-                  <div className={`w-9 h-9 rounded-xl ${tile.bg} flex items-center justify-center mx-auto mb-3`}>
-                    <tile.Icon size={18} className={tile.color} />
+                {
+                  Icon: BarChart3, iconBg: 'bg-gold/10', iconColor: 'text-gold',
+                  title: 'Value it',
+                  body: 'Is the stock cheap or expensive?',
+                  cta: 'Run valuation',
+                  view: 'valuation' as ActiveView,
+                },
+                {
+                  Icon: Sparkles, iconBg: 'bg-gain/10', iconColor: 'text-gain',
+                  title: 'AI analysis',
+                  body: 'Plain-English bull & bear case',
+                  cta: 'Read the case',
+                  view: 'valuation' as ActiveView,
+                },
+              ]).map(tile => (
+                <div key={tile.title} className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-3">
+                  <div className={`w-10 h-10 rounded-xl ${tile.iconBg} border border-border flex items-center justify-center flex-shrink-0`}>
+                    <tile.Icon size={18} className={tile.iconColor} />
                   </div>
-                  <p className="text-xs font-semibold text-primary mb-1">{tile.title}</p>
-                  <p className="text-[11px] text-muted leading-snug">{tile.body}</p>
+                  <div>
+                    <p className="text-sm font-semibold text-primary mb-1">{tile.title}</p>
+                    <p className="text-xs text-muted leading-snug">{tile.body}</p>
+                  </div>
+                  <button
+                    onClick={() => { setHomeMode(false); setActiveView(tile.view); }}
+                    className="flex items-center gap-1 text-xs font-semibold text-gold hover:text-gold/80 transition-colors self-start"
+                  >
+                    {tile.cta} <span className="text-sm leading-none">→</span>
+                  </button>
                 </div>
               ))}
             </div>
 
             {/* Quick picks */}
             <div className="w-full mt-8">
-              <p className="text-[11px] uppercase tracking-widest text-muted mb-3 font-medium">Popular stocks to try</p>
+              <p className="text-[10px] uppercase tracking-[1.5px] text-muted/70 mb-3 font-semibold">
+                Popular stocks to try
+              </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_PICKS.map((sym) => (
                   <button
                     key={sym}
                     onClick={() => handleSelect(sym)}
-                    className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-card border border-border text-muted hover:text-primary hover:border-gold/40 transition-all"
+                    className="px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold border border-border text-muted bg-transparent hover:text-primary hover:border-gold/40 hover:bg-card transition-all"
                   >
                     {sym}
                   </button>
                 ))}
               </div>
             </div>
-            <p className="mt-10 text-xs text-muted/40 text-center">
+
+            <p className="mt-10 text-xs text-muted/50 text-center">
               Search any NSE or BSE listed company by name or symbol
             </p>
           </div>
@@ -462,34 +493,38 @@ export default function Home() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* ── LEFT NAV SIDEBAR ─────────────────────────── */}
-          <aside className="w-[168px] flex-shrink-0 border-r border-border bg-card/30 flex flex-col overflow-hidden">
+          <aside className="w-[168px] flex-shrink-0 border-r border-border bg-terminal flex flex-col overflow-hidden">
 
             {/* Navigation */}
             <div className="p-2 pt-3">
-              <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Analyse</p>
+              <p className="text-[9px] text-muted/70 uppercase tracking-[1.5px] font-semibold px-2 mb-2">Analyse</p>
               {NAV_ITEMS.map(item => {
                 const isActive = activeView === item.view;
                 return (
                   <button
                     key={item.view}
                     onClick={() => setActiveView(item.view)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-all mb-0.5 ${
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-left transition-all mb-0.5 ${
                       isActive
-                        ? 'bg-gold/10 border border-gold/20'
-                        : 'hover:bg-border/50 border border-transparent'
+                        ? 'bg-card border border-border shadow-sm'
+                        : 'hover:bg-card/60 border border-transparent'
                     }`}
                   >
-                    <item.Icon size={14} className={`flex-shrink-0 ${isActive ? 'text-gold' : 'text-muted'}`} />
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isActive ? 'bg-gold/10 border border-gold/20' : 'bg-border/40'
+                    }`}>
+                      <item.Icon size={13} className={isActive ? 'text-gold' : 'text-muted'} />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1">
-                        <span className={`text-[11px] font-medium leading-tight ${isActive ? 'text-gold' : 'text-muted'}`}>{item.label}</span>
+                        <span className={`text-[11px] font-semibold leading-tight ${isActive ? 'text-primary' : 'text-muted'}`}>{item.label}</span>
                         {item.badge && (
                           <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gold/15 text-gold border border-gold/20 leading-none">
                             {item.badge}
                           </span>
                         )}
                       </div>
-                      <p className={`text-[9px] leading-tight mt-0.5 ${isActive ? 'text-gold/60' : 'text-muted/50'}`}>
+                      <p className={`text-[9px] leading-tight mt-0.5 truncate ${isActive ? 'text-muted' : 'text-muted/50'}`}>
                         {item.desc}
                       </p>
                     </div>
@@ -753,7 +788,7 @@ export default function Home() {
 
           {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
           {!['watchlist', 'portfolio'].includes(activeView) && (
-            <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-card/30 overflow-y-auto flex-col">
+            <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-terminal overflow-y-auto flex-col">
               {company ? (
                 <div className="p-3 space-y-3">
                   <AIOverview company={company} financials={financials} />

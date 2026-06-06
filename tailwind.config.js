@@ -7,8 +7,6 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // CSS variable approach — every color works with Tailwind opacity modifiers
-      // e.g. bg-card/50, text-muted/60, border-border/30 all work correctly
       colors: {
         terminal: 'rgb(var(--color-terminal) / <alpha-value>)',
         card:     'rgb(var(--color-card) / <alpha-value>)',
@@ -22,10 +20,9 @@ module.exports = {
         warning:  'rgb(var(--color-warning) / <alpha-value>)',
       },
       fontFamily: {
-        // Inter — professional financial UI standard (Bloomberg, Stripe, Linear)
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        // IBM Plex Mono — tabular numbers, designed for data display
-        mono: ['IBM Plex Mono', 'JetBrains Mono', 'Cascadia Code', 'monospace'],
+        sans:  ['DM Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono:  ['IBM Plex Mono', 'JetBrains Mono', 'Cascadia Code', 'monospace'],
+        serif: ['Lora', 'Georgia', 'Times New Roman', 'serif'],
       },
     },
   },
