@@ -37,16 +37,16 @@
   --color-warning:  180 83 9;
 }
 
-/* Dark — warm charcoal, NOT cold blue */
+/* Dark — Claude-style neutral charcoal (not warm brown, not cold blue) */
 [data-theme="dark"] {
-  --color-terminal: 24 20 16;      /* #181410 — warm dark charcoal */
-  --color-card:     38 33 27;      /* #26211B — warm dark card */
-  --color-border:   62 55 47;      /* #3E372F — warm dark border */
-  --color-gold:     229 110 58;    /* #E56E3A — warm orange terracotta */
+  --color-terminal: 28 28 30;      /* #1C1C1E — Claude dark bg, neutral near-black */
+  --color-card:     38 38 41;      /* #262629 — dark card surface */
+  --color-border:   62 62 67;      /* #3E3E43 — visible neutral border */
+  --color-gold:     229 110 58;    /* #E56E3A — terracotta (keep brand) */
   --color-gain:     52 211 153;    /* #34D399 — teal green */
   --color-loss:     248 113 113;   /* #F87171 — soft red */
-  --color-primary:  245 241 235;   /* #F5F1EB — warm cream text */
-  --color-muted:    168 162 158;   /* #A8A29E — warm muted */
+  --color-primary:  242 242 242;   /* #F2F2F2 — near white text */
+  --color-muted:    160 160 165;   /* #A0A0A5 — neutral muted */
   --color-accent:   229 110 58;    /* #E56E3A */
   --color-warning:  251 191 36;    /* amber */
 }
