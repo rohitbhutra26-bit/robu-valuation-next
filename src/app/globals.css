@@ -53,7 +53,7 @@
 [data-theme="light"] {
   --color-terminal: 237 233 227;   /* #EDE9E3 — warm cream page bg */
   --color-card:     252 250 247;   /* #FCFAF7 — warm white card */
-  --color-border:   28 25 23;      /* used with /10–/15 opacity — warm dark alpha */
+  --color-border:   180 174 167;   /* warm mid gray — readable as fill + subtle as border */
   --color-gold:     196 81 26;     /* #C4511A — terracotta accent */
   --color-gain:     22 163 74;     /* #16A34A */
   --color-loss:     220 38 38;     /* #DC2626 */
@@ -73,7 +73,7 @@
 [data-theme="dark"] {
   --color-terminal: 31 31 30;      /* #1F1F1E — CDS exact page bg */
   --color-card:     44 44 42;      /* #2C2C2A — CDS exact surface */
-  --color-border:   226 225 218;   /* warm white alpha — used with /15 */
+  --color-border:   70 68 65;      /* warm dark gray — readable as fill; border lines use --border-subtle */
   --color-gold:     229 110 58;    /* #E56E3A — warm terracotta in dark */
   --color-gain:     52 211 153;    /* #34D399 */
   --color-loss:     248 113 113;   /* #F87171 */
@@ -164,7 +164,10 @@ button:active, [role="button"]:active {
 .border-subtle { border-color: var(--border-subtle) !important; }
 .border-strong { border-color: var(--border-strong) !important; }
 
-/* Override Tailwind's border-border to use alpha in dark mode */
+/* Override Tailwind's border-border to use alpha in both themes */
+[data-theme="light"] [class*="border-border"] {
+  border-color: var(--border-subtle) !important;
+}
 [data-theme="dark"] [class*="border-border"] {
   border-color: var(--border-subtle) !important;
 }
@@ -247,8 +250,11 @@ button:active, [role="button"]:active {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: rgb(var(--color-border) / 0.3);
+  background: rgb(var(--color-border) / 0.4);
   border-radius: var(--radius-sm);
+}
+[data-theme="dark"] .skeleton {
+  background: rgb(var(--color-border) / 0.65);
 }
 .skeleton::after {
   content: '';
@@ -257,7 +263,7 @@ button:active, [role="button"]:active {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(var(--color-card) / 0.6) 50%,
+    rgb(var(--color-primary) / 0.07) 50%,
     transparent 100%
   );
   animation: cds-shimmer 1.5s var(--ease-cds) infinite;
