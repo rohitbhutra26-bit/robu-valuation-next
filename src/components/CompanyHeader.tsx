@@ -41,7 +41,7 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
             <span className="text-xs font-mono font-semibold px-2 py-0.5 bg-gold/10 text-gold border border-gold/30 rounded">
               {company.symbol}
             </span>
-            <span className="text-xs px-2 py-0.5 bg-border rounded text-muted border border-border/50">
+            <span className="text-xs px-2 py-0.5 bg-border/50 rounded text-primary/80 border border-border/50 font-medium">
               {smartSectorLabel}
             </span>
             <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded">
@@ -99,31 +99,31 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
 
       <div className="mt-4 flex flex-wrap gap-2">
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">Mkt Cap</span>
+          <span className="text-[11px] text-muted font-medium">Mkt Cap</span>
           <span className="text-xs font-semibold text-primary font-mono">{formatCr(company.marketCap)}</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">P/E</span>
+          <span className="text-[11px] text-muted font-medium">P/E</span>
           <span className="text-xs font-semibold text-primary font-mono">{company.pe.toFixed(1)}x</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">P/B</span>
+          <span className="text-[11px] text-muted font-medium">P/B</span>
           <span className="text-xs font-semibold text-primary font-mono">{company.pb.toFixed(1)}x</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">ROE</span>
+          <span className="text-[11px] text-muted font-medium">ROE</span>
           <span className={`text-xs font-semibold font-mono ${company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss'}`}>
             {company.roe.toFixed(1)}%
           </span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">D/E</span>
+          <span className="text-[11px] text-muted font-medium">D/E</span>
           <span className={`text-xs font-semibold font-mono ${company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}`}>
             {company.debtToEquity.toFixed(2)}x
           </span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-xs text-muted">Div Yield</span>
+          <span className="text-[11px] text-muted font-medium">Div Yield</span>
           <span className="text-xs font-semibold text-primary font-mono">{company.dividendYield.toFixed(2)}%</span>
         </div>
       </div>
