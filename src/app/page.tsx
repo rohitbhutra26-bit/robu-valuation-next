@@ -23,6 +23,7 @@ import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
+import PriceChart from '@/components/PriceChart';
 import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
 import ScenarioBuilder from '@/components/ScenarioBuilder';
@@ -714,6 +715,7 @@ export default function Home() {
                       );
                     })()}
 
+                    <PriceChart company={company} />
                     <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
