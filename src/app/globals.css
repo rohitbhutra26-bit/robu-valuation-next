@@ -2,61 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Claude design system — warm editorial palette ──────────────────────── */
-/* RGB triplets so Tailwind opacity modifiers (bg-card/50) work             */
+/* ════════════════════════════════════════════════════════════════════════════
+   ROBU TERMINAL — Claude Design System (CDS)
+   Tokens sourced directly from live claude.ai CSS inspection
+   ════════════════════════════════════════════════════════════════════════════ */
 
-/* Default = light warm cream (Claude aesthetic) */
+/* ── Easing functions (sourced from CDS) ─────────────────────────────────── */
 :root {
-  --color-terminal: 237 233 227;   /* #EDE9E3 — warm cream background */
-  --color-card:     252 250 247;   /* #FCFAF7 — warm white card surface */
-  --color-border:   214 208 201;   /* #D6D0C9 — warm gray border */
-  --color-gold:     196 81 26;     /* #C4511A — terracotta accent */
-  --color-gain:     22 163 74;     /* #16A34A — green */
-  --color-loss:     220 38 38;     /* #DC2626 — red */
-  --color-primary:  28 25 23;      /* #1C1917 — warm near-black */
-  --color-muted:    120 113 108;   /* #78716C — warm gray */
-  --color-accent:   196 81 26;     /* #C4511A — terracotta (same as gold) */
-  --color-warning:  180 83 9;      /* #B45309 — amber */
+  /* CDS uses cubic-bezier(0.4, 0, 0.2, 1) — Material standard, fast-in decel */
+  --ease-cds: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Spring: for panel slides and transform animations */
+  --ease-spring: linear(
+    0 0%, 0.2459 7.14286%, 0.6526 14.2857%, 0.9468 21.4286%,
+    1.0764 28.5714%, 1.0915 35.7143%, 1.0585 42.8571%,
+    1.0164 50%, 0.9918 57.1429%, 0.9895 64.2857%,
+    1.0012 71.4286%, 1.0063 78.5714%, 1.0016 85.7143%,
+    0.9996 92.8571%, 1 100%
+  );
 
-  --font-sans:  'DM Sans', system-ui, -apple-system, sans-serif;
-  --font-mono:  'IBM Plex Mono', 'JetBrains Mono', monospace;
-  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+  /* CDS timing */
+  --dur-micro:    35ms;   /* bg/border colour snaps */
+  --dur-fast:     60ms;   /* text colour */
+  --dur-standard: 150ms;  /* opacity, position, size */
+  --dur-slow:     300ms;  /* panels, modals */
+  --dur-spring:   450ms;  /* spring transforms */
+
+  /* CDS shadows (exact values from stylesheet) */
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
+
+  /* CDS radius scale */
+  --radius-xs:   2px;
+  --radius-sm:   4px;    /* base cds-radius */
+  --radius-md:   6px;    /* buttons */
+  --radius-lg:   8px;    /* small cards */
+  --radius-xl:   12px;   /* cards */
+  --radius-2xl:  16px;   /* panels */
+  --radius-full: 9999px; /* pills */
+
+  /* Fonts — Anthropic's stack, using publicly available equivalents */
+  --font-sans:  'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Lora', Georgia, 'Arial Hebrew', 'Times New Roman', Times, serif;
+  --font-mono:  'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
 }
 
-/* Explicit light — same as :root */
+/* ── Light theme — warm cream (Claude editorial) ─────────────────────────── */
+/* Measured from the Claude design trial screenshot                           */
+:root,
 [data-theme="light"] {
-  --color-terminal: 237 233 227;
-  --color-card:     252 250 247;
-  --color-border:   214 208 201;
-  --color-gold:     196 81 26;
-  --color-gain:     22 163 74;
-  --color-loss:     220 38 38;
-  --color-primary:  28 25 23;
-  --color-muted:    120 113 108;
-  --color-accent:   196 81 26;
-  --color-warning:  180 83 9;
+  --color-terminal: 237 233 227;   /* #EDE9E3 — warm cream page bg */
+  --color-card:     252 250 247;   /* #FCFAF7 — warm white card */
+  --color-border:   28 25 23;      /* used with /10–/15 opacity — warm dark alpha */
+  --color-gold:     196 81 26;     /* #C4511A — terracotta accent */
+  --color-gain:     22 163 74;     /* #16A34A */
+  --color-loss:     220 38 38;     /* #DC2626 */
+  --color-primary:  28 25 23;      /* #1C1917 — warm near-black */
+  --color-muted:    120 113 108;   /* #78716C */
+  --color-accent:   196 81 26;     /* #C4511A */
+  --color-warning:  180 83 9;      /* #B45309 */
+
+  /* Light-specific: warm alpha border */
+  --border-subtle:  rgba(28, 25, 23, 0.10);
+  --border-strong:  rgba(28, 25, 23, 0.18);
+  --shadow-color:   rgba(0, 0, 0, 0.06);
 }
 
-/* Dark — Claude-style neutral charcoal (not warm brown, not cold blue) */
+/* ── Dark theme — exact CDS values from live claude.ai ──────────────────── */
+/* Measured: body bg=rgb(31,31,30), card=rgb(44,44,42), nav=rgb(31,31,30)   */
 [data-theme="dark"] {
-  --color-terminal: 28 28 30;      /* #1C1C1E — Claude dark bg, neutral near-black */
-  --color-card:     38 38 41;      /* #262629 — dark card surface */
-  --color-border:   62 62 67;      /* #3E3E43 — visible neutral border */
-  --color-gold:     229 110 58;    /* #E56E3A — terracotta (keep brand) */
-  --color-gain:     52 211 153;    /* #34D399 — teal green */
-  --color-loss:     248 113 113;   /* #F87171 — soft red */
-  --color-primary:  242 242 242;   /* #F2F2F2 — near white text */
-  --color-muted:    160 160 165;   /* #A0A0A5 — neutral muted */
-  --color-accent:   229 110 58;    /* #E56E3A */
-  --color-warning:  251 191 36;    /* amber */
+  --color-terminal: 31 31 30;      /* #1F1F1E — CDS exact page bg */
+  --color-card:     44 44 42;      /* #2C2C2A — CDS exact surface */
+  --color-border:   226 225 218;   /* warm white alpha — used with /15 */
+  --color-gold:     229 110 58;    /* #E56E3A — warm terracotta in dark */
+  --color-gain:     52 211 153;    /* #34D399 */
+  --color-loss:     248 113 113;   /* #F87171 */
+  --color-primary:  248 248 246;   /* #F8F8F6 — CDS exact primary text */
+  --color-muted:    195 194 183;   /* #C3C2B7 — CDS exact secondary text */
+  --color-accent:   229 110 58;
+  --color-warning:  251 191 36;
+
+  /* Dark-specific: warm alpha border (Claude's exact approach) */
+  --border-subtle:  rgba(226, 225, 218, 0.12);
+  --border-strong:  rgba(226, 225, 218, 0.22);
+  --shadow-color:   rgba(0, 0, 0, 0.35);
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 html {
@@ -79,71 +112,165 @@ body {
   overflow-x: hidden;
   max-width: 100vw;
   letter-spacing: -0.011em;
+  /* CDS: theme transitions on body */
+  transition:
+    background-color var(--dur-standard) var(--ease-cds),
+    color var(--dur-standard) var(--ease-cds);
 }
 
 /* ── Typography ───────────────────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-}
+h1, h2, h3, h4, h5, h6 { letter-spacing: -0.02em; line-height: 1.25; }
 
 .font-serif {
   font-family: var(--font-serif) !important;
   letter-spacing: -0.01em;
 }
 
-.font-mono,
-code,
-pre,
-[class*="font-mono"] {
+.font-mono, code, pre, [class*="font-mono"] {
   font-family: var(--font-mono) !important;
   font-feature-settings: "tnum" 1, "kern" 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
 }
 
-/* ── Overflow protection ──────────────────────────────────────────────────── */
-.min-w-0 { min-width: 0; }
-
-p, span, div, td, th, li {
-  overflow-wrap: break-word;
-  word-break: normal;
+/* ── CDS Interaction: transition everything the CDS way ──────────────────── */
+/* Micro = 35ms for bg/border (feels instant but avoids jarring flash)       */
+/* Standard = 150ms for color, opacity (perceptible but snappy)              */
+button, a, [role="button"] {
+  transition:
+    background-color var(--dur-micro) var(--ease-cds),
+    border-color     var(--dur-micro) var(--ease-cds),
+    box-shadow       var(--dur-micro) var(--ease-cds),
+    color            var(--dur-fast)  var(--ease-cds),
+    opacity          var(--dur-standard) var(--ease-cds),
+    transform        var(--dur-spring) var(--ease-spring);
 }
 
-.whitespace-nowrap {
-  word-break: normal;
-  overflow-wrap: normal;
+/* CDS: active press = subtle scale-down (spring easing gives snap-back) */
+button:active, [role="button"]:active {
+  transform: scale(0.98);
 }
 
-/* ── Interaction ──────────────────────────────────────────────────────────── */
-button, a, input, select, textarea, [role="button"] {
-  touch-action: manipulation;
-}
-
-button {
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-/* ── Focus rings ──────────────────────────────────────────────────────────── */
+/* ── Focus rings (CDS style: 2px warm offset) ────────────────────────────── */
 :focus-visible {
   outline: 2px solid rgb(var(--color-gold));
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* ── Border utilities using CDS alpha approach ───────────────────────────── */
+/* Instead of a fixed RGB, Claude uses warm-alpha overlays for borders       */
+.border-subtle { border-color: var(--border-subtle) !important; }
+.border-strong { border-color: var(--border-strong) !important; }
+
+/* Override Tailwind's border-border to use alpha in dark mode */
+[data-theme="dark"] [class*="border-border"] {
+  border-color: var(--border-subtle) !important;
 }
 
-:focus:not(:focus-visible) { outline: none; }
+/* ── CDS Elevation — card shadows ────────────────────────────────────────── */
+.bg-card {
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-standard) var(--ease-cds);
+}
+
+[data-theme="dark"] .bg-card { box-shadow: none; }
+
+/* CDS card hover — border brightens + subtle lift */
+.card-hover {
+  transition:
+    border-color var(--dur-micro)    var(--ease-cds),
+    box-shadow   var(--dur-standard) var(--ease-cds),
+    transform    var(--dur-spring)   var(--ease-spring);
+}
+.card-hover:hover {
+  border-color: rgb(var(--color-gold) / 0.35) !important;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.card-hover:active { transform: translateY(0); }
+
+/* ── CDS Keyframes ────────────────────────────────────────────────────────── */
+
+/* Fade in (CDS: _fade, _fadeInText) */
+@keyframes cds-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Slide up (combined fade + lift) */
+@keyframes cds-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide in from right (panel) */
+@keyframes cds-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Dot pulse (exact CDS cds-dot-pulse keyframe) */
+@keyframes cds-dot-pulse {
+  0%, 5%    { opacity: 0.3; animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1); }
+  15%, 25%  { opacity: 0.85; animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1); }
+  65%, 100% { opacity: 0.3; }
+}
+
+/* Shimmer (CDS skeleton loading) */
+@keyframes cds-shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
+/* Pulse (CDS: 2s ease-in-out infinite) */
+@keyframes cds-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* Spin (for loading indicators) */
+@keyframes cds-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Animation utility classes ───────────────────────────────────────────── */
+.fade-in       { animation: cds-fade-in    var(--dur-standard) var(--ease-cds) both; }
+.slide-up      { animation: cds-slide-up   var(--dur-slow)     var(--ease-cds) both; }
+.slide-in-right{ animation: cds-slide-in-right var(--dur-slow) var(--ease-spring) both; }
+.cds-pulse     { animation: cds-pulse 2s ease-in-out infinite; }
+.cds-spin      { animation: cds-spin 1s linear infinite; }
+
+/* CDS Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--color-border) / 0.3);
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--color-card) / 0.6) 50%,
+    transparent 100%
+  );
+  animation: cds-shimmer 1.5s var(--ease-cds) infinite;
+}
 
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--color-border));
-  border-radius: 4px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--color-muted) / 0.5);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
 @media (max-width: 1023px) {
   ::-webkit-scrollbar { display: none; }
@@ -153,7 +280,7 @@ button {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Range inputs (sliders) ───────────────────────────────────────────────── */
+/* ── Range sliders ────────────────────────────────────────────────────────── */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -175,7 +302,8 @@ input[type='range']::-webkit-slider-runnable-track {
     rgba(128,128,128,0.18) 100%
   );
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
+  transition: background var(--dur-micro) var(--ease-cds);
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -187,11 +315,14 @@ input[type='range']::-webkit-slider-thumb {
   width: 13px;
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgb(var(--color-gold) / 0.15);
-  transition: box-shadow 0.15s;
+  transition:
+    box-shadow var(--dur-micro) var(--ease-cds),
+    transform  var(--dur-spring) var(--ease-spring);
 }
 
 input[type='range']:active::-webkit-slider-thumb {
   box-shadow: 0 0 0 5px rgb(var(--color-gold) / 0.25);
+  transform: scale(1.15);
 }
 
 input[type='range']::-moz-range-track {
@@ -203,7 +334,7 @@ input[type='range']::-moz-range-track {
     rgba(128,128,128,0.18) 100%
   );
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
 }
 
 input[type='range']::-moz-range-thumb {
@@ -212,15 +343,25 @@ input[type='range']::-moz-range-thumb {
   height: 13px;
   width: 13px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgb(var(--color-gold) / 0.15);
 }
 
 input[type='range']:focus { outline: none; }
 
+/* ── Overflow ─────────────────────────────────────────────────────────────── */
+.min-w-0 { min-width: 0; }
+p, span, div, td, th, li { overflow-wrap: break-word; word-break: normal; }
+.whitespace-nowrap { word-break: normal; overflow-wrap: normal; }
+
+/* ── Tap targets ──────────────────────────────────────────────────────────── */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 table { border-collapse: collapse; width: 100%; }
 
-/* ── Mobile text size bumps ───────────────────────────────────────────────── */
+/* ── Mobile text bumps ────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .text-\[9px\]  { font-size: 12px !important; }
   .text-\[10px\] { font-size: 12px !important; }
@@ -228,58 +369,7 @@ table { border-collapse: collapse; width: 100%; }
   .text-xs       { font-size: 13px !important; }
 }
 
-/* ── Card elevation — warm shadow in light, subtle glow in dark ───────────── */
-.bg-card {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-}
-
-[data-theme="dark"] .bg-card {
-  box-shadow: none;
-}
-
-/* ── Card hover system ────────────────────────────────────────────────────── */
-.card-hover {
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.card-hover:hover {
-  border-color: rgb(var(--color-gold) / 0.35);
-  box-shadow: 0 0 0 1px rgb(var(--color-gold) / 0.12);
-}
-
-/* ── Print ────────────────────────────────────────────────────────────────── */
-@media print {
-  header, nav, footer,
-  .no-print,
-  [class*="sticky"],
-  [class*="fixed"] {
-    display: none !important;
-  }
-  .print-only { display: block !important; }
-  body {
-    background: #fff !important;
-    color: #111 !important;
-    font-family: Georgia, serif !important;
-    font-size: 12px;
-  }
-  #print-report { display: block !important; }
-  @page { margin: 20mm; size: A4 portrait; }
-}
-.print-only { display: none; }
-
-/* ── Animations ───────────────────────────────────────────────────────────── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.fade-in { animation: fadeIn 0.18s ease-out; }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.slide-up { animation: slideUp 0.22s ease-out; }
-
-/* ── Accent text ──────────────────────────────────────────────────────────── */
+/* ── CDS Gradient accent text ─────────────────────────────────────────────── */
 .text-gradient-gold {
   background: linear-gradient(135deg, rgb(var(--color-gold)), rgb(var(--color-accent)));
   -webkit-background-clip: text;
@@ -287,7 +377,7 @@ table { border-collapse: collapse; width: 100%; }
   background-clip: text;
 }
 
-/* ── Mobile layout helpers ────────────────────────────────────────────────── */
+/* ── Mobile helpers ───────────────────────────────────────────────────────── */
 @media (max-width: 1023px) {
   body { overflow-x: hidden; position: relative; }
   .overflow-x-auto {
@@ -301,19 +391,18 @@ table { border-collapse: collapse; width: 100%; }
   }
 }
 
-/* ── Number input: hide spinners ──────────────────────────────────────────── */
+/* ── Number inputs ────────────────────────────────────────────────────────── */
 input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
+input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type='number'] { -moz-appearance: textfield; }
 
-/* ── Tablet breakpoint ────────────────────────────────────────────────────── */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .fixed.bottom-0 nav, nav.fixed.bottom-0 {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-  .screener-table-wrap { overflow-x: auto; }
+/* ── Print ────────────────────────────────────────────────────────────────── */
+@media print {
+  header, nav, footer, .no-print,
+  [class*="sticky"], [class*="fixed"] { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: #fff !important; color: #111 !important; font-family: Georgia, serif !important; font-size: 12px; }
+  #print-report { display: block !important; }
+  @page { margin: 20mm; size: A4 portrait; }
 }
+.print-only { display: none; }

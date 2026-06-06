@@ -814,19 +814,19 @@ export default function Home() {
 /* ── SkeletonView — responsive loading skeleton ── */
 function SkeletonView({ symbol }: { symbol: string }) {
   return (
-    <div className="p-3 sm:p-4 space-y-3 animate-pulse">
+    <div className="p-3 sm:p-4 space-y-3">
       {/* Company header */}
       <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-border/60 flex-shrink-0" />
+          <div className="skeleton w-10 h-10 rounded-cds-lg flex-shrink-0" />
           <div className="space-y-2">
-            <div className="h-4 w-28 sm:w-36 rounded bg-border/60" />
-            <div className="h-3 w-16 sm:w-24 rounded bg-border/40" />
+            <div className="skeleton h-4 w-28 sm:w-36 rounded-cds-sm" />
+            <div className="skeleton h-3 w-16 sm:w-24 rounded-cds-sm" />
           </div>
         </div>
         <div className="text-right space-y-2">
-          <div className="h-6 w-20 sm:w-28 rounded bg-border/60 ml-auto" />
-          <div className="h-3 w-14 rounded bg-border/40 ml-auto" />
+          <div className="skeleton h-6 w-20 sm:w-28 rounded-cds-sm ml-auto" />
+          <div className="skeleton h-3 w-14 rounded-cds-sm ml-auto" />
         </div>
       </div>
 
