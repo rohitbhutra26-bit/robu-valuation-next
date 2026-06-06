@@ -497,7 +497,7 @@ export default function Home() {
 
             {/* Navigation */}
             <div className="p-2 pt-3">
-              <p className="text-[9px] text-muted/70 uppercase tracking-[1.5px] font-semibold px-2 mb-2">Analyse</p>
+              <p className="text-[10px] text-muted/85 uppercase tracking-[1.5px] font-semibold px-2 mb-2">Analyse</p>
               {NAV_ITEMS.map(item => {
                 const isActive = activeView === item.view;
                 return (
@@ -524,7 +524,7 @@ export default function Home() {
                           </span>
                         )}
                       </div>
-                      <p className={`text-[9px] leading-tight mt-0.5 truncate ${isActive ? 'text-muted' : 'text-muted/50'}`}>
+                      <p className={`text-[10px] leading-tight mt-0.5 truncate ${isActive ? 'text-muted' : 'text-muted/75'}`}>
                         {item.desc}
                       </p>
                     </div>
@@ -536,7 +536,7 @@ export default function Home() {
               {!selectedSymbol && (
                 <>
                   <div className="my-3 border-t border-border/60" />
-                  <p className="text-[9px] text-muted/60 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
+                  <p className="text-[10px] text-muted/80 uppercase tracking-[1.2px] font-medium px-2 mb-1.5">Quick Select</p>
                 </>
               )}
             </div>
@@ -700,7 +700,7 @@ export default function Home() {
                                     key={y}
                                     onClick={() => setAssumptions(a => ({ ...a, years: y }))}
                                     className={`flex-1 min-w-[36px] py-1.5 rounded text-xs font-semibold transition-all ${
-                                      assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-muted hover:text-primary'
+                                      assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-primary/70 hover:text-primary'
                                     }`}
                                   >
                                     {y}Y
