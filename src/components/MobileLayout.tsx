@@ -28,6 +28,8 @@ import ROBUScoreCard from './ROBUScoreCard';
 import ScenarioBuilder from './ScenarioBuilder';
 import AnnouncementsFeed from './AnnouncementsFeed';
 import SectorAlternatives from './SectorAlternatives';
+import PriceChart from './PriceChart';
+import { getBaselineFinancial } from '@/lib/forecastUtils';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -492,7 +494,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
     </div>
   );
 
-  const latest = financials[financials.length - 1];
+  // Use last COMPLETE fiscal year for hints — avoids showing partial-year data
+  const { baseline, isPartialDetected, yearLabel } = getBaselineFinancial(financials);
   const sectorProfile = getCompanyProfile(company);
 
   return (
@@ -521,7 +524,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
           min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
           onChange={v => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-          hint={`How fast do you think sales will grow? Actual last year: ${latest.revenueGrowth.toFixed(1)}%`}
+          hint={`${isPartialDetected ? `⚠ Latest year partial — using ${yearLabel} · ` : ''}Base: ${yearLabel} ₹${(baseline.revenue/100).toFixed(0)}K Cr · growth ${baseline.revenueGrowth.toFixed(1)}%`}
         />
         {sectorProfile.model !== 'pb' && (
           <MobileSlider
@@ -543,7 +546,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
           hint={
             sectorProfile.model === 'pe' ? `At what P/E will you sell? Current: ${company.pe.toFixed(1)}x` :
             sectorProfile.model === 'pb' ? `At what P/B will you sell? Current: ${company.pb.toFixed(1)}x` :
-            `Sector default: ${sectorProfile.defaultExitMultiple}x`
+            `Sector default: ${sectorProfile.defaultExitMultiple}x · Base: ${yearLabel}`
           }
         />
         <div>
@@ -564,6 +567,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         </div>
       </div>
 
+      <PriceChart company={company} financials={financials} />
       <ForecastChart financials={financials} assumptions={assumptions} />
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} compact />
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} compact />
