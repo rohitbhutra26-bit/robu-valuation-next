@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { BarChart3 } from '@/lib/icons';
 import { Company, FinancialYear } from '@/lib/types';
 
@@ -9,27 +9,40 @@ interface Props {
   financials?: FinancialYear[];
 }
 
-function getTheme(): 'dark' | 'light' {
-  if (typeof document === 'undefined') return 'light';
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+interface Candle {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
 }
+
+type TF = '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | 'ALL';
+
+const TF_DAYS: Record<TF, number> = {
+  '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, '3Y': 1095, 'ALL': 99999,
+};
 
 const inr = (n: number) =>
   `₹${n.toLocaleString('en-IN', { maximumFractionDigits: n >= 100 ? 0 : 1 })}`;
 
+function cutoffDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function PriceChart({ company, financials = [] }: Props) {
-  const widgetRef = useRef<HTMLDivElement | null>(null);
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // NSE:RELIANCE format — TradingView's native NSE coverage
-  const tvSymbol = `NSE:${company.symbol}`;
+  const [allCandles, setAllCandles] = useState<Candle[]>([]);
+  const [tf, setTf]                 = useState<TF>('1Y');
+  const [isLoading, setIsLoading]   = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // ── P/E Valuation bands ────────────────────────────────────────────────────
-  // Calculated purely from fundamentals — no data-server call needed.
-  // Uses trailing EPS from financials (more accurate than company.eps which
-  // can be TTM from Yahoo) × 70% / 100% / 135% of current P/E as proxy for
-  // cheap / fair / pricey historical re-rating range.
+  // ── P/E bands ─────────────────────────────────────────────────────────────
   const bands = useMemo(() => {
-    // Best EPS: last financial year with eps > 0
     const validFins = financials.filter(f => f.eps > 0);
     const eps =
       validFins.length > 0
@@ -39,116 +52,205 @@ export default function PriceChart({ company, financials = [] }: Props) {
         : company.pe > 0 && company.currentPrice > 0
         ? company.currentPrice / company.pe
         : 0;
-
     if (eps <= 0 || company.pe <= 0) return null;
-
-    const fairPE   = company.pe;
-    const cheapPE  = +(fairPE * 0.70).toFixed(1);
-    const priceyPE = +(fairPE * 1.35).toFixed(1);
-
+    const fairPE = company.pe;
     return {
-      cheap:    Math.round(eps * cheapPE),
-      fair:     Math.round(eps * fairPE),
-      expensive: Math.round(eps * priceyPE),
-      eps:      eps.toFixed(1),
-      fairPE:   fairPE.toFixed(1),
-      cheapPE,
-      priceyPE,
+      cheap:     Math.round(eps * fairPE * 0.70),
+      fair:      Math.round(eps * fairPE),
+      expensive: Math.round(eps * fairPE * 1.35),
+      eps:       eps.toFixed(1),
+      fairPE:    fairPE.toFixed(1),
+      cheapPE:   +(fairPE * 0.70).toFixed(1),
+      priceyPE:  +(fairPE * 1.35).toFixed(1),
     };
   }, [company, financials]);
 
   const price     = company.currentPrice;
   const gapToFair = bands ? ((bands.fair / price - 1) * 100) : null;
 
-  // ── Mount TradingView widget ───────────────────────────────────────────────
+  // ── Fetch OHLC from Yahoo Finance via our proxy ───────────────────────────
   useEffect(() => {
-    const el = widgetRef.current;
-    if (!el) return;
-    el.innerHTML = '';
+    setIsLoading(true);
+    setFetchError(null);
+    fetch(`/api/historical/${company.symbol}`)
+      .then(r => r.ok ? r.json() : r.json().then((e: { error?: string }) => { throw new Error(e.error || 'Failed'); }))
+      .then((data: Candle[]) => {
+        if (Array.isArray(data) && data.length > 0) setAllCandles(data);
+        else throw new Error('No candle data');
+      })
+      .catch((e: Error) => setFetchError(e.message))
+      .finally(() => setIsLoading(false));
+  }, [company.symbol]);
 
-    const theme = getTheme();
+  // ── Slice candles to timeframe ────────────────────────────────────────────
+  const visibleCandles = useMemo(() => {
+    if (!allCandles.length) return [];
+    const days = TF_DAYS[tf];
+    if (days >= 99999) return allCandles;
+    const cut = cutoffDate(days);
+    return allCandles.filter(c => c.time >= cut);
+  }, [allCandles, tf]);
 
-    // TradingView requires a wrapper div with the exact class name
-    // Height: 380px on mobile, 520px on tablet+
-    const isMobile = window.innerWidth < 640;
-    const chartHeight = isMobile ? 380 : 520;
+  // ── Build / rebuild chart whenever visible candles or bands change ─────────
+  useEffect(() => {
+    const el = chartContainerRef.current;
+    if (!el || !visibleCandles.length) return;
 
-    const container = document.createElement('div');
-    container.className = 'tradingview-widget-container';
-    container.style.width  = '100%';
-    container.style.height = `${chartHeight}px`;
+    let cancelled = false;
+    let cleanupFn: (() => void) | null = null;
 
-    const inner = document.createElement('div');
-    inner.className = 'tradingview-widget-container__widget';
-    inner.style.height = `${chartHeight - 28}px`;
-    inner.style.width  = '100%';
-    container.appendChild(inner);
+    import('lightweight-charts').then(({ createChart, ColorType, CrosshairMode, LineStyle }) => {
+      if (cancelled || !chartContainerRef.current) return;
+      const container = chartContainerRef.current;
 
-    const copyright = document.createElement('div');
-    copyright.className = 'tradingview-widget-copyright';
-    copyright.innerHTML =
-      '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">' +
-      '<span class="blue-text" style="font-size:10px;color:var(--color-muted,#888)">Track all markets on TradingView</span></a>';
-    container.appendChild(copyright);
+      const isDark     = document.documentElement.getAttribute('data-theme') === 'dark';
+      const textColor  = isDark ? '#888888' : '#666666';
+      const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      const upColor    = '#22c55e';
+      const downColor  = '#ef4444';
+      const isMobile   = window.innerWidth < 640;
+      const chartH     = isMobile ? 300 : 460;
 
-    const script = document.createElement('script');
-    script.type  = 'text/javascript';
-    script.src   = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    // Config passed as innerHTML of the script tag (TradingView's standard embed pattern)
-    script.innerHTML = JSON.stringify({
-      autosize:            true,
-      symbol:              tvSymbol,
-      interval:            'D',
-      timezone:            'Asia/Kolkata',
-      theme,
-      style:               '1',      // 1 = candlestick
-      locale:              'en',
-      allow_symbol_change: false,
-      calendar:            false,
-      hide_volume:         false,
-      withdateranges:      true,     // shows the 1D / 1W / 1M … range bar
-      save_image:          true,
-      support_host:        'https://www.tradingview.com',
+      const chart = createChart(container, {
+        width:  container.clientWidth,
+        height: chartH,
+        layout: {
+          background:  { type: ColorType.Solid, color: 'transparent' },
+          textColor,
+          fontFamily:  "'Inter', system-ui, sans-serif",
+          fontSize:    11,
+        },
+        grid: {
+          vertLines: { color: gridColor, style: LineStyle.Dotted },
+          horzLines: { color: gridColor, style: LineStyle.Dotted },
+        },
+        crosshair: { mode: CrosshairMode.Normal },
+        rightPriceScale: {
+          borderColor: gridColor,
+          scaleMargins: { top: 0.08, bottom: 0.22 },
+        },
+        timeScale: {
+          borderColor: gridColor,
+          timeVisible: true,
+          secondsVisible: false,
+          fixLeftEdge: true,
+          fixRightEdge: true,
+        },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true },
+        handleScale:  { mouseWheel: true, pinch: true },
+      });
+
+      // Candlestick series
+      const cSeries = chart.addCandlestickSeries({
+        upColor, downColor,
+        borderUpColor: upColor, borderDownColor: downColor,
+        wickUpColor: upColor,   wickDownColor: downColor,
+        priceScaleId: 'right',
+      });
+      cSeries.setData(
+        visibleCandles.map(c => ({ time: c.time as import('lightweight-charts').Time, open: c.open, high: c.high, low: c.low, close: c.close }))
+      );
+
+      // Volume histogram (separate overlay scale)
+      const vSeries = chart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: 'vol',
+      });
+      chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+      vSeries.setData(
+        visibleCandles.map(c => ({
+          time:  c.time as import('lightweight-charts').Time,
+          value: c.volume ?? 0,
+          color: c.close >= c.open
+            ? (isDark ? 'rgba(34,197,94,0.22)' : 'rgba(34,197,94,0.18)')
+            : (isDark ? 'rgba(239,68,68,0.22)'  : 'rgba(239,68,68,0.18)'),
+        }))
+      );
+
+      // P/E dashed lines on the price chart
+      if (bands) {
+        const lines: Array<{ price: number; color: string; title: string }> = [
+          { price: bands.cheap,     color: '#22c55e', title: `Cheap ${bands.cheapPE}x` },
+          { price: bands.fair,      color: '#f59e0b', title: `Fair ${bands.fairPE}x`   },
+          { price: bands.expensive, color: '#ef4444', title: `Pricey ${bands.priceyPE}x` },
+        ];
+        lines.forEach(({ price: p, color, title }) =>
+          cSeries.createPriceLine({ price: p, color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title })
+        );
+      }
+
+      chart.timeScale().fitContent();
+
+      // Responsive resize
+      const ro = new ResizeObserver(entries => {
+        if (entries[0]) chart.applyOptions({ width: entries[0].contentRect.width });
+      });
+      ro.observe(container);
+
+      cleanupFn = () => { ro.disconnect(); chart.remove(); };
     });
-    container.appendChild(script);
-    el.appendChild(container);
 
     return () => {
-      if (el) el.innerHTML = '';
+      cancelled = true;
+      cleanupFn?.();
     };
-  }, [tvSymbol]); // re-mount only when symbol changes; TradingView handles theme internally
+  }, [visibleCandles, bands]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 p-4 pb-3">
-        <div className="flex items-start gap-2.5">
+      <div className="flex items-start justify-between gap-2 p-4 pb-2">
+        <div className="flex items-start gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
             <BarChart3 size={14} className="text-accent" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold text-primary">Price Chart</h3>
-            <p className="text-xs text-muted">
-              {company.symbol} · 1min → monthly · drawing tools included
+            <p className="text-xs text-muted truncate">
+              {company.symbol} · candlestick + volume
               {gapToFair !== null && (
                 <span className={gapToFair >= 0 ? ' text-gain' : ' text-loss'}>
-                  {' '}· {gapToFair >= 0 ? '+' : ''}{gapToFair.toFixed(0)}% to fair value
+                  {' '}· {gapToFair >= 0 ? '+' : ''}{gapToFair.toFixed(0)}% to fair
                 </span>
               )}
             </p>
           </div>
         </div>
+
+        {/* Timeframe selector */}
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          {(Object.keys(TF_DAYS) as TF[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setTf(t)}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold transition-all ${
+                tf === t
+                  ? 'bg-gold text-terminal'
+                  : 'text-muted hover:text-primary hover:bg-border/50'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* TradingView chart container — height adapts to mobile/tablet/desktop via JS */}
-      <div ref={widgetRef} className="w-full" style={{ minHeight: 380 }} />
+      {/* Chart */}
+      <div className="w-full px-1">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64 text-xs text-muted/60">Loading price data…</div>
+        ) : fetchError ? (
+          <div className="flex items-center justify-center h-32 text-xs text-muted/60">Chart unavailable — {fetchError}</div>
+        ) : (
+          <div ref={chartContainerRef} className="w-full" />
+        )}
+      </div>
 
-      {/* ── Valuation bands panel ─────────────────────────────────────────── */}
+      {/* P/E valuation bands */}
       {bands ? (
-        <div className="px-4 pb-4 pt-3 border-t border-border space-y-3">
+        <div className="px-4 pb-4 pt-3 border-t border-border space-y-3 mt-1">
           <p className="text-[10px] uppercase tracking-[1.5px] font-semibold text-muted">
             P/E Valuation Levels · EPS ₹{bands.eps} × P/E range
           </p>
@@ -156,33 +258,9 @@ export default function PriceChart({ company, financials = [] }: Props) {
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {(
               [
-                {
-                  label: 'Cheap',
-                  price: bands.cheap,
-                  pe: bands.cheapPE,
-                  pct: ((bands.cheap / price - 1) * 100),
-                  bg: 'bg-gain/10',
-                  border: 'border-gain/25',
-                  text: 'text-gain',
-                },
-                {
-                  label: 'Fair',
-                  price: bands.fair,
-                  pe: +bands.fairPE,
-                  pct: gapToFair!,
-                  bg: 'bg-gold/10',
-                  border: 'border-gold/25',
-                  text: 'text-gold',
-                },
-                {
-                  label: 'Pricey',
-                  price: bands.expensive,
-                  pe: bands.priceyPE,
-                  pct: ((bands.expensive / price - 1) * 100),
-                  bg: 'bg-loss/10',
-                  border: 'border-loss/25',
-                  text: 'text-loss',
-                },
+                { label: 'Cheap',  price: bands.cheap,     pe: bands.cheapPE,  pct: (bands.cheap     / price - 1) * 100, bg: 'bg-gain/10', border: 'border-gain/25', text: 'text-gain' },
+                { label: 'Fair',   price: bands.fair,      pe: +bands.fairPE,  pct: gapToFair!,                           bg: 'bg-gold/10', border: 'border-gold/25', text: 'text-gold' },
+                { label: 'Pricey', price: bands.expensive, pe: bands.priceyPE, pct: (bands.expensive / price - 1) * 100, bg: 'bg-loss/10', border: 'border-loss/25', text: 'text-loss' },
               ] as const
             ).map(b => (
               <div key={b.label} className={`text-center p-2 sm:p-2.5 rounded-lg ${b.bg} border ${b.border}`}>
@@ -197,12 +275,11 @@ export default function PriceChart({ company, financials = [] }: Props) {
           </div>
 
           <p className="text-[10px] text-muted/60 leading-relaxed">
-            Levels = EPS ₹{bands.eps} × 70% / 100% / 135% of current P/E ({bands.fairPE}x).
-            Use as a quick re-rating gauge, not a buy/sell signal.
+            Dashed lines on chart show each level. EPS ₹{bands.eps} × 70% / 100% / 135% of {bands.fairPE}x P/E.
           </p>
         </div>
       ) : (
-        <div className="px-4 pb-3 pt-2 border-t border-border">
+        <div className="px-4 pb-3 pt-2 border-t border-border mt-1">
           <p className="text-[11px] text-muted/60">
             Valuation bands require valid EPS and P/E — unavailable for {company.symbol}.
           </p>
