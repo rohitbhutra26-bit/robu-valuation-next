@@ -768,7 +768,7 @@ export function dcfModel(
 
   const g    = growthRate / 100;
   const disc = wacc / 100;
-  const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+  const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
   // Project and discount each year's FCF
   let pvSum = 0;
