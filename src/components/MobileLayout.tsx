@@ -261,7 +261,7 @@ function MobileError({ message, onRetry }: { message: string; onRetry: () => voi
 function HomeView({
   onSelect, selectedSymbol, onGoTo,
 }: { onSelect: (s: string) => void; selectedSymbol: string; onGoTo: (t: MainTab) => void }) {
-  const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TATAMOTORS', 'SBIN', 'ADANIENT', 'ANGELONE', 'KAYNES'];
+  const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TMPV', 'SBIN', 'ADANIENT', 'ANGELONE', 'KAYNES'];
 
   const shortcuts = [
     {
