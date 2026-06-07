@@ -18,8 +18,12 @@ interface Candle {
   volume: number;
 }
 
-type TF = '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | 'ALL';
+interface HistoricalError {
+  error: 'NO_KEY' | 'RATE_LIMIT' | 'NOT_FOUND' | string;
+  message: string;
+}
 
+type TF = '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | 'ALL';
 const TF_DAYS: Record<TF, number> = {
   '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, '3Y': 1095, 'ALL': 99999,
 };
@@ -36,22 +40,19 @@ function cutoffDate(days: number): string {
 export default function PriceChart({ company, financials = [] }: Props) {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const [allCandles, setAllCandles] = useState<Candle[]>([]);
-  const [tf, setTf]                 = useState<TF>('1Y');
-  const [isLoading, setIsLoading]   = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [allCandles, setAllCandles]     = useState<Candle[]>([]);
+  const [tf, setTf]                     = useState<TF>('1Y');
+  const [isLoading, setIsLoading]       = useState(true);
+  const [fetchError, setFetchError]     = useState<HistoricalError | null>(null);
 
-  // ── P/E bands ─────────────────────────────────────────────────────────────
+  // ── P/E bands ────────────────────────────────────────────────────────────
   const bands = useMemo(() => {
     const validFins = financials.filter(f => f.eps > 0);
     const eps =
-      validFins.length > 0
-        ? validFins[validFins.length - 1].eps
-        : company.eps && company.eps > 0
-        ? company.eps
-        : company.pe > 0 && company.currentPrice > 0
-        ? company.currentPrice / company.pe
-        : 0;
+      validFins.length > 0 ? validFins[validFins.length - 1].eps
+      : company.eps && company.eps > 0 ? company.eps
+      : company.pe > 0 && company.currentPrice > 0 ? company.currentPrice / company.pe
+      : 0;
     if (eps <= 0 || company.pe <= 0) return null;
     const fairPE = company.pe;
     return {
@@ -68,21 +69,25 @@ export default function PriceChart({ company, financials = [] }: Props) {
   const price     = company.currentPrice;
   const gapToFair = bands ? ((bands.fair / price - 1) * 100) : null;
 
-  // ── Fetch OHLC from Yahoo Finance via our proxy ───────────────────────────
+  // ── Fetch OHLC ────────────────────────────────────────────────────────────
   useEffect(() => {
     setIsLoading(true);
     setFetchError(null);
     fetch(`/api/historical/${company.symbol}`)
-      .then(r => r.ok ? r.json() : r.json().then((e: { error?: string }) => { throw new Error(e.error || 'Failed'); }))
-      .then((data: Candle[]) => {
-        if (Array.isArray(data) && data.length > 0) setAllCandles(data);
-        else throw new Error('No candle data');
+      .then(async r => {
+        const json = await r.json();
+        if (!r.ok) throw json as HistoricalError;
+        return json as Candle[];
       })
-      .catch((e: Error) => setFetchError(e.message))
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setAllCandles(data);
+        else throw { error: 'NOT_FOUND', message: 'No candle data returned' };
+      })
+      .catch((e: HistoricalError) => setFetchError(e))
       .finally(() => setIsLoading(false));
   }, [company.symbol]);
 
-  // ── Slice candles to timeframe ────────────────────────────────────────────
+  // ── Slice to timeframe ───────────────────────────────────────────────────
   const visibleCandles = useMemo(() => {
     if (!allCandles.length) return [];
     const days = TF_DAYS[tf];
@@ -91,7 +96,7 @@ export default function PriceChart({ company, financials = [] }: Props) {
     return allCandles.filter(c => c.time >= cut);
   }, [allCandles, tf]);
 
-  // ── Build / rebuild chart whenever visible candles or bands change ─────────
+  // ── Chart ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const el = chartContainerRef.current;
     if (!el || !visibleCandles.length) return;
@@ -103,22 +108,22 @@ export default function PriceChart({ company, financials = [] }: Props) {
       if (cancelled || !chartContainerRef.current) return;
       const container = chartContainerRef.current;
 
-      const isDark     = document.documentElement.getAttribute('data-theme') === 'dark';
-      const textColor  = isDark ? '#888888' : '#666666';
-      const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-      const upColor    = '#22c55e';
-      const downColor  = '#ef4444';
-      const isMobile   = window.innerWidth < 640;
-      const chartH     = isMobile ? 300 : 460;
+      const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+      const textColor = isDark ? '#888888' : '#666666';
+      const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      const upColor   = '#22c55e';
+      const downColor = '#ef4444';
+      const isMobile  = window.innerWidth < 640;
+      const chartH    = isMobile ? 300 : 460;
 
       const chart = createChart(container, {
         width:  container.clientWidth,
         height: chartH,
         layout: {
-          background:  { type: ColorType.Solid, color: 'transparent' },
+          background: { type: ColorType.Solid, color: 'transparent' },
           textColor,
-          fontFamily:  "'Inter', system-ui, sans-serif",
-          fontSize:    11,
+          fontFamily: "'Inter', system-ui, sans-serif",
+          fontSize: 11,
         },
         grid: {
           vertLines: { color: gridColor, style: LineStyle.Dotted },
@@ -148,10 +153,13 @@ export default function PriceChart({ company, financials = [] }: Props) {
         priceScaleId: 'right',
       });
       cSeries.setData(
-        visibleCandles.map(c => ({ time: c.time as import('lightweight-charts').Time, open: c.open, high: c.high, low: c.low, close: c.close }))
+        visibleCandles.map(c => ({
+          time: c.time as import('lightweight-charts').Time,
+          open: c.open, high: c.high, low: c.low, close: c.close,
+        }))
       );
 
-      // Volume histogram (separate overlay scale)
+      // Volume histogram
       const vSeries = chart.addHistogramSeries({
         priceFormat: { type: 'volume' },
         priceScaleId: 'vol',
@@ -167,36 +175,75 @@ export default function PriceChart({ company, financials = [] }: Props) {
         }))
       );
 
-      // P/E dashed lines on the price chart
+      // P/E dashed lines
       if (bands) {
-        const lines: Array<{ price: number; color: string; title: string }> = [
-          { price: bands.cheap,     color: '#22c55e', title: `Cheap ${bands.cheapPE}x` },
-          { price: bands.fair,      color: '#f59e0b', title: `Fair ${bands.fairPE}x`   },
-          { price: bands.expensive, color: '#ef4444', title: `Pricey ${bands.priceyPE}x` },
-        ];
-        lines.forEach(({ price: p, color, title }) =>
+        ([
+          { price: bands.cheap,     color: '#22c55e', title: `Cheap ${bands.cheapPE}x`  },
+          { price: bands.fair,      color: '#f59e0b', title: `Fair ${bands.fairPE}x`    },
+          { price: bands.expensive, color: '#ef4444', title: `Pricey ${bands.priceyPE}x`},
+        ] as const).forEach(({ price: p, color, title }) =>
           cSeries.createPriceLine({ price: p, color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title })
         );
       }
 
       chart.timeScale().fitContent();
 
-      // Responsive resize
       const ro = new ResizeObserver(entries => {
         if (entries[0]) chart.applyOptions({ width: entries[0].contentRect.width });
       });
       ro.observe(container);
-
       cleanupFn = () => { ro.disconnect(); chart.remove(); };
     });
 
-    return () => {
-      cancelled = true;
-      cleanupFn?.();
-    };
+    return () => { cancelled = true; cleanupFn?.(); };
   }, [visibleCandles, bands]);
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Error states ─────────────────────────────────────────────────────────
+  function ErrorPanel() {
+    if (!fetchError) return null;
+
+    if (fetchError.error === 'NO_KEY') {
+      return (
+        <div className="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">
+          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center">
+            <BarChart3 size={18} className="text-gold" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-primary mb-1">Price chart needs a free API key</p>
+            <p className="text-xs text-muted leading-relaxed max-w-xs">
+              Get a free Alpha Vantage key (20 sec, no credit card) and add it to Railway as{' '}
+              <code className="bg-border px-1 py-0.5 rounded text-[10px] font-mono text-gold">ALPHA_VANTAGE_KEY</code>
+            </p>
+          </div>
+          <a
+            href="https://www.alphavantage.co/support/#api-key"
+            target="_blank" rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-gold/10 border border-gold/30 rounded-lg text-xs font-semibold text-gold hover:bg-gold/20 transition-colors"
+          >
+            Get free API key →
+          </a>
+        </div>
+      );
+    }
+
+    if (fetchError.error === 'RATE_LIMIT') {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-xs text-muted/70 text-center max-w-xs">
+            Rate limit hit (25 req/min on free tier). Chart will load in a minute.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center py-8">
+        <p className="text-xs text-muted/60">Chart unavailable for {company.symbol}</p>
+      </div>
+    );
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
 
@@ -209,7 +256,7 @@ export default function PriceChart({ company, financials = [] }: Props) {
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-primary">Price Chart</h3>
             <p className="text-xs text-muted truncate">
-              {company.symbol} · candlestick + volume
+              {company.symbol} · candlestick + volume · BSE/NSE
               {gapToFair !== null && (
                 <span className={gapToFair >= 0 ? ' text-gain' : ' text-loss'}>
                   {' '}· {gapToFair >= 0 ? '+' : ''}{gapToFair.toFixed(0)}% to fair
@@ -218,31 +265,34 @@ export default function PriceChart({ company, financials = [] }: Props) {
             </p>
           </div>
         </div>
-
-        {/* Timeframe selector */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          {(Object.keys(TF_DAYS) as TF[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setTf(t)}
-              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold transition-all ${
-                tf === t
-                  ? 'bg-gold text-terminal'
-                  : 'text-muted hover:text-primary hover:bg-border/50'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+        {/* Timeframe buttons — only show if chart is loaded */}
+        {allCandles.length > 0 && (
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {(Object.keys(TF_DAYS) as TF[]).map(t => (
+              <button
+                key={t}
+                onClick={() => setTf(t)}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold transition-all ${
+                  tf === t
+                    ? 'bg-gold text-terminal'
+                    : 'text-muted hover:text-primary hover:bg-border/50'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Chart */}
+      {/* Chart or error */}
       <div className="w-full px-1">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64 text-xs text-muted/60">Loading price data…</div>
+          <div className="flex items-center justify-center h-48 text-xs text-muted/60">
+            Loading price data…
+          </div>
         ) : fetchError ? (
-          <div className="flex items-center justify-center h-32 text-xs text-muted/60">Chart unavailable — {fetchError}</div>
+          <ErrorPanel />
         ) : (
           <div ref={chartContainerRef} className="w-full" />
         )}
@@ -254,15 +304,12 @@ export default function PriceChart({ company, financials = [] }: Props) {
           <p className="text-[10px] uppercase tracking-[1.5px] font-semibold text-muted">
             P/E Valuation Levels · EPS ₹{bands.eps} × P/E range
           </p>
-
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            {(
-              [
-                { label: 'Cheap',  price: bands.cheap,     pe: bands.cheapPE,  pct: (bands.cheap     / price - 1) * 100, bg: 'bg-gain/10', border: 'border-gain/25', text: 'text-gain' },
-                { label: 'Fair',   price: bands.fair,      pe: +bands.fairPE,  pct: gapToFair!,                           bg: 'bg-gold/10', border: 'border-gold/25', text: 'text-gold' },
-                { label: 'Pricey', price: bands.expensive, pe: bands.priceyPE, pct: (bands.expensive / price - 1) * 100, bg: 'bg-loss/10', border: 'border-loss/25', text: 'text-loss' },
-              ] as const
-            ).map(b => (
+            {([
+              { label: 'Cheap',  price: bands.cheap,     pe: bands.cheapPE,  pct: (bands.cheap     / price - 1) * 100, bg: 'bg-gain/10', border: 'border-gain/25', text: 'text-gain' },
+              { label: 'Fair',   price: bands.fair,      pe: +bands.fairPE,  pct: gapToFair!,                           bg: 'bg-gold/10', border: 'border-gold/25', text: 'text-gold' },
+              { label: 'Pricey', price: bands.expensive, pe: bands.priceyPE, pct: (bands.expensive / price - 1) * 100, bg: 'bg-loss/10', border: 'border-loss/25', text: 'text-loss' },
+            ] as const).map(b => (
               <div key={b.label} className={`text-center p-2 sm:p-2.5 rounded-lg ${b.bg} border ${b.border}`}>
                 <p className={`text-[9px] sm:text-[10px] ${b.text} font-bold uppercase tracking-wide mb-0.5`}>{b.label}</p>
                 <p className={`text-xs sm:text-sm font-bold font-mono ${b.text} leading-tight`}>{inr(b.price)}</p>
@@ -273,10 +320,11 @@ export default function PriceChart({ company, financials = [] }: Props) {
               </div>
             ))}
           </div>
-
-          <p className="text-[10px] text-muted/60 leading-relaxed">
-            Dashed lines on chart show each level. EPS ₹{bands.eps} × 70% / 100% / 135% of {bands.fairPE}x P/E.
-          </p>
+          {allCandles.length > 0 && (
+            <p className="text-[10px] text-muted/60 leading-relaxed">
+              Dashed lines on chart show each level. EPS ₹{bands.eps} × 70% / 100% / 135% of {bands.fairPE}x P/E.
+            </p>
+          )}
         </div>
       ) : (
         <div className="px-4 pb-3 pt-2 border-t border-border mt-1">
