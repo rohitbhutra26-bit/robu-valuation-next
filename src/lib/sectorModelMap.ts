@@ -284,7 +284,8 @@ const SYMBOL_OVERRIDES: Record<string, SectorProfile> = {
   // These stocks use Screener.in sector = "Consumer Cyclical" but should be Auto P/E
   MM:          peProfile('Auto / Diversified', 22),   // Mahindra & Mahindra
   MARUTI:      peProfile('Auto', 24),                 // Maruti Suzuki
-  TATAMOTORS:  peProfile('Auto', 14),                 // Tata Motors (lower PE — global, cyclical)
+  TMPV:        peProfile('Auto', 14),                 // Tata Motors PV (demerged from TATAMOTORS Nov 2025)
+  TMCV:        peProfile('Auto', 12),                 // Tata Motors CV (listed Nov 2025)
   HEROMOTOCO:  peProfile('Auto', 20),                 // Hero MotoCorp
   BAJAJ_AUTO:  peProfile('Auto', 25),                 // Bajaj Auto
   EICHERMOT:   peProfile('Auto / Premium', 30),       // Eicher Motors (Royal Enfield premium)
