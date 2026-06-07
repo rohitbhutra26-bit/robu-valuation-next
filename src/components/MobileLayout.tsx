@@ -531,7 +531,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
             label="Net Margin" value={assumptions.netMarginAssumption}
             min={1} max={50} inputMax={100} step={0.5} suffix="%" color="text-gain"
             onChange={v => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-            hint={`Of ₹100 earned, how much stays as profit? Actual: ${latest.netMargin.toFixed(1)}%`}
+            hint={`Of ₹100 earned, how much stays as profit? Actual: ${baseline.netMargin.toFixed(1)}%`}
           />
         )}
         <MobileSlider
