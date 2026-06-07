@@ -715,7 +715,7 @@ export default function Home() {
                       );
                     })()}
 
-                    <PriceChart company={company} />
+                    <PriceChart company={company} financials={financials} />
                     <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
