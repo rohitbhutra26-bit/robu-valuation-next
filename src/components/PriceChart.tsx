@@ -19,7 +19,7 @@ interface Candle {
 }
 
 interface HistoricalError {
-  error: 'NO_KEY' | 'RATE_LIMIT' | 'NOT_FOUND' | string;
+  error: 'NOT_FOUND' | string;
   message: string;
 }
 
@@ -201,40 +201,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
   // ── Error states ─────────────────────────────────────────────────────────
   function ErrorPanel() {
     if (!fetchError) return null;
-
-    if (fetchError.error === 'NO_KEY') {
-      return (
-        <div className="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center">
-            <BarChart3 size={18} className="text-gold" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-primary mb-1">Price chart needs a free API key</p>
-            <p className="text-xs text-muted leading-relaxed max-w-xs">
-              Get a free Alpha Vantage key (20 sec, no credit card) and add it to Railway as{' '}
-              <code className="bg-border px-1 py-0.5 rounded text-[10px] font-mono text-gold">ALPHA_VANTAGE_KEY</code>
-            </p>
-          </div>
-          <a
-            href="https://www.alphavantage.co/support/#api-key"
-            target="_blank" rel="noopener noreferrer"
-            className="px-3 py-1.5 bg-gold/10 border border-gold/30 rounded-lg text-xs font-semibold text-gold hover:bg-gold/20 transition-colors"
-          >
-            Get free API key →
-          </a>
-        </div>
-      );
-    }
-
-    if (fetchError.error === 'RATE_LIMIT') {
-      return (
-        <div className="flex items-center justify-center py-8">
-          <p className="text-xs text-muted/70 text-center max-w-xs">
-            Rate limit hit (25 req/min on free tier). Chart will load in a minute.
-          </p>
-        </div>
-      );
-    }
 
     return (
       <div className="flex items-center justify-center py-8">
