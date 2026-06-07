@@ -178,6 +178,67 @@ export function validateFinancials(
   return { score, level, issues, cleanedFinancials, revenueUnitSuspect, epsReconciled };
 }
 
+// ─── Baseline fiscal year detector ───────────────────────────────────────────
+// Every valuation model starts from: baseRevenue × (1 + g)^years.
+// If "latest" is a partial year (e.g., only 9 months of FY2026), the base
+// revenue is artificially low → projected fair value is understated.
+//
+// Detection rules (either triggers "partial"):
+//   1. Year string contains the current calendar year  →  likely incomplete
+//   2. Latest revenue < 70% of the previous year's revenue  →  partial data
+//
+// Returns the last COMPLETE fiscal year as `baseline`, plus:
+//   avg3yrRevenue  — 3-year average from complete years (smoother base)
+//   completeYears  — financials[] with any partial tail excluded
+//
+export interface BaselineResult {
+  baseline:            FinancialYear;
+  isPartialDetected:   boolean;
+  yearLabel:           string;
+  avg3yrRevenue:       number;       // 3-yr average revenue (₹ Cr) — complete years only
+  completeYears:       FinancialYear[];
+}
+
+export function getBaselineFinancial(financials: FinancialYear[]): BaselineResult {
+  if (financials.length === 0) {
+    throw new Error('getBaselineFinancial: financials array is empty');
+  }
+
+  const currentCalYear = new Date().getFullYear();
+  const latest = financials[financials.length - 1];
+  const prev   = financials.length >= 2 ? financials[financials.length - 2] : null;
+
+  // Rule 1: does the year label mention the current calendar year?
+  const yearStr           = String(latest.year ?? '');
+  const mentionsThisYear  = yearStr.includes(String(currentCalYear));
+
+  // Rule 2: revenue dropped >30% vs prior year — suggests partial data
+  const revenueLooksPartial =
+    prev !== null && prev.revenue > 0 && latest.revenue < prev.revenue * 0.70;
+
+  const isPartialDetected = mentionsThisYear || revenueLooksPartial;
+
+  const completeYears = isPartialDetected ? financials.slice(0, -1) : financials;
+
+  // Guard: if after trimming we have nothing, fall back to the full array
+  const safeComplete = completeYears.length > 0 ? completeYears : financials;
+  const baseline     = safeComplete[safeComplete.length - 1];
+
+  // 3-year average revenue from complete years (smoother than a single point)
+  const last3          = safeComplete.slice(-3);
+  const avg3yrRevenue  = Math.round(
+    last3.reduce((sum, f) => sum + f.revenue, 0) / last3.length,
+  );
+
+  return {
+    baseline,
+    isPartialDetected,
+    yearLabel:    String(baseline.year ?? 'Latest FY'),
+    avg3yrRevenue,
+    completeYears: safeComplete,
+  };
+}
+
 export interface ModelOutput {
   fairValue: number;
   model: string;
@@ -211,9 +272,10 @@ export function peModel(
   exitPE: number,
   years: number,
 ): ModelOutput {
-  const latest = financials[financials.length - 1];
-  const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
-  const futureRevenue = latest.revenue * Math.pow(1 + growthRate / 100, years);
+  // Use last COMPLETE fiscal year as base — avoids projecting from a partial year
+  const { baseline } = getBaselineFinancial(financials);
+  const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
+  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
   const futurePAT    = futureRevenue * (netMargin / 100);
   const futureEPS    = futurePAT / shares;
   const fairValue    = futureEPS * exitPE;
@@ -233,11 +295,11 @@ export function evEbitdaModel(
   exitEVEBITDA: number,
   years: number,
 ): ModelOutput {
-  const latest = financials[financials.length - 1];
-  const shares     = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
-  const ebitdaMgn  = latest.ebitdaMargin > 0 ? latest.ebitdaMargin : 15; // fallback 15%
+  const { baseline } = getBaselineFinancial(financials);
+  const shares     = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
+  const ebitdaMgn  = baseline.ebitdaMargin > 0 ? baseline.ebitdaMargin : 15; // fallback 15%
 
-  const futureRevenue = latest.revenue * Math.pow(1 + growthRate / 100, years);
+  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
   const futureEBITDA  = futureRevenue * (ebitdaMgn / 100);
   const futureEV      = futureEBITDA * exitEVEBITDA;
 
@@ -264,8 +326,8 @@ export function pbModel(
   years: number,
 ): ModelOutput {
   // Current BVPS: prefer balance sheet data if available, else derive from market P/B
-  const latest = financials[financials.length - 1];
-  const sharesRaw = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+  const { baseline } = getBaselineFinancial(financials);
+  const sharesRaw = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
   // Use balance sheet equity if available (equity ÷ shares = BVPS directly)
   // Otherwise fall back to market-implied: currentPrice ÷ pb
@@ -296,10 +358,10 @@ export function evSalesModel(
   exitEVSales: number,
   years: number,
 ): ModelOutput {
-  const latest  = financials[financials.length - 1];
-  const shares  = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+  const { baseline } = getBaselineFinancial(financials);
+  const shares  = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
-  const futureRevenue = latest.revenue * Math.pow(1 + growthRate / 100, years);
+  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
   const futureEV      = futureRevenue * exitEVSales;
   const netDebt       = estimateNetDebt(company);
   const equityValue   = Math.max(futureEV - netDebt, 0);
@@ -552,6 +614,11 @@ export interface SuggestedAssumptions {
   source: 'analyst_guidance' | 'historical_cagr' | 'industry_fallback';
   confidence: 'High' | 'Medium' | 'Low';
   rationale: string;              // one line explaining the number
+  // ── Revenue base context ──────────────────────────────────────────────────
+  baseYearLabel:          string;   // e.g. "Mar 2025"
+  baseRevenue:            number;   // revenue of the base year (₹ Cr)
+  avg3yrRevenue:          number;   // 3-year average revenue (₹ Cr)
+  isPartialYearDetected:  boolean;  // true = latest year was excluded as partial
 }
 
 export function suggestAssumptions(
@@ -561,6 +628,12 @@ export function suggestAssumptions(
   sectorDefaultMultiple: number,
   years: number = 5,
 ): SuggestedAssumptions {
+  // ── Detect partial year + get complete history ─────────────────────────────
+  // Use completeYears for all growth and margin calculations so a partial
+  // current-year entry (e.g., 9 months of FY2026) never distorts the model.
+  const baselineResult = getBaselineFinancial(financials);
+  const { completeYears, baseline, yearLabel, avg3yrRevenue, isPartialDetected } = baselineResult;
+
   // ── Step 1: Find the best growth estimate ─────────────────────────────────
   let rawCompanyGrowth: number;
   let source: SuggestedAssumptions['source'];
@@ -574,14 +647,14 @@ export function suggestAssumptions(
     rawCompanyGrowth = fwdGrowth;
     source = 'analyst_guidance';
     confidence = 'High';
-    rationale = `Analyst consensus: ${fwdGrowth.toFixed(1)}% fwd growth, fading to ${industryCagr}% sector rate`;
+    rationale = `Analyst consensus: ${fwdGrowth.toFixed(1)}% fwd growth, fading to ${industryCagr}% sector rate · Base: ${yearLabel}`;
   } else {
-    // Priority 2: Historical revenue CAGR from financials
-    const revenueGrowths = financials
+    // Priority 2: Historical revenue CAGR from COMPLETE years only
+    const revenueGrowths = completeYears
       .slice(1)
       .map((f, i) => {
         if (f.revenueGrowth && Math.abs(f.revenueGrowth) < 80) return f.revenueGrowth;
-        if (financials[i].revenue > 0) return ((f.revenue / financials[i].revenue) - 1) * 100;
+        if (completeYears[i].revenue > 0) return ((f.revenue / completeYears[i].revenue) - 1) * 100;
         return null;
       })
       .filter((g): g is number => g !== null && g > -50 && g < 100);
@@ -592,34 +665,38 @@ export function suggestAssumptions(
       rawCompanyGrowth = recent.reduce((a, b) => a + b, 0) / recent.length;
       source = 'historical_cagr';
       confidence = rawCompanyGrowth > 5 ? 'Medium' : 'Low';
-      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}%, fading to ${industryCagr}% sector floor`;
+      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}%, fading to ${industryCagr}% sector floor · Base: ${yearLabel}`;
     } else {
       // Fallback: use industry rate directly
       rawCompanyGrowth = industryCagr;
       source = 'industry_fallback';
       confidence = 'Low';
-      rationale = `Insufficient history — using ${industryCagr}% sector CAGR as baseline`;
+      rationale = `Insufficient history — using ${industryCagr}% sector CAGR · Base: ${yearLabel}`;
     }
   }
 
   // ── Step 2: Fade toward industry CAGR ─────────────────────────────────────
   const revenueGrowthRate = fadedGrowthCAGR(rawCompanyGrowth, industryCagr, years);
 
-  // ── Step 3: Net margin from recent actuals ─────────────────────────────────
-  const recentMargins = financials.slice(-3).map(f => f.netMargin).filter(m => m > 0 && m < 80);
+  // ── Step 3: Net margin from recent COMPLETE year actuals ──────────────────
+  const recentMargins = completeYears.slice(-3).map(f => f.netMargin).filter(m => m > 0 && m < 80);
   const netMarginAssumption = recentMargins.length > 0
     ? recentMargins.reduce((a, b) => a + b, 0) / recentMargins.length
     : 10; // fallback 10%
 
   return {
-    revenueGrowthRate: Math.round(revenueGrowthRate * 10) / 10,
-    rawCompanyGrowth:  Math.round(rawCompanyGrowth * 10) / 10,
+    revenueGrowthRate:       Math.round(revenueGrowthRate * 10) / 10,
+    rawCompanyGrowth:        Math.round(rawCompanyGrowth * 10) / 10,
     industryCagr,
-    netMarginAssumption: Math.round(netMarginAssumption * 10) / 10,
-    exitMultiple: sectorDefaultMultiple,
+    netMarginAssumption:     Math.round(netMarginAssumption * 10) / 10,
+    exitMultiple:            sectorDefaultMultiple,
     source,
     confidence,
     rationale,
+    baseYearLabel:           yearLabel,
+    baseRevenue:             baseline.revenue,
+    avg3yrRevenue,
+    isPartialYearDetected:   isPartialDetected,
   };
 }
 
@@ -655,12 +732,12 @@ export function impliedGrowthRate(
   exitPE: number,
   years: number,
 ): number {
-  const latest = financials[financials.length - 1];
-  const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
+  const { baseline } = getBaselineFinancial(financials);
+  const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
   const margin = netMargin / 100;
   const price  = company.currentPrice;
   try {
-    const ratio = (price * shares) / (exitPE * margin * latest.revenue);
+    const ratio = (price * shares) / (exitPE * margin * baseline.revenue);
     return Math.max((Math.pow(Math.max(ratio, 0.01), 1 / years) - 1) * 100, 0);
   } catch {
     return 0;
@@ -678,12 +755,12 @@ export function dcfModel(
   terminalMultiple: number, // exit EV multiple
   years: number,
 ): ModelOutput {
-  // Use OCF from latest year, fallback to PAT if no OCF
-  const withOCF = financials.filter(f => f.ocf && f.ocf > 0);
-  const latest  = financials[financials.length - 1];
+  // Use OCF from last COMPLETE fiscal year, fallback to PAT if no OCF
+  const { baseline, completeYears } = getBaselineFinancial(financials);
+  const withOCF = completeYears.filter(f => f.ocf && f.ocf > 0);
   const baseFCF = withOCF.length > 0
     ? withOCF[withOCF.length - 1].ocf!
-    : latest.pat;
+    : baseline.pat;
 
   if (baseFCF <= 0) {
     return { fairValue: 0, model: 'DCF', desc: 'Insufficient OCF data for DCF' };
