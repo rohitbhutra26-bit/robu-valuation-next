@@ -42,7 +42,7 @@ const _sessionCache = new Map<string, { company: Company; financials: FinancialY
 // Track in-flight prefetch promises to avoid duplicate network calls
 const _inflight = new Map<string, Promise<void>>();
 
-const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TATAMOTORS','SBIN','ADANIENT','BHARTIARTL'];
+const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TMPV','TMCV','SBIN','ADANIENT','BHARTIARTL'];
 
 type ActiveView = 'valuation' | 'financials' | 'watchlist' | 'portfolio';
 
