@@ -235,7 +235,9 @@ export default function HistoricalValuationChart({ company }: Props) {
   }, [company.symbol, defaultMetric]);
 
   const { peValues, pbValues, dates } = useMemo(() => {
-    if (!data) return { peValues: [], pbValues: [], dates: [] };
+    if (!data || !Array.isArray(data.points)) {
+      return { peValues: [], pbValues: [], dates: [] };
+    }
     return {
       peValues: data.points.map(p => p.pe),
       pbValues: data.points.map(p => p.pb),
@@ -294,7 +296,7 @@ export default function HistoricalValuationChart({ company }: Props) {
         </div>
       )}
 
-      {data && !loading && (
+      {data && data.stats && !loading && (
         <>
           {activeMetric === 'pe' && (
             <LineChart
