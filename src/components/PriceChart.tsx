@@ -1,6 +1,5 @@
 'use client';
 
-<<<<<<< Updated upstream
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { BarChart3 } from '@/lib/icons';
 import { Company, FinancialYear } from '@/lib/types';
@@ -9,21 +8,6 @@ interface Props {
   company: Company;
   financials?: FinancialYear[];
 }
-=======
-import { useEffect, useRef, useState, useMemo } from 'react';
-import {
-  createChart,
-  ColorType,
-  LineStyle,
-  CrosshairMode,
-  type IChartApi,
-  type ISeriesApi,
-  type IPriceLine,
-  type Time,
-} from 'lightweight-charts';
-import { BarChart3 } from '@/lib/icons';
-import { Company, FinancialYear } from '@/lib/types';
->>>>>>> Stashed changes
 
 interface Candle {
   time: string;
@@ -39,46 +23,14 @@ interface HistoricalError {
   message: string;
 }
 
-<<<<<<< Updated upstream
 type TF = '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | 'ALL';
 const TF_DAYS: Record<TF, number> = {
   '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, '3Y': 1095, 'ALL': 99999,
 };
-=======
-interface Props {
-  company: Company;
-  financials?: FinancialYear[];
-}
-
-type DrawMode = 'none' | 'trend' | 'hori';
-type Pt = { time: Time; value: number };
-type Drawing =
-  | { id: number; type: 'trend'; p1: Pt; p2: Pt }
-  | { id: number; type: 'hori'; price: number };
-
-const PERIODS = [
-  { label: '6M', value: '6mo' },
-  { label: '1Y', value: '1y' },
-  { label: '2Y', value: '2y' },
-  { label: '5Y', value: '5y' },
-];
-
-const DRAW_COLOR = '#3b82f6';
-
-function cssColor(name: string, alpha = 1): string {
-  let triplet = '136,136,136';
-  if (typeof window !== 'undefined') {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    if (v) triplet = v.replace(/\s+/g, ',');
-  }
-  return alpha >= 1 ? `rgb(${triplet})` : `rgba(${triplet},${alpha})`;
-}
->>>>>>> Stashed changes
 
 const inr = (n: number) =>
   `₹${n.toLocaleString('en-IN', { maximumFractionDigits: n >= 100 ? 0 : 1 })}`;
 
-<<<<<<< Updated upstream
 function cutoffDate(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
@@ -92,112 +44,9 @@ export default function PriceChart({ company, financials = [] }: Props) {
   const [tf, setTf]                     = useState<TF>('1Y');
   const [isLoading, setIsLoading]       = useState(true);
   const [fetchError, setFetchError]     = useState<HistoricalError | null>(null);
-=======
-// "FY24" / "FY2024" / "Mar 2024" → fiscal-year-ending calendar year (2024)
-function parseFinYearEnd(label: string): number | null {
-  const m4 = label.match(/(20\d{2})/);
-  if (m4) return parseInt(m4[1], 10);
-  const m2 = label.match(/(\d{2})\b/);
-  if (m2) return 2000 + parseInt(m2[1], 10);
-  return null;
-}
-
-// Indian FY ends 31 Mar; a date in Apr–Dec belongs to next year's FY
-function fyEndYear(dateStr: string): number {
-  const d = new Date(dateStr);
-  return d.getUTCMonth() + 1 >= 4 ? d.getUTCFullYear() + 1 : d.getUTCFullYear();
-}
-
-function percentile(sorted: number[], p: number): number {
-  if (!sorted.length) return 0;
-  const i = Math.min(sorted.length - 1, Math.max(0, Math.floor(sorted.length * p)));
-  return sorted[i];
-}
-
-export default function PriceChart({ company, financials = [] }: Props) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-
-  // Drawing state kept in refs so it survives chart rebuilds without losing zoom
-  const drawingsRef = useRef<Drawing[]>([]);
-  const drawnObjRef = useRef<{ id: number; series?: ISeriesApi<'Line'>; line?: IPriceLine }[]>([]);
-  const pendingRef = useRef<Pt | null>(null);
-  const modeRef = useRef<DrawMode>('none');
-  const nextId = useRef(1);
-
-  const [candles, setCandles] = useState<Candle[]>([]);
-  const [fallbackPe, setFallbackPe] = useState<PEStats | null>(null);
-  const [period, setPeriod] = useState('2y');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [themeTick, setThemeTick] = useState(0);
-  const [drawCount, setDrawCount] = useState(0);
-
-  const [showFair, setShowFair] = useState(true);
-  const [showBands, setShowBands] = useState(true);
-  const [show52, setShow52] = useState(false);
-  const [mode, setMode] = useState<DrawMode>('none');
-
-  useEffect(() => { modeRef.current = mode; }, [mode]);
-
-  // Reset drawings when the stock changes
-  useEffect(() => {
-    drawingsRef.current = [];
-    pendingRef.current = null;
-    setMode('none');
-    setDrawCount(c => c + 1);
-  }, [company.symbol]);
-
-  // Current trailing EPS for translating P/E → price
-  const currentEps = useMemo(() => {
-    const finEps = [...financials]
-      .map(f => ({ end: parseFinYearEnd(f.year) ?? 0, eps: f.eps }))
-      .filter(x => x.end && x.eps > 0)
-      .sort((a, b) => b.end - a.end)[0]?.eps;
-    if (company.eps && company.eps > 0) return company.eps;
-    if (finEps && finEps > 0) return finEps;
-    if (company.pe > 0 && company.currentPrice > 0) return company.currentPrice / company.pe;
-    return 0;
-  }, [company.eps, company.pe, company.currentPrice, financials]);
-
-  // P/E stats computed from real candles + annual EPS (robust, no Screener needed)
-  const peStats = useMemo<PEStats | null>(() => {
-    const epsByEnd = new Map<number, number>();
-    financials.forEach(f => {
-      const end = parseFinYearEnd(f.year);
-      if (end && f.eps > 0) epsByEnd.set(end, f.eps);
-    });
-    const ends = [...epsByEnd.keys()].sort((a, b) => a - b);
-
-    if (ends.length >= 2 && candles.length > 20) {
-      const epsAsOf = (endYear: number): number => {
-        // trailing reported annual = most recent FY that ended on/before prior FY
-        let pick = 0;
-        for (const e of ends) if (e <= endYear - 1) pick = epsByEnd.get(e)!;
-        if (!pick) pick = epsByEnd.get(ends[0])!;
-        return pick;
-      };
-      const pes: number[] = [];
-      for (const c of candles) {
-        const eps = epsAsOf(fyEndYear(c.time));
-        if (eps > 0) {
-          const pe = c.close / eps;
-          if (pe > 0 && pe < 200) pes.push(pe);
-        }
-      }
-      if (pes.length > 20) {
-        const s = pes.sort((a, b) => a - b);
-        return { p25: percentile(s, 0.25), median: percentile(s, 0.5), p75: percentile(s, 0.75) };
-      }
-    }
-    return fallbackPe;
-  }, [financials, candles, fallbackPe]);
->>>>>>> Stashed changes
 
   // ── P/E bands ────────────────────────────────────────────────────────────
   const bands = useMemo(() => {
-<<<<<<< Updated upstream
     const validFins = financials.filter(f => f.eps > 0);
     const eps =
       validFins.length > 0 ? validFins[validFins.length - 1].eps
@@ -221,17 +70,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
   const gapToFair = bands ? ((bands.fair / price - 1) * 100) : null;
 
   // ── Fetch OHLC ────────────────────────────────────────────────────────────
-=======
-    if (!peStats || currentEps <= 0) return null;
-    return {
-      cheap: peStats.p25 * currentEps,
-      fair: peStats.median * currentEps,
-      expensive: peStats.p75 * currentEps,
-    };
-  }, [peStats, currentEps]);
-
-  // ── Fetch candles + (fallback) P/E history ──────────────────────────────────
->>>>>>> Stashed changes
   useEffect(() => {
     setIsLoading(true);
     setFetchError(null);
@@ -249,7 +87,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
       .finally(() => setIsLoading(false));
   }, [company.symbol]);
 
-<<<<<<< Updated upstream
   // ── Slice to timeframe ───────────────────────────────────────────────────
   const visibleCandles = useMemo(() => {
     if (!allCandles.length) return [];
@@ -263,28 +100,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
   useEffect(() => {
     const el = chartContainerRef.current;
     if (!el || !visibleCandles.length) return;
-=======
-    fetch(`/api/historical/${company.symbol}`, { signal: controller.signal })
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        const pe = data?.stats?.pe;
-        if (pe && typeof pe.median === 'number') {
-          setFallbackPe({ p25: pe.p25, median: pe.median, p75: pe.p75 });
-        }
-      })
-      .catch(() => {});
-
-    return () => controller.abort();
-  }, [company.symbol, period]);
-
-  // ── Recolor on theme change ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const obs = new MutationObserver(() => setThemeTick(t => t + 1));
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] });
-    return () => obs.disconnect();
-  }, []);
->>>>>>> Stashed changes
 
     let cancelled = false;
     let cleanupFn: (() => void) | null = null;
@@ -293,7 +108,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
       if (cancelled || !chartContainerRef.current) return;
       const container = chartContainerRef.current;
 
-<<<<<<< Updated upstream
       const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
       const textColor = isDark ? '#888888' : '#666666';
       const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
@@ -360,84 +174,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
             : (isDark ? 'rgba(239,68,68,0.22)'  : 'rgba(239,68,68,0.18)'),
         }))
       );
-=======
-    const chart = createChart(el, {
-      width: el.clientWidth,
-      height: 380,
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor, fontFamily: 'inherit', fontSize: 11 },
-      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
-      rightPriceScale: { borderColor: gridColor },
-      timeScale: { borderColor: gridColor, timeVisible: false },
-      crosshair: { mode: CrosshairMode.Normal },
-    });
-
-    const series = chart.addCandlestickSeries({
-      upColor: gain, downColor: loss,
-      borderUpColor: gain, borderDownColor: loss,
-      wickUpColor: gain, wickDownColor: loss,
-    });
-    series.setData(candles as any);
-    chart.timeScale().fitContent();
-    chartRef.current = chart;
-    seriesRef.current = series;
-
-    // valuation overlays
-    const addLine = (price: number, color: string, title: string, dashed = true) => {
-      if (!Number.isFinite(price) || price <= 0) return;
-      series.createPriceLine({ price, color, lineWidth: 2, lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid, axisLabelVisible: true, title });
-    };
-    if (showFair && bands) addLine(bands.fair, gold, `Fair ${inr(bands.fair)}`, false);
-    if (showBands && bands) {
-      addLine(bands.cheap, gain, `Cheap ${inr(bands.cheap)}`);
-      addLine(bands.expensive, loss, `Pricey ${inr(bands.expensive)}`);
-    }
-    if (show52) {
-      addLine(company.week52High, cssColor('--color-muted', 0.7), `52W High ${inr(company.week52High)}`);
-      addLine(company.week52Low, cssColor('--color-muted', 0.7), `52W Low ${inr(company.week52Low)}`);
-    }
-
-    // re-render saved drawings (survive rebuilds)
-    drawnObjRef.current = [];
-    const renderDrawing = (d: Drawing) => {
-      if (d.type === 'hori') {
-        const line = series.createPriceLine({ price: d.price, color: DRAW_COLOR, lineWidth: 2, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: inr(d.price) });
-        drawnObjRef.current.push({ id: d.id, line });
-      } else {
-        const ls = chart.addLineSeries({ color: DRAW_COLOR, lineWidth: 2, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false });
-        const pts = [d.p1, d.p2].sort((a, b) => (String(a.time) < String(b.time) ? -1 : 1));
-        ls.setData(pts as any);
-        drawnObjRef.current.push({ id: d.id, series: ls });
-      }
-    };
-    drawingsRef.current.forEach(renderDrawing);
-
-    // click handler for drawing
-    const onClick = (param: any) => {
-      const m = modeRef.current;
-      if (m === 'none' || !param?.point) return;
-      const price = series.coordinateToPrice(param.point.y);
-      const time: Time | null = param.time ?? chart.timeScale().coordinateToTime(param.point.x);
-      if (price == null || time == null) return;
-
-      if (m === 'hori') {
-        const d: Drawing = { id: nextId.current++, type: 'hori', price: Number(price) };
-        drawingsRef.current.push(d);
-        renderDrawing(d);
-        setDrawCount(c => c + 1);
-      } else if (m === 'trend') {
-        if (!pendingRef.current) {
-          pendingRef.current = { time, value: Number(price) };
-        } else {
-          const d: Drawing = { id: nextId.current++, type: 'trend', p1: pendingRef.current, p2: { time, value: Number(price) } };
-          pendingRef.current = null;
-          drawingsRef.current.push(d);
-          renderDrawing(d);
-          setDrawCount(c => c + 1);
-        }
-      }
-    };
-    chart.subscribeClick(onClick);
->>>>>>> Stashed changes
 
       // P/E dashed lines
       if (bands) {
@@ -459,7 +195,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
       cleanupFn = () => { ro.disconnect(); chart.remove(); };
     });
 
-<<<<<<< Updated upstream
     return () => { cancelled = true; cleanupFn?.(); };
   }, [visibleCandles, bands]);
 
@@ -475,36 +210,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
-=======
-    return () => {
-      ro.disconnect();
-      chart.unsubscribeClick(onClick);
-      chart.remove();
-      chartRef.current = null;
-      seriesRef.current = null;
-      drawnObjRef.current = [];
-    };
-  }, [candles, showFair, showBands, show52, bands, company.week52High, company.week52Low, themeTick]);
-
-  const clearDrawings = () => {
-    drawingsRef.current = [];
-    pendingRef.current = null;
-    setMode('none');
-    setDrawCount(c => c + 1);
-    setThemeTick(t => t + 1); // force a clean rebuild
-  };
-
-  const last = candles.length ? candles[candles.length - 1].close : company.currentPrice;
-  const gapToFair = bands && bands.fair > 0 ? (bands.fair / last - 1) * 100 : null;
-
-  const toggleBtn = (active: boolean, disabled: boolean) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-      disabled ? 'text-muted/40 border border-border/50 cursor-not-allowed'
-      : active ? 'bg-accent/10 text-accent border border-accent/30'
-      : 'text-muted border border-border hover:text-primary'
-    }`;
-
->>>>>>> Stashed changes
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
 
@@ -526,7 +231,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
             </p>
           </div>
         </div>
-<<<<<<< Updated upstream
         {/* Timeframe buttons — only show if chart is loaded */}
         {allCandles.length > 0 && (
           <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -594,69 +298,6 @@ export default function PriceChart({ company, financials = [] }: Props) {
             Valuation bands require valid EPS and P/E — unavailable for {company.symbol}.
           </p>
         </div>
-=======
-        <div className="flex gap-1">
-          {PERIODS.map(p => (
-            <button key={p.value} onClick={() => setPeriod(p.value)} className={toggleBtn(period === p.value, false)}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Overlay toggles */}
-      <div className="flex gap-1.5 flex-wrap items-center">
-        <span className="text-[11px] text-muted mr-0.5">Overlays:</span>
-        <button disabled={!bands} onClick={() => setShowFair(v => !v)} className={toggleBtn(showFair, !bands)}>
-          {showFair && bands ? '✓ ' : ''}Fair value
-        </button>
-        <button disabled={!bands} onClick={() => setShowBands(v => !v)} className={toggleBtn(showBands, !bands)}>
-          {showBands && bands ? '✓ ' : ''}P/E bands
-        </button>
-        <button onClick={() => setShow52(v => !v)} className={toggleBtn(show52, false)}>
-          {show52 ? '✓ ' : ''}52W high/low
-        </button>
-      </div>
-
-      {/* Drawing tools */}
-      <div className="flex gap-1.5 flex-wrap items-center">
-        <span className="text-[11px] text-muted mr-0.5">Draw:</span>
-        <button onClick={() => setMode(m => (m === 'trend' ? 'none' : 'trend'))} className={toggleBtn(mode === 'trend', false)}>
-          ╱ Trendline
-        </button>
-        <button onClick={() => setMode(m => (m === 'hori' ? 'none' : 'hori'))} className={toggleBtn(mode === 'hori', false)}>
-          — Horizontal
-        </button>
-        <button
-          onClick={clearDrawings}
-          disabled={drawingsRef.current.length === 0}
-          className={toggleBtn(false, drawingsRef.current.length === 0)}
-        >
-          ✕ Clear{drawingsRef.current.length ? ` (${drawingsRef.current.length})` : ''}
-        </button>
-        {mode !== 'none' && (
-          <span className="text-[11px] text-accent">
-            {mode === 'trend'
-              ? (pendingRef.current ? 'click the end point…' : 'click the start point…')
-              : 'click a price level…'}
-          </span>
-        )}
-      </div>
-
-      {/* Chart */}
-      <div className="relative">
-        <div ref={containerRef} className="w-full" style={{ height: 380, cursor: mode !== 'none' ? 'crosshair' : 'default' }} />
-        {loading && <div className="absolute inset-0 flex items-center justify-center text-xs text-muted">Loading price history…</div>}
-        {!loading && error && <div className="absolute inset-0 flex items-center justify-center text-xs text-muted text-center px-6">{error}</div>}
-      </div>
-
-      {bands && (
-        <p className="text-[11px] text-muted leading-relaxed">
-          Fair value = the stock&apos;s median P/E ({peStats?.median.toFixed(1)}x) × current EPS.
-          Cheap / pricey bands use the 25th / 75th percentile P/E from its own price history.
-          A quick &ldquo;rich or cheap vs its past&rdquo; gauge — not a forecast.
-        </p>
->>>>>>> Stashed changes
       )}
 
     </div>
