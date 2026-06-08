@@ -157,7 +157,29 @@ export default function Home() {
       const err = await companyRes.json().catch(() => ({}));
       throw new Error(err.error || `Failed to load ${symbol}`);
     }
-    const companyData: Company = await companyRes.json();
+    const raw: any = await companyRes.json();
+    // Normalize: the data server sometimes returns a partial object (missing
+    // symbol/sector/eps/52w when its live source degrades). Guarantee the
+    // fields the UI relies on so a thin response never white-screens the app.
+    const companyData: Company = {
+      ...raw,
+      symbol: raw.symbol || symbol.toUpperCase(),
+      name: raw.name || symbol.toUpperCase(),
+      sector: raw.sector || '',
+      industry: raw.industry || '',
+      currentPrice: raw.currentPrice || 0,
+      marketCap: raw.marketCap || 0,
+      pe: raw.pe || 0,
+      pb: raw.pb || 0,
+      roe: raw.roe || 0,
+      debtToEquity: raw.debtToEquity ?? 0,
+      dividendYield: raw.dividendYield || 0,
+      change: raw.change || 0,
+      changePercent: raw.changePercent || 0,
+      week52High: raw.week52High || 0,
+      week52Low: raw.week52Low || 0,
+      eps: raw.eps ?? 0,
+    };
     let fins: FinancialYear[] = [];
     if (financialsRes.ok) {
       fins = await financialsRes.json();
