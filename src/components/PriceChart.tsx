@@ -73,14 +73,15 @@ export default function PriceChart({ company, financials = [] }: Props) {
   useEffect(() => {
     setIsLoading(true);
     setFetchError(null);
-    fetch(`/api/historical/${company.symbol}`)
+    fetch(`/api/ohlc/${company.symbol}`)
       .then(async r => {
         const json = await r.json();
         if (!r.ok) throw json as HistoricalError;
-        return json as Candle[];
+        return json as { candles?: Candle[] } | Candle[];
       })
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) setAllCandles(data);
+        const arr = Array.isArray(data) ? data : (data.candles ?? []);
+        if (arr.length > 0) setAllCandles(arr);
         else throw { error: 'NOT_FOUND', message: 'No candle data returned' };
       })
       .catch((e: HistoricalError) => setFetchError(e))
