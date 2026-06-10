@@ -70,7 +70,6 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
   const avgMargin = margins.reduce((a, b) => a + b, 0) / margins.length;
   const marginVariance = margins.reduce((a, b) => a + Math.pow(b - avgMargin, 2), 0) / margins.length;
   const marginStdDev = Math.sqrt(marginVariance);
-  const marginConsistency = grade(marginStdDev, [0, 0, 0]); // inverse — lower is better
   const consistencyGrade = marginStdDev <= 1 ? 'A' : marginStdDev <= 3 ? 'B' : marginStdDev <= 6 ? 'C' : 'D';
 
   // Overall score: average of grades
@@ -144,8 +143,8 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
       {/* Margin quality */}
       <div className="grid grid-cols-2 gap-3">
         {([
-          { label: 'Net Margin (FY24)', value: latest.netMargin, suffix: '%', g: marginGrade as 'A'|'B'|'C'|'D', threshold: '15% = A' },
-          { label: 'EBITDA Margin (FY24)', value: latest.ebitdaMargin, suffix: '%', g: ebitdaGrade as 'A'|'B'|'C'|'D', threshold: '25% = A' },
+          { label: `Net Margin (${latest.year})`, value: latest.netMargin, suffix: '%', g: marginGrade as 'A'|'B'|'C'|'D', threshold: '15% = A' },
+          { label: `EBITDA Margin (${latest.year})`, value: latest.ebitdaMargin, suffix: '%', g: ebitdaGrade as 'A'|'B'|'C'|'D', threshold: '25% = A' },
           { label: 'Margin Consistency', value: marginStdDev, suffix: '% σ', g: consistencyGrade as 'A'|'B'|'C'|'D', threshold: 'Low σ = stable' },
           { label: 'Avg Net Margin', value: avgMargin, suffix: '%', g: grade(avgMargin, [12, 6, 2]) as 'A'|'B'|'C'|'D', threshold: '12% = A' },
         ] as Array<{ label: string; value: number; suffix: string; g: 'A'|'B'|'C'|'D'; threshold: string }>).map(({ label, value, suffix, g, threshold }) => (

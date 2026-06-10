@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
-import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 import { scaleIn } from '@/lib/animations';
 
@@ -50,7 +50,6 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   const isStrongBuy   = upside > 30;
   const isUndervalued = upside > 10;
   const isFair        = upside >= -10 && upside <= 10;
-  const isOvervalued  = upside < -10;
   const isExpensive   = upside < -30;
 
   const verdict =

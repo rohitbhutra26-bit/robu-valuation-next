@@ -124,7 +124,7 @@ export default function ROBUScoreCard({
       </button>
 
       <p className="text-[9px] text-muted/60 text-center leading-relaxed">
-        ROBU Score = 25% ROIIC + 25% Earnings Quality + 20% Execution + 20% Moat + 10% Price Reality
+        ROBU Score = 25% Capital Efficiency (ROIIC) + 25% Earnings Quality + 20% Execution + 20% Moat + 10% Price Reality
       </p>
     </div>
   );

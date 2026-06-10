@@ -45,6 +45,13 @@ function calcCAGR(start: number, end: number, years: number): number {
   return (Math.pow(end / start, 1 / years) - 1) * 100;
 }
 
+// Adaptive ₹ Crore formatting — small caps were showing "₹0K Cr" before
+function fmtCr(v: number): string {
+  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L Cr`;
+  if (v >= 1000)   return `₹${(v / 1000).toFixed(1)}K Cr`;
+  return `₹${v.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
+}
+
 export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
   const fin = financials;
   if (!fin || fin.length === 0) return null;
@@ -64,16 +71,16 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
       className="flex flex-wrap gap-2"
     >
       <MetricCard
-        label="Revenue (FY24)"
-        value={`₹${(latest.revenue / 1000).toFixed(0)}K Cr`}
-        subValue={`${revCAGR.toFixed(1)}% 4Y CAGR`}
+        label={`Revenue (${latest.year})`}
+        value={fmtCr(latest.revenue)}
+        subValue={`${revCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={revCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
       />
       <MetricCard
-        label="PAT (FY24)"
-        value={`₹${(latest.pat / 1000).toFixed(1)}K Cr`}
-        subValue={`${patCAGR.toFixed(1)}% 4Y CAGR`}
+        label={`Profit (${latest.year})`}
+        value={fmtCr(latest.pat)}
+        subValue={`${patCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={patCAGR > 0 ? 'up' : 'down'}
         color={latest.pat > 0 ? 'text-gain' : 'text-loss'}
       />
@@ -84,9 +91,9 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
         color={latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary'}
       />
       <MetricCard
-        label="EPS (FY24)"
+        label={`EPS (${latest.year})`}
         value={`₹${latest.eps.toFixed(1)}`}
-        subValue={`${epsCAGR.toFixed(1)}% 4Y CAGR`}
+        subValue={`${epsCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={epsCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
       />

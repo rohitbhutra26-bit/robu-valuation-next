@@ -13,6 +13,7 @@ interface AssumptionsPanelProps {
 
 function SliderRow({
   label,
+  hint,
   value,
   min,
   max,
@@ -23,6 +24,7 @@ function SliderRow({
   color = 'text-gold',
 }: {
   label: string;
+  hint?: string;        // plain-English one-liner shown under the label
   value: number;
   min: number;
   max: number;          // slider visual range
@@ -47,7 +49,10 @@ function SliderRow({
   return (
     <div className="mb-4">
       <div className="flex justify-between items-center mb-1.5">
-        <span className="text-xs text-muted">{label}</span>
+        <div className="min-w-0 pr-2">
+          <span className="text-xs text-muted">{label}</span>
+          {hint && <p className="text-[10px] text-muted/60 leading-tight mt-0.5">{hint}</p>}
+        </div>
         {/* Editable number input — no upper clamp beyond inputMax */}
         <div className="flex items-center gap-0.5">
           <input
@@ -107,6 +112,7 @@ export default function AssumptionsPanel({
 
       <SliderRow
         label="Revenue Growth Rate"
+        hint="How fast you expect sales to grow each year"
         value={assumptions.revenueGrowthRate}
         min={1}
         max={50}
@@ -119,6 +125,7 @@ export default function AssumptionsPanel({
 
       <SliderRow
         label="Net Margin Assumption"
+        hint="Profit kept from every ₹100 of sales"
         value={assumptions.netMarginAssumption}
         min={1}
         max={50}
@@ -131,6 +138,7 @@ export default function AssumptionsPanel({
 
       <SliderRow
         label="Exit P/E Multiple"
+        hint="What the market will pay per ₹1 of profit at the end"
         value={assumptions.exitPE}
         min={5}
         max={100}
@@ -143,7 +151,10 @@ export default function AssumptionsPanel({
 
       <div className="mb-2">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-xs text-muted">Projection Period</span>
+          <div>
+            <span className="text-xs text-muted">Projection Period</span>
+            <p className="text-[10px] text-muted/60 leading-tight mt-0.5">How many years ahead the model looks</p>
+          </div>
           <span className="text-sm font-semibold font-mono text-primary">{assumptions.years} Years</span>
         </div>
         <div className="flex gap-2">
@@ -165,6 +176,7 @@ export default function AssumptionsPanel({
 
       <SliderRow
         label="WACC (Discount Rate)"
+        hint="The yearly return you demand for waiting — higher = stricter"
         value={assumptions.wacc}
         min={6}
         max={20}
@@ -177,6 +189,7 @@ export default function AssumptionsPanel({
 
       <SliderRow
         label="Margin of Safety"
+        hint="Extra discount you demand before buying, in case you're wrong"
         value={assumptions.marginOfSafety}
         min={0}
         max={50}
@@ -188,7 +201,7 @@ export default function AssumptionsPanel({
       />
 
       <div className="mt-4 pt-3 border-t border-border space-y-1.5">
-        <p className="text-xs text-muted font-medium mb-2">Reference (FY24 Actual)</p>
+        <p className="text-xs text-muted font-medium mb-2">Reference (Latest Actuals)</p>
         <div className="flex justify-between text-xs">
           <span className="text-muted">Net Margin</span>
           <span className="text-primary font-mono">{latestNetMargin.toFixed(1)}%</span>

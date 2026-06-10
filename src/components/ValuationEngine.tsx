@@ -3,21 +3,18 @@
 import { useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import MethodsDrawer from '@/components/MethodsDrawer';
-import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 import {
-  runPrimaryModel,
   peModel,
   pegModel,
   earningsYieldModel,
   impliedGrowthRate,
-  gordonGrowthPB,
   earningsQualityScore,
   evEbitdaModel,
   dcfModel,
   grahamNumber,
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
-import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
 import { Clock } from '@/lib/icons';
 import Tooltip from '@/components/Tooltip';
 
@@ -27,6 +24,14 @@ interface ValuationEngineProps {
   assumptions: ValuationAssumptions;
   compact?: boolean; // mobile: show only composite FV + stats, collapse method cards
 }
+
+// ─── Plain-English explanation for each method ───────────────────────────────
+const METHOD_PLAIN: Record<string, string> = {
+  'DCF':           'Adds up the cash this business will earn in future, converted to today\'s money.',
+  'Graham Number': 'A classic "safe price" check using profits and the company\'s net worth.',
+  'PE-Based':      'Estimates future profit, then applies the price the market usually pays for it.',
+  'EV/EBITDA':     'Values the whole business including its debt, then works out your share.',
+};
 
 // ─── Method card ─────────────────────────────────────────────────────────────
 function MethodCard({
@@ -66,7 +71,10 @@ function MethodCard({
           Buy ≤ ₹{buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({marginOfSafety}% MoS)
         </p>
       )}
-      <p className="text-[10px] text-muted leading-relaxed line-clamp-3">{desc}</p>
+      {METHOD_PLAIN[method] && (
+        <p className="text-[10px] text-primary/70 leading-relaxed mb-1">{METHOD_PLAIN[method]}</p>
+      )}
+      <p className="text-[10px] text-muted leading-relaxed line-clamp-3 font-mono">{desc}</p>
     </div>
   );
 }
@@ -129,8 +137,6 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   );
 
   // ── Keep legacy models for quality score + other signals ──────────────────
-  const bench = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
-  const latest = financials[financials.length - 1];
   const pegResult = pegModel(financials, company);
   const eyResult  = earningsYieldModel(financials, company);
 
@@ -411,7 +417,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
           label="Implied Growth"
           value={`${impliedG.toFixed(1)}%`}
           color="text-accent"
-          sub="Market expects"
+          sub="Already in the price"
         />
         <StatPill
           label="PEG Ratio"
@@ -427,19 +433,21 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         />
       </div>
 
-      {/* ── Legend ── */}
+      {/* ── Legend — plain English ── */}
       <div className="text-[11px] text-muted border-t border-border pt-3 space-y-1 leading-relaxed">
         <p>
           <span className="text-primary font-medium">DCF</span>
-          {' '}— primary model for {profile.sectorLabel} sector
-          {model === 'pb' && '; banks valued on book value, not earnings'}
-          {model === 'ev_ebitda' && '; removes D&A distortion in asset-heavy businesses'}
-          {model === 'ev_sales' && '; revenue multiple for pre-profit / high-growth companies'}
+          {' '}— the lead model for the {profile.sectorLabel} sector
+          {model === 'pb' && '; banks are valued on their net worth (book value), not profits'}
+          {model === 'ev_ebitda' && '; better for asset-heavy businesses where depreciation hides true profit'}
+          {model === 'ev_sales' && '; uses sales instead of profit — for fast growers not yet profitable'}
         </p>
-        <p><span className="text-primary font-medium">PEG Ratio</span> — if EPS grows 20%/yr, fair P/E ≈ 20x (PEG = 1)</p>
-        <p><span className="text-primary font-medium">Earnings Yield</span> — compares stock earnings vs Indian G-Sec rate ({RISK_FREE_RATE}%)</p>
-        <p><span className="text-primary font-medium">Earnings Quality</span> — scores 0-100: profit consistency + margin stability + revenue momentum → adjusts exit multiple</p>
-        <p><span className="text-primary font-medium">Composite</span> — {model === 'pb' ? '50% Gordon Growth + 50% P/B — banks weighted toward institutional model' : 'avg of all valid methods; reduces single-model bias'}</p>
+        <p><span className="text-primary font-medium">Margin of Safety</span> — the discount between price and fair value. Bigger = more room to be wrong.</p>
+        <p><span className="text-primary font-medium">Implied Growth</span> — the growth today&apos;s price already assumes. If the company can beat it, the stock is cheap.</p>
+        <p><span className="text-primary font-medium">PEG Ratio</span> — P/E vs growth. Under 1 = paying less than the growth is worth. Over 2 = paying a lot.</p>
+        <p><span className="text-primary font-medium">Earnings Yield</span> — profit you get per ₹100 of stock. Should beat the {RISK_FREE_RATE}% you&apos;d earn risk-free in G-Secs.</p>
+        <p><span className="text-primary font-medium">Quality Score</span> — 0–100 for steady profits, stable margins and growing sales. High quality earns a higher exit multiple.</p>
+        <p><span className="text-primary font-medium">Composite</span> — the average of all valid methods, so no single model can mislead you.</p>
       </div>
     </div>
   );

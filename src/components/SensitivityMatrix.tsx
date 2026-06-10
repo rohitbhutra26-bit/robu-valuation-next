@@ -1,7 +1,7 @@
 'use client';
 
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 
 interface SensitivityMatrixProps {
@@ -56,6 +56,9 @@ export default function SensitivityMatrix({
         </span>
       </div>
 
+      <p className="text-xs text-muted mb-1">
+        What the stock is worth if your inputs turn out different. ✦ marks your current inputs.
+      </p>
       <p className="text-xs text-muted mb-3">
         Revenue Growth % (rows) × {profile.exitMultipleLabel} (cols)
         {profile.model !== 'pb' && profile.model !== 'ev_ebitda' && ` — Net Margin fixed at ${margin.toFixed(1)}%`}

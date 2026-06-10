@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { computeTargetPath, Feasibility, PathRequirement } from '@/lib/targetPathEngine';
 import { Clock } from '@/lib/icons';
 
@@ -15,7 +15,7 @@ interface Props {
 // ─── Feasibility config ───────────────────────────────────────────────────────
 const FEASIBILITY: Record<Feasibility, { label: string; color: string; bg: string; border: string; dot: string }> = {
   achievable:  { label: 'Achievable',  color: 'text-gain', bg: 'bg-gain/10',  border: 'border-gain/30',  dot: '#10B981' },
-  ambitious:   { label: 'Ambitious',   color: 'text-gold', bg: 'bg-gold/10',  border: 'border-gold/30',  dot: '#3b82f6' },
+  ambitious:   { label: 'Ambitious',   color: 'text-gold', bg: 'bg-gold/10',  border: 'border-gold/30',  dot: '#F59E0B' },
   difficult:   { label: 'Difficult',   color: 'text-loss', bg: 'bg-loss/10',  border: 'border-loss/30',  dot: '#EF4444' },
   unrealistic: { label: 'Unrealistic', color: 'text-loss', bg: 'bg-loss/20',  border: 'border-loss/40',  dot: '#EF4444' },
 };
@@ -58,21 +58,6 @@ function RequirementRow({ req, applicable = true }: { req: PathRequirement; appl
 
       {/* Explanation */}
       <p className="ml-4 text-[11px] text-muted leading-relaxed">{req.explanation}</p>
-
-      {/* Visual bar — how far above reference */}
-      {req.value > 0 && (
-        <div className="ml-4 mt-2">
-          <div className="h-1 bg-border rounded-full overflow-hidden w-full">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                backgroundColor: f.dot,
-                width: `${Math.min(Math.max((req.value / (req.value * 1.5)) * 100, 5), 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

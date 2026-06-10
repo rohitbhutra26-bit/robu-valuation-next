@@ -1,5 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#EDE9E3',
+};
 
 export const metadata: Metadata = {
   title: 'Robu Terminal® | Indian Stock Analysis',
@@ -9,13 +17,6 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    viewportFit: 'cover',
-  },
-  themeColor: '#EDE9E3',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

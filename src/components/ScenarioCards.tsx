@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ValuationAssumptions, ScenarioResult } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
-import { getSectorProfile, getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
+import { getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
 import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
 import Tooltip from '@/components/Tooltip';
 
@@ -67,7 +67,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
     {
       name: 'Bull',
       probability: 25,
-      color: '#4ade80',
+      color: '#10B981',
       growthRate:       assumptions.revenueGrowthRate + deltas.bullGrowthDelta,
       marginAssumption: assumptions.netMarginAssumption + deltas.bullMarginDelta,
       exitMultiple:     Math.min(qualAdjMultiple + deltas.bullMultipleDelta, profile.exitMultipleMax),
@@ -152,10 +152,13 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
         <div>
           <h3 className="text-sm font-semibold text-primary">Scenario Analysis</h3>
           <p className="text-[11px] text-muted mt-0.5">
+            Bear = things go wrong · Base = your inputs · Bull = things go right
+          </p>
+          <p className="text-[11px] text-muted mt-0.5">
             Model: <span className="text-gold font-medium">{profile.exitMultipleLabel}</span>
             {' · '}
             {deltas.isCompanySpecific
-              ? <span className="inline-flex items-center gap-0.5">spread from σ={sigma.toFixed(1)}%<Tooltip text={`Historical revenue σ = ${sigma.toFixed(1)}% — measures how volatile this company's revenue has been`} /></span>
+              ? <span className="inline-flex items-center gap-0.5">spread from σ={sigma.toFixed(1)}%<Tooltip text={`σ = how bumpy this company's revenue has been historically (${sigma.toFixed(1)}%). Steadier revenue → tighter Bear/Bull range`} /></span>
               : 'sector-template spread'}
           </p>
           {/* Earnings quality badge */}
