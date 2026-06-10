@@ -16,6 +16,9 @@ import FinancialsTable from './FinancialsTable';
 import ValuationEngine from './ValuationEngine';
 import EarningsQuality from './EarningsQuality';
 import WhatMustHappen from './WhatMustHappen';
+import ReverseDCF from './ReverseDCF';
+import MonteCarloCard from './MonteCarloCard';
+import RedFlagsCard from './RedFlagsCard';
 import HistoricalValuationChart from './HistoricalValuationChart';
 import ForecastChart from './ForecastChart';
 import IndustryBenchmarks from './IndustryBenchmarks';
@@ -571,6 +574,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <ForecastChart financials={financials} assumptions={assumptions} />
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} compact />
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} compact />
+      <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
+      <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
+      <RedFlagsCard company={company} financials={financials} />
       {financials.length >= 3 && <ROBUScoreCard company={company} financials={financials} />}
       <ScenarioBuilder company={company} financials={financials} />
       <AnnouncementsFeed company={company} />

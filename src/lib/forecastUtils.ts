@@ -252,6 +252,34 @@ function fmtCr(n: number): string {
   return `₹${n.toFixed(0)} Cr`;
 }
 
+// ─── Growth fade engine ───────────────────────────────────────────────────────
+// No company grows at 25% forever. Every projection in this file fades the
+// user's growth rate linearly toward TERMINAL_GROWTH (≈ India nominal GDP)
+// over the forecast horizon. Year 1 = full rate, Year N = terminal rate.
+// Never fades upward: a company growing slower than terminal stays at its own rate.
+export const TERMINAL_GROWTH = 6; // % — long-run India nominal GDP proxy
+
+export function fadePath(g: number, years: number, terminal: number = TERMINAL_GROWTH): number[] {
+  const end = Math.min(terminal, g); // never inflate slow growers
+  const rates: number[] = [];
+  for (let y = 1; y <= years; y++) {
+    const t = years <= 1 ? 0 : (y - 1) / (years - 1);
+    rates.push(g * (1 - t) + end * t);
+  }
+  return rates;
+}
+
+// Total compounded multiple over the faded path: Π(1 + r/100)
+export function fadeCompound(g: number, years: number, terminal: number = TERMINAL_GROWTH): number {
+  return fadePath(g, years, terminal).reduce((acc, r) => acc * (1 + r / 100), 1);
+}
+
+// Label helper: "18%→6%" or just "5%" when no fade applies
+function fadeLabel(g: number, years: number): string {
+  const end = Math.min(TERMINAL_GROWTH, g);
+  return end < g ? `${g.toFixed(0)}%→${end.toFixed(0)}% fade` : `${g.toFixed(0)}% flat`;
+}
+
 // ─── Net debt estimator ───────────────────────────────────────────────────────
 // We approximate from D/E ratio and book value.
 // Book Value ≈ Market Cap / P/B  (market-based book)
@@ -275,14 +303,14 @@ export function peModel(
   // Use last COMPLETE fiscal year as base — avoids projecting from a partial year
   const { baseline } = getBaselineFinancial(financials);
   const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
-  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
+  const futureRevenue = baseline.revenue * fadeCompound(growthRate, years);
   const futurePAT    = futureRevenue * (netMargin / 100);
   const futureEPS    = futurePAT / shares;
   const fairValue    = futureEPS * exitPE;
   return {
     fairValue,
     model: 'Forward P/E',
-    desc: `${fmtCr(futureRevenue)} revenue × ${netMargin.toFixed(1)}% margin ÷ ${shares.toFixed(1)}Cr shares × ${exitPE}x P/E`,
+    desc: `${fmtCr(futureRevenue)} revenue (${fadeLabel(growthRate, years)}) × ${netMargin.toFixed(1)}% margin ÷ ${shares.toFixed(1)}Cr shares × ${exitPE}x P/E`,
   };
 }
 
@@ -299,7 +327,7 @@ export function evEbitdaModel(
   const shares     = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
   const ebitdaMgn  = baseline.ebitdaMargin > 0 ? baseline.ebitdaMargin : 15; // fallback 15%
 
-  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
+  const futureRevenue = baseline.revenue * fadeCompound(growthRate, years);
   const futureEBITDA  = futureRevenue * (ebitdaMgn / 100);
   const futureEV      = futureEBITDA * exitEVEBITDA;
 
@@ -336,7 +364,7 @@ export function pbModel(
     ? company.currentPrice / company.pb
     : company.currentPrice * 0.35;
 
-  const futureBVPS = currentBVPS * Math.pow(1 + bookGrowthRate / 100, years);
+  const futureBVPS = currentBVPS * fadeCompound(bookGrowthRate, years);
 
   // exitPB is the RE-RATING multiple — the premium the market will pay at exit.
   // This is INDEPENDENT of current pb, so changing the slider has full effect.
@@ -361,7 +389,7 @@ export function evSalesModel(
   const { baseline } = getBaselineFinancial(financials);
   const shares  = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
-  const futureRevenue = baseline.revenue * Math.pow(1 + growthRate / 100, years);
+  const futureRevenue = baseline.revenue * fadeCompound(growthRate, years);
   const futureEV      = futureRevenue * exitEVSales;
   const netDebt       = estimateNetDebt(company);
   const equityValue   = Math.max(futureEV - netDebt, 0);
@@ -647,7 +675,7 @@ export function suggestAssumptions(
     rawCompanyGrowth = fwdGrowth;
     source = 'analyst_guidance';
     confidence = 'High';
-    rationale = `Analyst consensus: ${fwdGrowth.toFixed(1)}% fwd growth, fading to ${industryCagr}% sector rate · Base: ${yearLabel}`;
+    rationale = `Analyst consensus: ${fwdGrowth.toFixed(1)}% fwd growth — model fades it to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
   } else {
     // Priority 2: Historical revenue CAGR from COMPLETE years only
     const revenueGrowths = completeYears
@@ -665,7 +693,7 @@ export function suggestAssumptions(
       rawCompanyGrowth = recent.reduce((a, b) => a + b, 0) / recent.length;
       source = 'historical_cagr';
       confidence = rawCompanyGrowth > 5 ? 'Medium' : 'Low';
-      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}%, fading to ${industryCagr}% sector floor · Base: ${yearLabel}`;
+      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}% — model fades it to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
     } else {
       // Fallback: use industry rate directly
       rawCompanyGrowth = industryCagr;
@@ -675,8 +703,10 @@ export function suggestAssumptions(
     }
   }
 
-  // ── Step 2: Fade toward industry CAGR ─────────────────────────────────────
-  const revenueGrowthRate = fadedGrowthCAGR(rawCompanyGrowth, industryCagr, years);
+  // ── Step 2: No pre-fade — the models themselves now fade growth toward
+  // TERMINAL_GROWTH year by year (see fadePath). Pre-fading here would
+  // double-discount growth. The slider shows the honest year-1 rate.
+  const revenueGrowthRate = Math.min(Math.max(rawCompanyGrowth, 1), 60);
 
   // ── Step 3: Net margin from recent COMPLETE year actuals ──────────────────
   const recentMargins = completeYears.slice(-3).map(f => f.netMargin).filter(m => m > 0 && m < 80);
@@ -725,6 +755,9 @@ export function runPrimaryModel(
 
 // ─── Implied growth (reverse-solver) ─────────────────────────────────────────
 // "What revenue CAGR does today's price already imply?"
+// Solves for the year-1 growth rate (with fade applied — same math as the
+// models) that makes the PE model output exactly today's price. Bisection:
+// fadeCompound is monotonic in g, so 40 iterations nail it to ±0.01%.
 export function impliedGrowthRate(
   financials: FinancialYear[],
   company: Company,
@@ -736,12 +769,17 @@ export function impliedGrowthRate(
   const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
   const margin = netMargin / 100;
   const price  = company.currentPrice;
-  try {
-    const ratio = (price * shares) / (exitPE * margin * baseline.revenue);
-    return Math.max((Math.pow(Math.max(ratio, 0.01), 1 / years) - 1) * 100, 0);
-  } catch {
-    return 0;
+  if (price <= 0 || margin <= 0 || exitPE <= 0 || baseline.revenue <= 0) return 0;
+
+  const targetMultiple = (price * shares) / (exitPE * margin * baseline.revenue);
+  if (targetMultiple <= fadeCompound(0, years)) return 0;
+
+  let lo = 0, hi = 100;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (fadeCompound(mid, years) < targetMultiple) lo = mid; else hi = mid;
   }
+  return (lo + hi) / 2;
 }
 
 // ─── DCF Model ────────────────────────────────────────────────────────────────
@@ -766,20 +804,21 @@ export function dcfModel(
     return { fairValue: 0, model: 'DCF', desc: 'Insufficient OCF data for DCF' };
   }
 
-  const g    = growthRate / 100;
   const disc = wacc / 100;
   const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
-  // Project and discount each year's FCF
+  // Project and discount each year's FCF along the FADED growth path
+  // (year 1 grows at the full rate, fading to TERMINAL_GROWTH by year N)
+  const path = fadePath(growthRate, years);
   let pvSum = 0;
+  let fcf = baseFCF;
   for (let yr = 1; yr <= years; yr++) {
-    const fcf = baseFCF * Math.pow(1 + g, yr);
+    fcf = fcf * (1 + path[yr - 1] / 100);
     pvSum += fcf / Math.pow(1 + disc, yr);
   }
 
-  // Terminal value: Year-N FCF × terminal multiple, discounted back
-  const terminalFCF = baseFCF * Math.pow(1 + g, years);
-  const terminalValue = (terminalFCF * terminalMultiple) / Math.pow(1 + disc, years);
+  // Terminal value: faded Year-N FCF × terminal multiple, discounted back
+  const terminalValue = (fcf * terminalMultiple) / Math.pow(1 + disc, years);
 
   const totalEV   = pvSum + terminalValue;
   const netDebt   = estimateNetDebt(company);
@@ -789,7 +828,7 @@ export function dcfModel(
   return {
     fairValue,
     model: 'DCF',
-    desc: `OCF ₹${fmtCr(baseFCF)} → ${years}Y @ ${growthRate}% growth, ${wacc}% WACC, ${terminalMultiple}x terminal`,
+    desc: `OCF ${fmtCr(baseFCF)} → ${years}Y, growth ${fadeLabel(growthRate, years)}, ${wacc}% WACC, ${terminalMultiple}x terminal`,
   };
 }
 

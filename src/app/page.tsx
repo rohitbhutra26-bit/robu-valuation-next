@@ -22,6 +22,9 @@ import IndustryBenchmarks from '@/components/IndustryBenchmarks';
 import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
+import ReverseDCF from '@/components/ReverseDCF';
+import MonteCarloCard from '@/components/MonteCarloCard';
+import RedFlagsCard from '@/components/RedFlagsCard';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
 import PriceChart from '@/components/PriceChart';
 import ForecastChart from '@/components/ForecastChart';
@@ -742,6 +745,9 @@ export default function Home() {
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
                     <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+                    <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
+                    <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
+                    <RedFlagsCard company={company} financials={financials} />
                     <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
                   </>
                 )}

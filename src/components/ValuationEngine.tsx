@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import MethodsDrawer from '@/components/MethodsDrawer';
-import { getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile, ValuationModel } from '@/lib/sectorModelMap';
 import {
   peModel,
   pegModel,
@@ -13,6 +13,7 @@ import {
   evEbitdaModel,
   dcfModel,
   grahamNumber,
+  gordonGrowthPB,
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
 import { Clock } from '@/lib/icons';
@@ -31,6 +32,18 @@ const METHOD_PLAIN: Record<string, string> = {
   'Graham Number': 'A classic "safe price" check using profits and the company\'s net worth.',
   'PE-Based':      'Estimates future profit, then applies the price the market usually pays for it.',
   'EV/EBITDA':     'Values the whole business including its debt, then works out your share.',
+  'Gordon P/B':    'The institutional bank model: worth more than book value only if ROE beats the cost of equity.',
+};
+
+// ─── Sector-aware composite weights ──────────────────────────────────────────
+// Not all models deserve an equal vote. DCF means little for a bank;
+// Graham punishes asset-light compounders. Weights follow how institutional
+// desks actually value each sector type.
+const COMPOSITE_WEIGHTS: Record<ValuationModel, { dcf: number; graham: number; pe: number; ev: number; gordon: number }> = {
+  pe:        { dcf: 0.40, pe: 0.30, ev: 0.20, graham: 0.10, gordon: 0 },
+  ev_ebitda: { dcf: 0.35, ev: 0.40, pe: 0.15, graham: 0.10, gordon: 0 },
+  ev_sales:  { dcf: 0.35, ev: 0.30, pe: 0.20, graham: 0.15, gordon: 0 },
+  pb:        { gordon: 0.50, pe: 0.30, graham: 0.20, dcf: 0, ev: 0 }, // banks: book value, not cash flow
 };
 
 // ─── Method card ─────────────────────────────────────────────────────────────
@@ -140,9 +153,23 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   const pegResult = pegModel(financials, company);
   const eyResult  = earningsYieldModel(financials, company);
 
-  // ── Composite fair value — average of all 4 models ───────────────────────
-  const allFVs = [dcfResult.fairValue, grahamResult.fairValue, peResult.fairValue, evResult.fairValue].filter(v => v > 0);
-  const compositeFV   = allFVs.length > 0 ? allFVs.reduce((a, b) => a + b, 0) / allFVs.length : 0;
+  // ── Composite fair value — SECTOR-WEIGHTED, not a flat average ───────────
+  // Banks lean on Gordon Growth P/B; industrials on EV/EBITDA; the default
+  // book leans on DCF. Methods that fail (fv=0) drop out and weights renormalise.
+  const gordonResult = model === 'pb' ? gordonGrowthPB(company, assumptions.revenueGrowthRate) : null;
+  const w = COMPOSITE_WEIGHTS[model] ?? COMPOSITE_WEIGHTS.pe;
+  const weightedParts = [
+    { fv: dcfResult.fairValue,            weight: w.dcf },
+    { fv: grahamResult.fairValue,         weight: w.graham },
+    { fv: peResult.fairValue,             weight: w.pe },
+    { fv: evResult.fairValue,             weight: w.ev },
+    { fv: gordonResult?.fairValue ?? 0,   weight: w.gordon },
+  ].filter(p => p.fv > 0 && p.weight > 0);
+  const weightSum   = weightedParts.reduce((a, p) => a + p.weight, 0);
+  const allFVs      = weightedParts.map(p => p.fv); // kept for method count label
+  const compositeFV = weightSum > 0
+    ? weightedParts.reduce((a, p) => a + p.fv * p.weight, 0) / weightSum
+    : 0;
   const compositeUp   = compositeFV > 0 ? (compositeFV / company.currentPrice - 1) * 100 : 0;
   const compositeCAGR = compositeFV > 0
     ? (Math.pow(Math.max(compositeFV / company.currentPrice, 0.001), 1 / assumptions.years) - 1) * 100
@@ -187,7 +214,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         <div className="bg-border/20 rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Composite Fair Value
             <span className="text-muted/60 ml-1">
-              {`(avg of ${allFVs.length} methods)`}
+              {`(sector-weighted, ${allFVs.length} methods)`}
             </span>
           </p>
           <div className="flex items-end gap-3 flex-wrap">
@@ -248,7 +275,10 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         <MethodsDrawer open={showDetails} onClose={() => setShowDetails(false)}>
           {/* 4 Valuation Models */}
           <div className="grid grid-cols-2 gap-3">
-            <MethodCard method="DCF" desc={dcfResult.desc} fairValue={dcfResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} primary />
+            {gordonResult && gordonResult.isValid && (
+              <MethodCard method="Gordon P/B" desc={gordonResult.desc} fairValue={gordonResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} primary />
+            )}
+            <MethodCard method="DCF" desc={dcfResult.desc} fairValue={dcfResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} primary={model !== 'pb'} />
             <MethodCard method="Graham Number" desc={grahamResult.desc} fairValue={grahamResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
             <MethodCard method="PE-Based" desc={peResult.desc} fairValue={peResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
             <MethodCard method="EV/EBITDA" desc={evResult.desc} fairValue={evResult.fairValue} currentPrice={company.currentPrice} marginOfSafety={mos_input} />
@@ -311,7 +341,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
           <p className="text-xs text-muted mb-1">
             Composite Fair Value
             <span className="text-muted/60 ml-1">
-              {`(avg of ${allFVs.length} methods)`}
+              {`(sector-weighted, ${allFVs.length} methods)`}
             </span>
           </p>
           <p className="text-2xl font-bold font-mono text-gold">
@@ -344,15 +374,25 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         </div>
       </div>
 
-      {/* ── 4 Valuation Models — always shown ── */}
+      {/* ── Valuation Models — always shown; Gordon P/B joins for banks ── */}
       <div className="grid grid-cols-2 gap-3">
+        {gordonResult && gordonResult.isValid && (
+          <MethodCard
+            method="Gordon P/B"
+            desc={gordonResult.desc}
+            fairValue={gordonResult.fairValue}
+            currentPrice={company.currentPrice}
+            marginOfSafety={mos_input}
+            primary={true}
+          />
+        )}
         <MethodCard
           method="DCF"
           desc={dcfResult.desc}
           fairValue={dcfResult.fairValue}
           currentPrice={company.currentPrice}
           marginOfSafety={mos_input}
-          primary={true}
+          primary={model !== 'pb'}
         />
         <MethodCard
           method="Graham Number"
@@ -447,7 +487,13 @@ export default function ValuationEngine({ company, financials, assumptions, comp
         <p><span className="text-primary font-medium">PEG Ratio</span> — P/E vs growth. Under 1 = paying less than the growth is worth. Over 2 = paying a lot.</p>
         <p><span className="text-primary font-medium">Earnings Yield</span> — profit you get per ₹100 of stock. Should beat the {RISK_FREE_RATE}% you&apos;d earn risk-free in G-Secs.</p>
         <p><span className="text-primary font-medium">Quality Score</span> — 0–100 for steady profits, stable margins and growing sales. High quality earns a higher exit multiple.</p>
-        <p><span className="text-primary font-medium">Composite</span> — the average of all valid methods, so no single model can mislead you.</p>
+        <p><span className="text-primary font-medium">Composite</span> — sector-weighted blend: {
+          model === 'pb'        ? 'Gordon P/B 50% · PE 30% · Graham 20% (banks are valued on book, not cash flow)' :
+          model === 'ev_ebitda' ? 'EV/EBITDA 40% · DCF 35% · PE 15% · Graham 10%' :
+          model === 'ev_sales'  ? 'DCF 35% · EV 30% · PE 20% · Graham 15%' :
+                                  'DCF 40% · PE 30% · EV 20% · Graham 10%'
+        }. Failed methods drop out automatically.</p>
+        <p><span className="text-primary font-medium">Growth fade</span> — every projection slows your growth rate toward 6% (≈ India GDP) by the final year. No company compounds at 25% forever.</p>
       </div>
     </div>
   );
