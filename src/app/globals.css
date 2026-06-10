@@ -413,8 +413,11 @@ input[type='number'] { -moz-appearance: textfield; }
   body { background: #fff !important; color: #111 !important; font-family: Georgia, serif !important; font-size: 12px; }
   /* Print the actual colors — verdict banners, score bars, flag chips */
   #print-report * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  @page { margin: 14mm; size: A4 portrait; }
-  .pr-chapter { page-break-before: always; }
+  /* margin:0 removes Chrome's auto headers/footers (timestamp + URL at edges).
+     The report carries its own padding instead. */
+  @page { margin: 0; size: A4 portrait; }
+  #print-report { padding: 13mm 15mm; }
+  .pr-chapter { page-break-before: always; padding-top: 13mm; }
   .pr-keep { page-break-inside: avoid; }
 }
 .print-only { display: none; }

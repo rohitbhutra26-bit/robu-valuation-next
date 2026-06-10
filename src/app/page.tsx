@@ -621,6 +621,7 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <CompanyHeader
                       company={company}
+                      financials={financials}
                       isWatchlisted={isWatchlisted}
                       onWatchlistToggle={handleWatchlistToggle}
                       isInPortfolio={isPortfolioStock}
@@ -643,6 +644,11 @@ export default function Home() {
 
                     {/* Data quality banner — shown before anything else if issues exist */}
                     {dataQuality && <DataQualityBanner quality={dataQuality} />}
+
+                    {/* Danger before dreams — red flags up top, linked from header badge */}
+                    <div id="red-flags-card">
+                      <RedFlagsCard company={company} financials={financials} />
+                    </div>
 
                     {/* Assumptions panel */}
                     {(() => {
@@ -746,12 +752,26 @@ export default function Home() {
                     <PriceChart company={company} financials={financials} />
                     <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
-                    <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
-                    <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+
+                    {/* Proof tier — stress-tests of the story above */}
                     <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
                     <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
-                    <RedFlagsCard company={company} financials={financials} />
                     <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
+
+                    {/* Expert tier — collapsed by default, halves the page for casual users */}
+                    <details className="group bg-card border border-border rounded-xl">
+                      <summary className="cursor-pointer list-none p-4 flex items-center gap-2 select-none">
+                        <SlidersHorizontal size={14} className="text-muted group-open:text-gold transition-colors" />
+                        <span className="text-sm font-semibold text-primary">Advanced analysis</span>
+                        <span className="text-[11px] text-muted">sensitivity matrix · valuation engine · custom scenarios</span>
+                        <span className="ml-auto text-muted text-xs group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div className="p-4 pt-0 space-y-4">
+                        <SensitivityMatrix financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
+                        <ValuationEngine company={company} financials={financials} assumptions={assumptions} />
+                        <ScenarioBuilder company={company} financials={financials} />
+                      </div>
+                    </details>
                   </>
                 )}
 
@@ -781,9 +801,6 @@ export default function Home() {
                 {/* ── VIEW: PEERS ── */}
                 {activeView === 'valuation' && company && financials.length >= 3 && (
                   <ROBUScoreCard company={company} financials={financials} />
-                )}
-                {activeView === 'valuation' && company && financials.length > 0 && (
-                  <ScenarioBuilder company={company} financials={financials} />
                 )}
                 {activeView === 'valuation' && company && (
                   <AnnouncementsFeed company={company} />

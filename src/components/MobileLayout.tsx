@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users,
@@ -105,7 +105,8 @@ function BottomNav({
       className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="bg-card backdrop-blur-xl border-t border-border flex">
+      <div className="bg-card backdrop-blur-xl border-t border-border flex justify-center">
+        <div className="flex w-full max-w-md">
         {tabs.map(({ id, label, icon }) => {
           const disabled = id === 'stock' && !hasCompany;
           const isOn = active === id;
@@ -124,6 +125,7 @@ function BottomNav({
             </button>
           );
         })}
+        </div>
       </div>
     </nav>
   );
@@ -329,7 +331,7 @@ function HomeView({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-primary">{s.title}</p>
-              <p className="text-[11px] text-muted mt-0.5 truncate">{s.desc}</p>
+              <p className="text-[11px] text-muted mt-0.5 leading-snug">{s.desc}</p>
             </div>
             <ChevronRight size={15} className="text-muted/40 flex-shrink-0" />
           </button>
@@ -372,17 +374,18 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
   const pct = high > low ? Math.max(2, Math.min(98, ((company.currentPrice - low) / (high - low)) * 100)) : 50;
   const latest = financials.length > 0 ? financials[financials.length - 1] : null;
 
+  const has52W = low > 0 && high > 0;
   const stats = [
     { label: 'Market Cap',    value: fmt(company.marketCap) },
-    { label: 'P/E Ratio',    value: `${company.pe.toFixed(1)}x`,             color: 'text-gold' },
-    { label: 'P/B Ratio',    value: `${company.pb.toFixed(1)}x` },
+    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-gold' : 'text-muted' },
+    { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
     { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
     { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
-    { label: 'Div Yield',    value: `${company.dividendYield.toFixed(2)}%` },
+    { label: 'Div Yield',    value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
   ];
 
   return (
-    <div className="px-4 pt-4 pb-32 space-y-3">
+    <div className="px-4 pt-4 pb-32 space-y-3 max-w-2xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
       {/* Price card */}
@@ -404,15 +407,19 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
           <span>({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)</span>
           <span className="text-xs text-muted font-normal">today</span>
         </div>
-        <div className="flex justify-between text-[10px] text-muted mb-1.5 gap-2">
-          <span className="truncate">52W Low ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-          <span className="flex-shrink-0">52W High ₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-        </div>
-        <div className="relative h-2 bg-border rounded-full overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
-          <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
-            style={{ left: `calc(${pct}% - 7px)` }} />
-        </div>
+        {has52W && (
+          <>
+            <div className="flex justify-between text-[10px] text-muted mb-1.5 gap-2">
+              <span className="truncate">52W Low ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+              <span className="flex-shrink-0">52W High ₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="relative h-2 bg-border rounded-full overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
+              <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
+                style={{ left: `calc(${pct}% - 7px)` }} />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Stats */}
@@ -503,7 +510,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   const sectorProfile = getCompanyProfile(company);
 
   return (
-    <div className="px-4 pt-4 pb-32 space-y-4">
+    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
       <WealthProjection company={company} financials={financials} assumptions={assumptions} />
@@ -597,7 +604,7 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company) return null;
   return (
-    <div className="px-4 pt-4 pb-32 space-y-4">
+    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full">
       <AIOverview company={company} financials={financials} />
       <HistoricalValuationChart company={company} />
       <IndustryBenchmarks company={company} financials={financials} />
@@ -662,6 +669,15 @@ export default function MobileLayout({
 
   const mountedMain  = useRef<Set<MainTab>>(new Set<MainTab>(['home']));
   const mountedStock = useRef<Set<StockTab>>(new Set<StockTab>(['overview']));
+
+  // Shared links (?symbol=X) must open the stock directly, like on desktop
+  useEffect(() => {
+    if (company && selectedSymbol && mainTab === 'home') {
+      mountedMain.current.add('stock');
+      setMainTab('stock');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company?.symbol]);
 
   function handleSelect(symbol: string) {
     onSelect(symbol);

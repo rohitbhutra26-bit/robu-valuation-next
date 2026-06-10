@@ -1,13 +1,16 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Company } from '@/lib/types';
+import { Company, FinancialYear } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
+import { redFlags } from '@/lib/advancedModels';
 import { Bookmark, Briefcase } from '@/lib/icons';
 import { slideDown } from '@/lib/animations';
 
 interface CompanyHeaderProps {
   company: Company;
+  financials?: FinancialYear[];
   isWatchlisted?: boolean;
   onWatchlistToggle?: () => void;
   isInPortfolio?: boolean;
@@ -21,10 +24,44 @@ function formatCr(value: number): string {
   return `₹${value.toLocaleString('en-IN')} Cr`;
 }
 
-export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggle, isInPortfolio, onPortfolioToggle }: CompanyHeaderProps) {
+export default function CompanyHeader({ company, financials, isWatchlisted, onWatchlistToggle, isInPortfolio, onPortfolioToggle }: CompanyHeaderProps) {
   const isPositive = company.changePercent >= 0;
   const smartProfile = getCompanyProfile(company);
   const smartSectorLabel = smartProfile.sectorLabel;
+  const has52W = company.week52Low > 0 && company.week52High > 0;
+
+  // Red-flag count badge — danger visible without scrolling
+  const flagSummary = useMemo(() => {
+    if (!financials?.length) return null;
+    try {
+      const r = redFlags(financials, company, smartProfile.model);
+      return { fails: r.failCount, warns: r.warnCount };
+    } catch { return null; }
+  }, [financials, company, smartProfile.model]);
+
+  function scrollToFlags() {
+    document.getElementById('red-flags-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Metric chip with semantic color + plain meaning
+  const chips: { label: string; value: string; tone?: 'gain' | 'gold' | 'loss' }[] = [
+    { label: 'Mkt Cap', value: formatCr(company.marketCap) },
+    { label: 'P/E', value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)' },
+    { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
+    {
+      label: 'ROE',
+      value: `${company.roe.toFixed(1)}%`,
+      tone: company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'gold' : 'loss',
+    },
+    {
+      label: 'D/E',
+      value: `${company.debtToEquity.toFixed(2)}x`,
+      tone: company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'gold' : 'loss',
+    },
+    { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
+  ];
+
+  const toneClass = { gain: 'text-gain', gold: 'text-gold', loss: 'text-loss' };
 
   return (
     <motion.div
@@ -47,6 +84,26 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
             <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded">
               NSE
             </span>
+            {/* Red-flag badge — click scrolls to the full checklist */}
+            {flagSummary && (
+              <button
+                onClick={scrollToFlags}
+                title="See the full red-flag checklist"
+                className={`text-xs px-2 py-0.5 rounded border font-semibold transition-all hover:opacity-80 ${
+                  flagSummary.fails > 0
+                    ? 'bg-loss/10 text-loss border-loss/30'
+                    : flagSummary.warns > 0
+                    ? 'bg-gold/10 text-gold border-gold/30'
+                    : 'bg-gain/10 text-gain border-gain/30'
+                }`}
+              >
+                {flagSummary.fails > 0
+                  ? `⚠ ${flagSummary.fails} red flag${flagSummary.fails === 1 ? '' : 's'}`
+                  : flagSummary.warns > 0
+                  ? `${flagSummary.warns} caution${flagSummary.warns === 1 ? '' : 's'}`
+                  : '✓ health checks pass'}
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <h1 className="text-xl font-bold text-primary leading-tight">{company.name}</h1>
@@ -91,41 +148,29 @@ export default function CompanyHeader({ company, isWatchlisted, onWatchlistToggl
               {isPositive ? '+' : ''}{company.changePercent.toFixed(2)}%
             </span>
           </div>
-          <p className="text-xs text-muted mt-0.5 whitespace-nowrap">
-            52W: ₹{company.week52Low.toLocaleString('en-IN')} – ₹{company.week52High.toLocaleString('en-IN')}
-          </p>
+          {has52W && (
+            <p className="text-xs text-muted mt-0.5 whitespace-nowrap">
+              52W: ₹{company.week52Low.toLocaleString('en-IN')} – ₹{company.week52High.toLocaleString('en-IN')}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">Mkt Cap</span>
-          <span className="text-xs font-semibold text-primary font-mono">{formatCr(company.marketCap)}</span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">P/E</span>
-          <span className="text-xs font-semibold text-primary font-mono">{company.pe.toFixed(1)}x</span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">P/B</span>
-          <span className="text-xs font-semibold text-primary font-mono">{company.pb.toFixed(1)}x</span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">ROE</span>
-          <span className={`text-xs font-semibold font-mono ${company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss'}`}>
-            {company.roe.toFixed(1)}%
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">D/E</span>
-          <span className={`text-xs font-semibold font-mono ${company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}`}>
-            {company.debtToEquity.toFixed(2)}x
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-          <span className="text-[11px] text-muted font-medium">Div Yield</span>
-          <span className="text-xs font-semibold text-primary font-mono">{company.dividendYield.toFixed(2)}%</span>
-        </div>
+      <div className="mt-4 flex flex-wrap gap-2 items-center">
+        {chips.map(c => (
+          <div key={c.label} className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
+            <span className="text-[11px] text-muted font-medium">{c.label}</span>
+            <span className={`text-xs font-semibold font-mono ${c.tone ? toneClass[c.tone] : 'text-primary'}`}>
+              {c.value}
+            </span>
+          </div>
+        ))}
+        {/* Color legend — one glance teaches the whole app's color language */}
+        <span className="text-[10px] text-muted/70 ml-auto hidden sm:flex items-center gap-2 flex-shrink-0">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gain inline-block" />good</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />okay</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-loss inline-block" />weak</span>
+        </span>
       </div>
     </motion.div>
   );

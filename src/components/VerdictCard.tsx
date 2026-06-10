@@ -6,6 +6,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
+import { generateInsight } from '@/lib/aiInsight';
 import { scaleIn } from '@/lib/animations';
 
 interface Props {
@@ -82,23 +83,14 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         >
           <verdict.Icon size={18} className={verdict.color} />
         </motion.div>
-        <div className="flex-1 overflow-hidden">
-          <p className={`text-sm font-semibold ${verdict.color} leading-tight truncate`}>{verdict.label}</p>
-          <p className="text-xs text-muted mt-0.5 leading-snug truncate">{verdict.sub}</p>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-semibold ${verdict.color} leading-tight`}>{verdict.label}</p>
+          <p className="text-xs text-muted mt-0.5 leading-snug">{verdict.sub}</p>
         </div>
-        <div className="flex-shrink-0 text-right overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={upsideLabel}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className={`text-sm font-bold font-mono ${verdict.color} whitespace-nowrap`}
-            >
-              {upsideLabel}
-            </motion.p>
-          </AnimatePresence>
+        <div className="flex-shrink-0 text-right">
+          <p className={`text-sm font-bold font-mono ${verdict.color} whitespace-nowrap`}>
+            {upsideLabel}
+          </p>
         </div>
       </div>
 
@@ -122,6 +114,22 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         <span className="font-mono text-primary">
           ₹{current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
         </span>
+        {(() => {
+          try {
+            const conf = generateInsight(company, financials).confidence;
+            const cls = conf === 'High' ? 'text-gain border-gain/30 bg-gain/10'
+                      : conf === 'Medium' ? 'text-gold border-gold/30 bg-gold/10'
+                      : 'text-loss border-loss/30 bg-loss/10';
+            return (
+              <span
+                className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded border ${cls}`}
+                title="How much the different valuation methods agree with each other"
+              >
+                {conf} confidence
+              </span>
+            );
+          } catch { return null; }
+        })()}
       </div>
     </motion.div>
   );

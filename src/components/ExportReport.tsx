@@ -44,7 +44,7 @@ const FAINT  = '#9ca3af';
 const GOLD   = '#b45309';
 const TERRA  = '#c2410c';
 const CREAM  = '#fffbeb';
-const LINE   = '#e5e7eb';
+const LINE   = '#ececec';
 const GAIN   = '#16a34a';
 const LOSS   = '#dc2626';
 const PAPER  = '#fafafa';
@@ -70,7 +70,7 @@ interface HistStats { min: number; max: number; median: number; p25: number; p75
 
 function Brand({ company, page }: { company: Company; page: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '8px', marginBottom: '18px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '10px', marginBottom: '26px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '14px' }}>R</div>
         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TERRA }}>Robu Terminal</span>
@@ -85,16 +85,16 @@ function Brand({ company, page }: { company: Company; page: string }) {
 
 function SecTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
-    <div style={{ marginBottom: '14px' }}>
-      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: '2px' }}>{kicker}</div>
-      <div style={{ fontSize: '19px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK }}>{title}</div>
+    <div style={{ margin: '4px 0 16px' }}>
+      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: GOLD, marginBottom: '4px' }}>{kicker}</div>
+      <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
     </div>
   );
 }
 
 function Card({ children, accent, style }: { children: React.ReactNode; accent?: string; style?: React.CSSProperties }) {
   return (
-    <div className="pr-keep" style={{ background: '#fff', border: `1px solid ${accent || LINE}`, borderRadius: '10px', padding: '12px 14px', ...style }}>
+    <div className="pr-keep" style={{ background: '#fff', border: `1px solid ${accent || LINE}`, borderRadius: '12px', padding: '14px 16px', ...style }}>
       {children}
     </div>
   );
@@ -255,7 +255,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
           </div>
 
           {/* Verdict banner */}
-          <div className="pr-keep" style={{ padding: '14px 18px', background: vBg, border: `2px solid ${vColor}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <div className="pr-keep" style={{ padding: '18px 22px', background: vBg, border: `2px solid ${vColor}`, borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: vColor, fontFamily: 'Georgia, serif' }}>{verdictLabel}</div>
               <div style={{ fontSize: '11px', color: MUTED, marginTop: '3px' }}>
@@ -270,7 +270,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
           </div>
 
           {/* ROBU score */}
-          <div className="pr-keep" style={{ display: 'flex', gap: '14px', marginBottom: '14px' }}>
+          <div className="pr-keep" style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>
             <Card accent={GOLD} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: CREAM }}>
               <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Robu score</div>
               <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Georgia, serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
@@ -289,7 +289,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
           </div>
 
           {/* Key metrics */}
-          <div className="pr-keep" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px' }}>
+          <div className="pr-keep" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '18px' }}>
             {[
               { label: 'Market cap',  value: company.marketCap >= 100000 ? `₹${(company.marketCap / 100000).toFixed(1)}L Cr` : `₹${Math.round(company.marketCap).toLocaleString('en-IN')} Cr` },
               { label: 'P/E',         value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—' },
@@ -300,9 +300,9 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               { label: 'Div yield',   value: `${company.dividendYield.toFixed(2)}%` },
               { label: 'EPS',         value: company.eps ? `₹${company.eps.toFixed(1)}` : '—' },
             ].map(m => (
-              <div key={m.label} style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: '8px', padding: '9px', textAlign: 'center' }}>
-                <div style={{ fontSize: '9px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>{m.label}</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'monospace' }}>{m.value}</div>
+              <div key={m.label} style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: '10px', padding: '12px 8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '9px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{m.label}</div>
+                <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'monospace' }}>{m.value}</div>
               </div>
             ))}
           </div>

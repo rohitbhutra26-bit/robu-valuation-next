@@ -115,7 +115,9 @@ export default function PriceChart({ company, financials = [] }: Props) {
       const upColor   = '#22c55e';
       const downColor = '#ef4444';
       const isMobile  = window.innerWidth < 640;
+      const isTouch   = window.matchMedia('(pointer: coarse)').matches;
       const chartH    = isMobile ? 300 : 460;
+      container.style.touchAction = 'pan-y';   // let vertical swipes scroll the page
 
       const chart = createChart(container, {
         width:  container.clientWidth,
@@ -142,8 +144,14 @@ export default function PriceChart({ company, financials = [] }: Props) {
           fixLeftEdge: true,
           fixRightEdge: true,
         },
-        handleScroll: { mouseWheel: true, pressedMouseMove: true },
-        handleScale:  { mouseWheel: true, pinch: true },
+        // On touch devices the chart must NOT capture swipes — otherwise the
+        // page gets stuck when the user tries to scroll past the chart.
+        handleScroll: isTouch
+          ? { mouseWheel: false, pressedMouseMove: false, horzTouchDrag: false, vertTouchDrag: false }
+          : { mouseWheel: true, pressedMouseMove: true },
+        handleScale: isTouch
+          ? { mouseWheel: false, pinch: false, axisPressedMouseMove: false }
+          : { mouseWheel: true, pinch: true },
       });
 
       // Candlestick series

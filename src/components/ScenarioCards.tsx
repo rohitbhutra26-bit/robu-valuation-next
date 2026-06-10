@@ -6,6 +6,7 @@ import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
 import { getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
 import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
+import { buildScenarioConfigs } from '@/lib/scenarioEngine';
 import Tooltip from '@/components/Tooltip';
 
 interface ScenarioCardsProps {
@@ -34,45 +35,15 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
   const profile  = getCompanyProfile(company);
   const years    = assumptions.years;
 
-  // ── Intelligence upgrade: company-specific volatility-driven deltas ───────
-  // sigma = std deviation of this company's historical revenue growth.
-  // A bank with σ=3% gets tight spreads; a steel co with σ=22% gets wide ones.
-  const sigma    = revenueVolatility(financials);
-  const deltas   = getDynamicDeltas(profile, sigma);
+  // Display-only context (header badges) — config math lives in the shared engine
+  const sigma   = revenueVolatility(financials);
+  const deltas  = getDynamicDeltas(profile, sigma);
+  const quality = earningsQualityScore(financials);
 
-  // ── Earnings quality: high-quality earners get a slight multiple premium ──
-  const quality  = earningsQualityScore(financials);
-  // Apply quality multiplier to exit multiple in Bear and Bull only
-  // (Base stays exactly as user set it, Bear/Bull get quality-adjusted)
-  const qualAdjMultiple = assumptions.exitMultiple * quality.multiplier;
-
-  // ── Build three scenario configs ─────────────────────────────────────────
-  const configs: Omit<Scenario, 'fairValue' | 'upside' | 'cagr'>[] = [
-    {
-      name: 'Bear',
-      probability: 25,
-      color: '#EF4444',
-      growthRate:       Math.max(assumptions.revenueGrowthRate + deltas.bearGrowthDelta,   1),
-      marginAssumption: Math.max(assumptions.netMarginAssumption + deltas.bearMarginDelta, 1),
-      exitMultiple:     Math.max(qualAdjMultiple + deltas.bearMultipleDelta, profile.exitMultipleMin),
-    },
-    {
-      name: 'Base',
-      probability: 50,
-      color: '#3b82f6',
-      growthRate:       assumptions.revenueGrowthRate,
-      marginAssumption: assumptions.netMarginAssumption,
-      exitMultiple:     assumptions.exitMultiple,
-    },
-    {
-      name: 'Bull',
-      probability: 25,
-      color: '#10B981',
-      growthRate:       assumptions.revenueGrowthRate + deltas.bullGrowthDelta,
-      marginAssumption: assumptions.netMarginAssumption + deltas.bullMarginDelta,
-      exitMultiple:     Math.min(qualAdjMultiple + deltas.bullMultipleDelta, profile.exitMultipleMax),
-    },
-  ];
+  // ── Shared scenario engine — identical Bear/Base/Bull everywhere ──────────
+  // (cards, ₹1L wealth table, and the PDF report can never disagree)
+  const configs: Omit<Scenario, 'fairValue' | 'upside' | 'cagr'>[] =
+    buildScenarioConfigs(company, financials, assumptions);
 
   // ── Run sector-appropriate model for each scenario ────────────────────────
   const scenarios: Scenario[] = configs.map(cfg => {
