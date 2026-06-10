@@ -404,11 +404,19 @@ input[type='number'] { -moz-appearance: textfield; }
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print {
-  header, nav, footer, .no-print,
-  [class*="sticky"], [class*="fixed"] { display: none !important; }
+  /* Hide the ENTIRE app — only the print report is visible on paper */
+  body * { visibility: hidden !important; }
+  #print-report, #print-report * { visibility: visible !important; }
   .print-only { display: block !important; }
+  #print-report {
+    display: block !important;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+  }
   body { background: #fff !important; color: #111 !important; font-family: Georgia, serif !important; font-size: 12px; }
-  #print-report { display: block !important; }
-  @page { margin: 20mm; size: A4 portrait; }
+  @page { margin: 14mm; size: A4 portrait; }
+  .pr-chapter { page-break-before: always; }
+  .pr-keep { page-break-inside: avoid; }
 }
 .print-only { display: none; }

@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel, pegModel, earningsYieldModel, earningsQualityScore } from '@/lib/forecastUtils';
 import { redFlags, monteCarloFairValue, reverseDcfVerdict, FlagStatus } from '@/lib/advancedModels';
 import { buildScenarioConfigs, fmtINR } from '@/lib/scenarioEngine';
+import { computeROBUScore } from '@/lib/robuScore';
+import { generateInsight } from '@/lib/aiInsight';
 import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
 import { Download } from '@/lib/icons';
 
@@ -14,393 +17,645 @@ interface ExportReportProps {
   assumptions: ValuationAssumptions;
 }
 
-export default function ExportReport({ company, financials, assumptions }: ExportReportProps) {
-  function handlePrint() {
-    window.print();
-  }
-
+export default function ExportReport(_props: ExportReportProps) {
   return (
     <button
-      onClick={handlePrint}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-muted border border-border hover:text-gold hover:border-gold/30 hover:bg-gold/5 transition-all"
+      onClick={() => window.print()}
+      className="group flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-terminal transition-all shadow-sm"
+      title="Download the full multi-page stock report as PDF"
     >
-      <Download size={13} />
-      Export PDF
+      <Download size={14} />
+      <span className="leading-tight text-left">
+        Download full
+        <span className="block font-serif text-[13px] tracking-wide">STOCK REPORT</span>
+      </span>
     </button>
   );
 }
 
-// ─── Shared print styles ───────────────────────────────────────────────────────
-const S = {
-  h2: { fontSize: '15px', fontWeight: 700, borderBottom: '2px solid #d97706', paddingBottom: '6px', marginBottom: '12px', letterSpacing: '0.3px' } as const,
-  section: { marginBottom: '22px', pageBreakInside: 'avoid' } as const,
-  cell: { padding: '6px 8px', textAlign: 'right' as const, fontFamily: 'monospace' },
-  small: { fontSize: '10px', color: '#888' },
-};
+// ═══════════════════════════════════════════════════════════════════════════
+//  ROBU PRINT REPORT — editorial serif + terracotta, Trendlyne-grade depth
+// ═══════════════════════════════════════════════════════════════════════════
+
+const INK    = '#1a1a1a';
+const MUTED  = '#6b7280';
+const FAINT  = '#9ca3af';
+const GOLD   = '#b45309';
+const TERRA  = '#c2410c';
+const CREAM  = '#fffbeb';
+const LINE   = '#e5e7eb';
+const GAIN   = '#16a34a';
+const LOSS   = '#dc2626';
+const PAPER  = '#fafafa';
 
 const FLAG_COLORS: Record<FlagStatus, { bg: string; fg: string; icon: string }> = {
-  pass: { bg: '#f0fdf4', fg: '#16a34a', icon: '✓' },
-  warn: { bg: '#fffbeb', fg: '#b45309', icon: '⚠' },
-  fail: { bg: '#fef2f2', fg: '#dc2626', icon: '✗' },
-  na:   { bg: '#f9fafb', fg: '#9ca3af', icon: '—' },
+  pass: { bg: '#f0fdf4', fg: GAIN, icon: '✓' },
+  warn: { bg: CREAM,     fg: GOLD, icon: '⚠' },
+  fail: { bg: '#fef2f2', fg: LOSS, icon: '✗' },
+  na:   { bg: PAPER,     fg: FAINT, icon: '—' },
 };
 
 const HORIZONS = [3, 5, 7, 10];
 
-// ─── Print-only report component (rendered hidden, shown on print) ─────────────
+interface Candle { time: string; close: number }
+interface Peer {
+  symbol: string; name?: string; currentPrice?: number; pe?: number; pb?: number;
+  roe?: number; de?: number; netMargin?: number; marketCap?: number; isSelf?: boolean;
+}
+interface Quarter { quarter: string; revenue: number; pat: number; opm: number; eps: number }
+interface HistStats { min: number; max: number; median: number; p25: number; p75: number; mean: number }
+
+// ─── Tiny building blocks ─────────────────────────────────────────────────────
+
+function Brand({ company, page }: { company: Company; page: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '8px', marginBottom: '18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '14px' }}>R</div>
+        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TERRA }}>Robu Terminal</span>
+        <span style={{ fontSize: '10px', color: FAINT }}>· Equity Research</span>
+      </div>
+      <div style={{ fontSize: '10px', color: MUTED, fontFamily: 'monospace' }}>
+        {company.symbol} · {page}
+      </div>
+    </div>
+  );
+}
+
+function SecTitle({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <div style={{ marginBottom: '14px' }}>
+      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: '2px' }}>{kicker}</div>
+      <div style={{ fontSize: '19px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK }}>{title}</div>
+    </div>
+  );
+}
+
+function Card({ children, accent, style }: { children: React.ReactNode; accent?: string; style?: React.CSSProperties }) {
+  return (
+    <div className="pr-keep" style={{ background: '#fff', border: `1px solid ${accent || LINE}`, borderRadius: '10px', padding: '12px 14px', ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function Bar({ value, color, height = 7 }: { value: number; color: string; height?: number }) {
+  return (
+    <div style={{ background: '#f3f4f6', borderRadius: '99px', height: `${height}px`, width: '100%' }}>
+      <div style={{ background: color, borderRadius: '99px', height: '100%', width: `${Math.min(Math.max(value, 0), 100)}%` }} />
+    </div>
+  );
+}
+
+// ─── Main printable report ────────────────────────────────────────────────────
+
 export function PrintableReport({ company, financials, assumptions }: ExportReportProps) {
+  const [candles, setCandles]     = useState<Candle[]>([]);
+  const [peers, setPeers]         = useState<Peer[]>([]);
+  const [quarters, setQuarters]   = useState<Quarter[]>([]);
+  const [peStats, setPeStats]     = useState<HistStats | null>(null);
+
+  useEffect(() => {
+    if (!company?.symbol) return;
+    let dead = false;
+    const sym = company.symbol;
+    const grab = async (url: string) => {
+      try { const r = await fetch(url); return r.ok ? await r.json() : null; } catch { return null; }
+    };
+    (async () => {
+      const [oh, pe, qt, hi] = await Promise.all([
+        grab(`/api/ohlc/${sym}`),
+        grab(`/api/peers/${sym}`),
+        grab(`/api/quarterly/${sym}`),
+        grab(`/api/historical/${sym}`),
+      ]);
+      if (dead) return;
+      const arr = Array.isArray(oh) ? oh : (oh?.candles ?? []);
+      setCandles(arr.filter((c: Candle) => c?.close > 0));
+      const plist = Array.isArray(pe) ? pe : (pe?.peers ?? []);
+      setPeers(plist);
+      setQuarters(Array.isArray(qt) ? qt.slice(0, 6) : []);
+      setPeStats(hi?.stats?.pe ?? null);
+    })();
+    return () => { dead = true; };
+  }, [company?.symbol]);
+
   if (!financials.length) return null;
 
   const profile = getCompanyProfile(company);
-  const bench = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
-  const latest = financials[financials.length - 1];
+  const bench   = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
+  const latest  = financials[financials.length - 1];
   const quality = earningsQualityScore(financials);
+  const robu    = computeROBUScore(financials, company);
+  const insight = generateInsight(company, financials);
 
-  // ── Valuation methods ──
   const primaryResult = runPrimaryModel(
     profile.model, financials, company,
     assumptions.revenueGrowthRate, assumptions.netMarginAssumption,
     assumptions.exitMultiple, assumptions.years,
   );
   const pegResult = pegModel(financials, company);
-  const eyResult = earningsYieldModel(financials, company);
+  const eyResult  = earningsYieldModel(financials, company);
 
-  const allFVs = [primaryResult.fairValue, pegResult.fairValue, eyResult.fairValue].filter(v => v > 0);
-  const compositeFV = allFVs.length > 0 ? allFVs.reduce((a, b) => a + b, 0) / allFVs.length : 0;
+  const allFVs      = [primaryResult.fairValue, pegResult.fairValue, eyResult.fairValue].filter(v => v > 0);
+  const compositeFV = allFVs.length ? allFVs.reduce((a, b) => a + b, 0) / allFVs.length : 0;
   const compositeUp = compositeFV > 0 ? ((compositeFV / company.currentPrice) - 1) * 100 : 0;
 
-  // ── Verdict ──
   const verdictLabel =
-    compositeUp > 30  ? 'Looks very undervalued' :
-    compositeUp > 10  ? 'Looks undervalued' :
+    compositeUp > 30 ? 'Looks very undervalued' :
+    compositeUp > 10 ? 'Looks undervalued' :
     compositeUp >= -10 ? 'Fairly priced' :
     compositeUp >= -30 ? 'Looks overvalued' : 'Looks very expensive';
-  const verdictColor = compositeUp > 10 ? '#16a34a' : compositeUp >= -10 ? '#b45309' : '#dc2626';
-  const verdictBg    = compositeUp > 10 ? '#f0fdf4' : compositeUp >= -10 ? '#fffbeb' : '#fef2f2';
+  const vColor = compositeUp > 10 ? GAIN : compositeUp >= -10 ? GOLD : LOSS;
+  const vBg    = compositeUp > 10 ? '#f0fdf4' : compositeUp >= -10 ? CREAM : '#fef2f2';
 
-  // ── Scenarios + wealth projection (shared engine) ──
   const scenarioConfigs = buildScenarioConfigs(company, financials, assumptions);
   const scenarios = scenarioConfigs.map(cfg => {
     const r = runPrimaryModel(profile.model, financials, company, cfg.growthRate, cfg.marginAssumption, cfg.exitMultiple, assumptions.years);
     const fv = Math.max(r.fairValue, 0);
     return { ...cfg, fairValue: fv, upside: fv > 0 ? ((fv / company.currentPrice) - 1) * 100 : 0 };
   });
-  const wealthRows = scenarioConfigs.map(cfg => {
-    const cells = HORIZONS.map(h => {
+  const wealthRows = scenarioConfigs.map(cfg => ({
+    name: cfg.name, emoji: cfg.emoji, color: cfg.color,
+    cells: HORIZONS.map(h => {
       const r = runPrimaryModel(profile.model, financials, company, cfg.growthRate, cfg.marginAssumption, cfg.exitMultiple, h);
       const mult = r.fairValue > 0 ? r.fairValue / company.currentPrice : 0;
-      const cagr = mult > 0 ? (Math.pow(mult, 1 / h) - 1) * 100 : 0;
-      return { years: h, amount: 100000 * mult, cagr };
-    });
-    return { name: cfg.name, emoji: cfg.emoji, color: cfg.color, cells };
-  });
+      return { years: h, amount: 100000 * mult, cagr: mult > 0 ? (Math.pow(mult, 1 / h) - 1) * 100 : 0 };
+    }),
+  }));
 
-  // ── Risk & proof engines ──
   const flags = redFlags(financials, company, profile.model);
-  const mc = monteCarloFairValue(
-    profile.model, financials, company,
-    assumptions.revenueGrowthRate, assumptions.netMarginAssumption,
-    assumptions.exitMultiple, assumptions.years,
-  );
-  const rdcf = reverseDcfVerdict(financials, company, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
+  const mc    = monteCarloFairValue(profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
+  const rdcf  = reverseDcfVerdict(financials, company, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
 
-  // ── Revenue / PAT trend chart (inline SVG, prints reliably) ──
+  // Price chart geometry
+  const PC_W = 700, PC_H = 150;
+  const closes = candles.map(c => c.close);
+  const pcMin = closes.length ? Math.min(...closes) : 0;
+  const pcMax = closes.length ? Math.max(...closes) : 1;
+  const pricePath = closes.length > 1
+    ? closes.map((c, i) => {
+        const x = (i / (closes.length - 1)) * PC_W;
+        const y = PC_H - ((c - pcMin) / Math.max(pcMax - pcMin, 0.01)) * (PC_H - 14) - 7;
+        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ')
+    : '';
+  const periodReturn = closes.length > 1 ? ((closes[closes.length - 1] / closes[0]) - 1) * 100 : 0;
+
+  // Revenue/PAT chart geometry
   const chartYears = financials.slice(-8);
   const maxRev = Math.max(...chartYears.map(f => f.revenue), 1);
-  const CW = 720, CH = 150, PAD = 8;
-  const bw = (CW - PAD * 2) / chartYears.length;
+  const RC_W = 700, RC_H = 150, RC_PAD = 8;
+  const bw = (RC_W - RC_PAD * 2) / Math.max(chartYears.length, 1);
+
+  // P/E zone gauge
+  const peNow = company.pe;
+  const peZone = peStats && peStats.max > peStats.min && peNow > 0
+    ? Math.min(Math.max((peNow - peStats.min) / (peStats.max - peStats.min), 0), 1)
+    : null;
 
   const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const th: React.CSSProperties = { padding: '6px 8px', textAlign: 'right', borderBottom: `1px solid ${LINE}`, fontWeight: 600, color: MUTED, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' };
+  const td: React.CSSProperties = { padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', fontSize: '11px' };
 
   return (
     <div className="print-only" style={{ display: 'none' }}>
       <div id="print-report">
-        <div style={{ fontFamily: 'Georgia, serif', maxWidth: '800px', margin: '0 auto', padding: '32px', color: '#111' }}>
+        <div style={{ fontFamily: 'Georgia, serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
 
-          {/* ── Header ── */}
-          <div style={{ borderBottom: '3px solid #d97706', paddingBottom: '16px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ fontSize: '11px', color: '#92400e', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '4px' }}>
-                  Robu Terminal · Equity Research
-                </div>
-                <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>{company.name}</h1>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#555' }}>
-                  {company.symbol} · {profile.sectorLabel} · NSE
-                </p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'monospace' }}>
-                  ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                </div>
-                <div style={{ fontSize: '12px', color: company.changePercent >= 0 ? '#16a34a' : '#dc2626' }}>
-                  {company.changePercent >= 0 ? '+' : ''}{company.changePercent.toFixed(2)}% today
-                </div>
-                <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>Report date: {today}</div>
-              </div>
-            </div>
-          </div>
+          {/* ════════ CHAPTER 1 · COVER & VERDICT ════════ */}
+          <Brand company={company} page={`Report · ${today}`} />
 
-          {/* ── 1. Verdict ── */}
-          <div style={{ ...S.section, padding: '14px 16px', background: verdictBg, border: `2px solid ${verdictColor}`, borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: verdictColor }}>{verdictLabel}</div>
-              <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>
-                Composite of {allFVs.length} valuation methods · {assumptions.years}-year horizon · {flags.failCount} red flag{flags.failCount === 1 ? '' : 's'}
-              </div>
+              <h1 style={{ fontSize: '27px', fontWeight: 700, margin: 0, lineHeight: 1.15 }}>{company.name}</h1>
+              <p style={{ margin: '5px 0 0', fontSize: '12px', color: MUTED }}>
+                {company.symbol} · {company.industry || profile.sectorLabel} · NSE · {profile.exitMultipleLabel} model
+              </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '11px', color: '#888' }}>Fair value (composite)</div>
-              <div style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'monospace' }}>₹{compositeFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', color: verdictColor }}>
-                {compositeUp >= 0 ? '+' : ''}{compositeUp.toFixed(1)}% vs price
+              <div style={{ fontSize: '26px', fontWeight: 700, fontFamily: 'monospace' }}>
+                ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </div>
+              <div style={{ fontSize: '11px', color: company.changePercent >= 0 ? GAIN : LOSS, fontFamily: 'monospace' }}>
+                {company.changePercent >= 0 ? '▲' : '▼'} {Math.abs(company.changePercent).toFixed(2)}% today
+              </div>
+              {company.week52Low > 0 && (
+                <div style={{ fontSize: '10px', color: FAINT, marginTop: '2px', fontFamily: 'monospace' }}>
+                  52W: ₹{Math.round(company.week52Low).toLocaleString('en-IN')} – ₹{Math.round(company.week52High).toLocaleString('en-IN')}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* ── 2. Key metrics ── */}
-          <div style={{ ...S.section, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+          {/* Verdict banner */}
+          <div className="pr-keep" style={{ padding: '14px 18px', background: vBg, border: `2px solid ${vColor}`, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: vColor, fontFamily: 'Georgia, serif' }}>{verdictLabel}</div>
+              <div style={{ fontSize: '11px', color: MUTED, marginTop: '3px' }}>
+                {insight.verdict} · {insight.confidence.toLowerCase()} confidence · {flags.failCount} red flag{flags.failCount === 1 ? '' : 's'} · composite of {allFVs.length} methods over {assumptions.years} years
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0, paddingLeft: '16px' }}>
+              <div style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '1px' }}>Fair value</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, fontFamily: 'monospace' }}>₹{compositeFV.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+              <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', color: vColor }}>{compositeUp >= 0 ? '+' : ''}{compositeUp.toFixed(1)}%</div>
+            </div>
+          </div>
+
+          {/* ROBU score */}
+          <div className="pr-keep" style={{ display: 'flex', gap: '14px', marginBottom: '14px' }}>
+            <Card accent={GOLD} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: CREAM }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Robu score</div>
+              <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Georgia, serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
+              <div style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, color: GOLD }}>{robu.total}/100</div>
+              <div style={{ fontSize: '10px', color: MUTED, marginTop: '4px', lineHeight: 1.4 }}>{robu.verdict}</div>
+            </Card>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '7px', justifyContent: 'center' }}>
+              {robu.dimensions.slice(0, 5).map(d => (
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '10px', color: MUTED, width: '110px', flexShrink: 0 }}>{d.name}</span>
+                  <div style={{ flex: 1 }}><Bar value={d.score} color={d.score >= 65 ? GAIN : d.score >= 40 ? GOLD : LOSS} /></div>
+                  <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, width: '60px', textAlign: 'right' }}>{d.score} · {d.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Key metrics */}
+          <div className="pr-keep" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px' }}>
             {[
-              { label: 'Market Cap',  value: company.marketCap >= 100000 ? `₹${(company.marketCap / 100000).toFixed(1)}L Cr` : `₹${company.marketCap.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr` },
+              { label: 'Market cap',  value: company.marketCap >= 100000 ? `₹${(company.marketCap / 100000).toFixed(1)}L Cr` : `₹${Math.round(company.marketCap).toLocaleString('en-IN')} Cr` },
               { label: 'P/E',         value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—' },
               { label: 'P/B',         value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
               { label: 'ROE',         value: `${company.roe.toFixed(1)}%` },
-              { label: 'EPS',         value: company.eps ? `₹${company.eps.toFixed(1)}` : '—' },
               { label: 'Debt/Equity', value: `${company.debtToEquity.toFixed(2)}x` },
-              { label: 'Div Yield',   value: `${company.dividendYield.toFixed(2)}%` },
-              { label: '52W Range',   value: company.week52Low > 0 ? `₹${Math.round(company.week52Low).toLocaleString('en-IN')}–${Math.round(company.week52High).toLocaleString('en-IN')}` : '—' },
+              { label: 'Net margin',  value: `${latest.netMargin.toFixed(1)}%` },
+              { label: 'Div yield',   value: `${company.dividendYield.toFixed(2)}%` },
+              { label: 'EPS',         value: company.eps ? `₹${company.eps.toFixed(1)}` : '—' },
             ].map(m => (
-              <div key={m.label} style={{ background: '#fafafa', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                <div style={{ fontSize: '9px', color: '#888', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{m.label}</div>
+              <div key={m.label} style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: '8px', padding: '9px', textAlign: 'center' }}>
+                <div style={{ fontSize: '9px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>{m.label}</div>
                 <div style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'monospace' }}>{m.value}</div>
               </div>
             ))}
           </div>
 
-          {/* ── 3. If you invested ₹1 lakh ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>If You Invested ₹1,00,000 Today</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+          {/* Price chart */}
+          {pricePath && (
+            <div className="pr-keep" style={{ marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Price · last {Math.round(candles.length / 250) || 1}y</span>
+                <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: periodReturn >= 0 ? GAIN : LOSS }}>
+                  {periodReturn >= 0 ? '+' : ''}{periodReturn.toFixed(1)}% over period
+                </span>
+              </div>
+              <svg width={PC_W} height={PC_H} viewBox={`0 0 ${PC_W} ${PC_H}`} style={{ display: 'block', border: `1px solid ${LINE}`, borderRadius: '8px', background: '#fff' }}>
+                <path d={pricePath} fill="none" stroke={TERRA} strokeWidth="1.8" />
+                <text x="6" y="14" fontSize="9" fill={FAINT} fontFamily="monospace">high ₹{Math.round(pcMax).toLocaleString('en-IN')}</text>
+                <text x="6" y={PC_H - 6} fontSize="9" fill={FAINT} fontFamily="monospace">low ₹{Math.round(pcMin).toLocaleString('en-IN')}</text>
+              </svg>
+            </div>
+          )}
+
+          {/* ════════ CHAPTER 2 · THE STORY ════════ */}
+          <div className="pr-chapter">
+            <Brand company={company} page="The story" />
+            <SecTitle kicker="In plain english" title="What's going on with this company?" />
+            <p style={{ fontSize: '13px', lineHeight: 1.75, color: INK, margin: '0 0 14px' }}>{insight.summary}</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <Card accent="#86efac" style={{ background: '#f0fdf4' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: GAIN, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🚀 The bull case — why it could work</div>
+                <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#14532d' }}>{insight.bull}</p>
+              </Card>
+              <Card accent="#fca5a5" style={{ background: '#fef2f2' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: LOSS, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🐻 The bear case — what could go wrong</div>
+                <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#7f1d1d' }}>{insight.bear}</p>
+              </Card>
+            </div>
+
+            <SecTitle kicker="Stress tests" title="Does the price make sense?" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              {rdcf && (
+                <Card>
+                  <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '5px' }}>Reverse DCF — what today&apos;s price assumes</div>
+                  <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                    Price implies <strong style={{ color: TERRA }}>{rdcf.impliedGrowth.toFixed(1)}%</strong> yearly growth.
+                    Delivered: <strong>{rdcf.deliveredGrowth.toFixed(1)}%</strong> over {rdcf.historyYears} yrs.
+                  </div>
+                  <div style={{ fontSize: '10px', color: MUTED, lineHeight: 1.5 }}>{rdcf.verdictText}</div>
+                </Card>
+              )}
+              {mc && (
+                <Card>
+                  <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '5px' }}>Monte Carlo — {mc.draws.toLocaleString()} simulated futures</div>
+                  <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                    Worth more than today&apos;s price in <strong style={{ color: mc.probUndervalued >= 50 ? GAIN : LOSS }}>{mc.probUndervalued.toFixed(0)}%</strong> of runs.
+                  </div>
+                  <div style={{ fontSize: '10px', color: MUTED, fontFamily: 'monospace' }}>
+                    Pessimistic ₹{Math.round(mc.p10).toLocaleString('en-IN')} · Median ₹{Math.round(mc.p50).toLocaleString('en-IN')} · Optimistic ₹{Math.round(mc.p90).toLocaleString('en-IN')}
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            <SecTitle kicker="Your money" title="If you invested ₹1,00,000 today" />
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px' }}>
               <thead>
-                <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb', color: '#555' }}>Scenario</th>
-                  {HORIZONS.map(h => (
-                    <th key={h} style={{ padding: '6px 8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb', color: '#555' }}>{h} years</th>
-                  ))}
+                <tr style={{ background: PAPER }}>
+                  <th style={{ ...th, textAlign: 'left' }}>Scenario</th>
+                  {HORIZONS.map(h => <th key={h} style={th}>{h} years</th>)}
                 </tr>
               </thead>
               <tbody>
                 {wealthRows.map(row => (
                   <tr key={row.name}>
-                    <td style={{ padding: '8px', fontWeight: 700, color: row.color }}>{row.emoji} {row.name}</td>
+                    <td style={{ padding: '8px', fontWeight: 700, color: row.color, fontSize: '12px' }}>{row.emoji} {row.name}</td>
                     {row.cells.map(c => (
-                      <td key={c.years} style={{ ...S.cell, borderBottom: '1px solid #f3f4f6' }}>
-                        <strong>{fmtINR(c.amount)}</strong>
-                        <span style={{ ...S.small, display: 'block' }}>{c.cagr >= 0 ? '+' : ''}{c.cagr.toFixed(1)}%/yr</span>
+                      <td key={c.years} style={{ ...td, borderBottom: `1px solid #f3f4f6` }}>
+                        <strong style={{ fontSize: '12px' }}>{fmtINR(c.amount)}</strong>
+                        <span style={{ display: 'block', fontSize: '9px', color: MUTED }}>{c.cagr >= 0 ? '+' : ''}{c.cagr.toFixed(1)}%/yr</span>
                       </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p style={{ ...S.small, marginTop: '6px' }}>Projections from your assumptions with growth fade built in. Dividends excluded. Not a guarantee.</p>
+            <p style={{ fontSize: '9px', color: FAINT, margin: 0 }}>Based on your assumptions with growth fade built in. Dividends excluded. Projections, not guarantees.</p>
           </div>
 
-          {/* ── 4. Valuation methods ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Valuation Summary</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* ════════ CHAPTER 3 · VALUATION ════════ */}
+          <div className="pr-chapter">
+            <Brand company={company} page="Valuation" />
+            <SecTitle kicker="Fair value" title="What is this stock actually worth?" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
               {[
-                { method: primaryResult.model, fv: primaryResult.fairValue, desc: primaryResult.desc },
-                { method: pegResult.model, fv: pegResult.fairValue, desc: pegResult.desc },
-                { method: eyResult.model, fv: eyResult.fairValue, desc: eyResult.desc },
-                { method: 'Composite Fair Value', fv: compositeFV, desc: `Average of ${allFVs.length} methods` },
+                { method: primaryResult.model, fv: primaryResult.fairValue, desc: primaryResult.desc, star: false },
+                { method: pegResult.model, fv: pegResult.fairValue, desc: pegResult.desc, star: false },
+                { method: eyResult.model, fv: eyResult.fairValue, desc: eyResult.desc, star: false },
+                { method: 'Composite fair value', fv: compositeFV, desc: `Average of ${allFVs.length} independent methods`, star: true },
               ].filter(m => m.fv > 0).map(m => {
                 const up = ((m.fv / company.currentPrice) - 1) * 100;
                 return (
-                  <div key={m.method} style={{ background: m.method === 'Composite Fair Value' ? '#fffbeb' : '#f9fafb', border: `1px solid ${m.method === 'Composite Fair Value' ? '#d97706' : '#e5e7eb'}`, borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '3px' }}>{m.method}</div>
+                  <Card key={m.method} accent={m.star ? GOLD : undefined} style={m.star ? { background: CREAM } : undefined}>
+                    <div style={{ fontSize: '10px', color: MUTED, marginBottom: '3px' }}>{m.method}</div>
                     <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'monospace' }}>
                       ₹{m.fv.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      <span style={{ fontSize: '12px', marginLeft: '8px', color: up >= 0 ? '#16a34a' : '#dc2626' }}>
-                        {up >= 0 ? '+' : ''}{up.toFixed(1)}%
-                      </span>
+                      <span style={{ fontSize: '12px', marginLeft: '8px', color: up >= 0 ? GAIN : LOSS }}>{up >= 0 ? '+' : ''}{up.toFixed(1)}%</span>
                     </div>
-                    <div style={{ ...S.small, marginTop: '3px' }}>{m.desc}</div>
-                  </div>
+                    <div style={{ fontSize: '9px', color: FAINT, marginTop: '3px', lineHeight: 1.4 }}>{m.desc}</div>
+                  </Card>
                 );
               })}
             </div>
-          </div>
 
-          {/* ── 5. Scenarios ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Bear / Base / Bull — {assumptions.years} Year Fair Value</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            <SecTitle kicker="Three futures" title={`Bear, base and bull — ${assumptions.years} year fair value`} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
               {scenarios.map(s => (
-                <div key={s.name} style={{ border: `1px solid ${s.color}`, borderRadius: '8px', padding: '10px', background: '#fff' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: s.color }}>{s.emoji} {s.name} <span style={{ fontWeight: 400, color: '#888' }}>({s.probability}%)</span></div>
-                  <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'monospace', margin: '4px 0 2px' }}>
-                    ₹{s.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                <Card key={s.name} accent={s.color}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: s.color }}>{s.emoji} {s.name} <span style={{ fontWeight: 400, color: FAINT }}>({s.probability}%)</span></div>
+                  <div style={{ fontSize: '17px', fontWeight: 700, fontFamily: 'monospace', margin: '4px 0 1px' }}>₹{s.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', color: s.upside >= 0 ? GAIN : LOSS }}>{s.upside >= 0 ? '+' : ''}{s.upside.toFixed(1)}%</div>
+                  <div style={{ fontSize: '9px', color: FAINT, marginTop: '3px' }}>{s.growthRate.toFixed(1)}% growth · {s.marginAssumption.toFixed(1)}% margin · {s.exitMultiple.toFixed(1)}x exit</div>
+                </Card>
+              ))}
+            </div>
+
+            {peStats && peZone !== null && (
+              <>
+                <SecTitle kicker="History check" title="Is today's P/E cheap or expensive vs its own past?" />
+                <Card style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: MUTED, marginBottom: '5px' }}>
+                    <span>Cheapest ever ({peStats.min}x)</span>
+                    <span>5-yr median {peStats.median}x</span>
+                    <span>Most expensive ({peStats.max}x)</span>
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'monospace', color: s.upside >= 0 ? '#16a34a' : '#dc2626' }}>
-                    {s.upside >= 0 ? '+' : ''}{s.upside.toFixed(1)}%
+                  <div style={{ position: 'relative', height: '14px', borderRadius: '99px', background: `linear-gradient(to right, #bbf7d0, #fef9c3, #fecaca)` }}>
+                    <div style={{ position: 'absolute', left: `${(peZone * 100).toFixed(1)}%`, top: '-3px', width: '4px', height: '20px', background: INK, borderRadius: '2px', transform: 'translateX(-50%)' }} />
                   </div>
-                  <div style={{ ...S.small, marginTop: '4px' }}>
-                    {s.growthRate.toFixed(1)}% growth · {s.marginAssumption.toFixed(1)}% margin · {s.exitMultiple.toFixed(1)}x exit
+                  <div style={{ fontSize: '11px', marginTop: '8px', lineHeight: 1.5 }}>
+                    Current P/E is <strong style={{ fontFamily: 'monospace' }}>{peNow.toFixed(1)}x</strong> —{' '}
+                    {peNow < peStats.p25 ? <strong style={{ color: GAIN }}>cheaper than 75% of its own history.</strong> :
+                     peNow < peStats.median ? <strong style={{ color: GAIN }}>below its 5-year median — cheaper than usual.</strong> :
+                     peNow < peStats.p75 ? <strong style={{ color: GOLD }}>around its normal range.</strong> :
+                     <strong style={{ color: LOSS }}>more expensive than 75% of its own history.</strong>}
                   </div>
+                </Card>
+              </>
+            )}
+
+            <SecTitle kicker="Inputs" title="Assumptions this report uses" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {[
+                { label: 'Revenue growth', value: `${assumptions.revenueGrowthRate}% p.a.` },
+                { label: 'Net margin', value: `${assumptions.netMarginAssumption}%` },
+                { label: 'Exit multiple', value: `${assumptions.exitMultiple}x` },
+                { label: 'Horizon', value: `${assumptions.years} years` },
+                { label: 'Earnings quality', value: `${quality.label} (${quality.score}/100)` },
+                { label: 'Model', value: profile.exitMultipleLabel },
+              ].map(a => (
+                <div key={a.label} style={{ fontSize: '11px', background: PAPER, border: `1px solid ${LINE}`, borderRadius: '6px', padding: '7px 10px' }}>
+                  <span style={{ color: MUTED }}>{a.label}: </span><strong>{a.value}</strong>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── 6. Red flags ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Red Flag Check — {flags.verdict}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          {/* ════════ CHAPTER 4 · HEALTH CHECK ════════ */}
+          <div className="pr-chapter">
+            <Brand company={company} page="Health check" />
+            <SecTitle kicker="Red flags" title={flags.verdict} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '16px' }}>
               {flags.flags.map(f => {
                 const c = FLAG_COLORS[f.status];
                 return (
-                  <div key={f.name} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', background: c.bg, borderRadius: '6px', padding: '7px 10px' }}>
-                    <span style={{ color: c.fg, fontWeight: 700, fontSize: '12px' }}>{c.icon}</span>
+                  <div key={f.name} className="pr-keep" style={{ display: 'flex', gap: '9px', alignItems: 'flex-start', background: c.bg, borderRadius: '8px', padding: '8px 11px' }}>
+                    <span style={{ color: c.fg, fontWeight: 700, fontSize: '13px', lineHeight: 1.2 }}>{c.icon}</span>
                     <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700 }}>{f.name}</span>
-                      <span style={{ fontSize: '11px', fontFamily: 'monospace', color: c.fg, marginLeft: '6px' }}>{f.value}</span>
-                      <div style={{ ...S.small, marginTop: '1px' }}>{f.note}</div>
+                      <div>
+                        <span style={{ fontSize: '11px', fontWeight: 700 }}>{f.name}</span>
+                        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: c.fg, marginLeft: '6px' }}>{f.value}</span>
+                      </div>
+                      <div style={{ fontSize: '9.5px', color: MUTED, marginTop: '1px', lineHeight: 1.45 }}>{f.note}</div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
 
-          {/* ── 7. Stress tests ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Stress Tests</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {rdcf && (
-                <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Reverse DCF — what does the price assume?</div>
-                  <div style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-                    Price implies <strong>{rdcf.impliedGrowth.toFixed(1)}%</strong> growth · company delivered{' '}
-                    <strong>{rdcf.deliveredGrowth.toFixed(1)}%</strong> over {rdcf.historyYears} yrs
-                  </div>
-                  <div style={{ ...S.small, marginTop: '4px' }}>{rdcf.verdictText}</div>
-                </div>
-              )}
-              {mc && (
-                <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Monte Carlo — {mc.draws.toLocaleString()} simulated futures</div>
-                  <div style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-                    Stock worth more than today&apos;s price in <strong>{mc.probUndervalued.toFixed(0)}%</strong> of simulations
-                  </div>
-                  <div style={{ ...S.small, marginTop: '4px' }}>
-                    Pessimistic ₹{Math.round(mc.p10).toLocaleString('en-IN')} · Median ₹{Math.round(mc.p50).toLocaleString('en-IN')} · Optimistic ₹{Math.round(mc.p90).toLocaleString('en-IN')}
-                  </div>
-                </div>
-              )}
+            <SecTitle kicker="Strength & risk" title="The two things that matter most" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <Card accent="#86efac" style={{ background: '#f0fdf4' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: GAIN, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Biggest strength</div>
+                <p style={{ fontSize: '11.5px', lineHeight: 1.6, margin: 0 }}>{robu.strengthFlag}</p>
+              </Card>
+              <Card accent="#fca5a5" style={{ background: '#fef2f2' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: LOSS, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Biggest risk</div>
+                <p style={{ fontSize: '11.5px', lineHeight: 1.6, margin: 0 }}>{robu.riskFlag}</p>
+              </Card>
             </div>
+            {robu.novelInsight && (
+              <Card accent={GOLD} style={{ background: CREAM, marginTop: '12px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>What no other tool tells you</div>
+                <p style={{ fontSize: '11.5px', lineHeight: 1.6, margin: 0 }}>{robu.novelInsight}</p>
+              </Card>
+            )}
           </div>
 
-          {/* ── 8. Revenue & profit trend (SVG bar chart) ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Revenue &amp; Profit Trend</h2>
-            <svg width={CW} height={CH + 24} viewBox={`0 0 ${CW} ${CH + 24}`} style={{ display: 'block' }}>
+          {/* ════════ CHAPTER 5 · FINANCIALS ════════ */}
+          <div className="pr-chapter">
+            <Brand company={company} page="Financials" />
+            <SecTitle kicker="Track record" title="Revenue & profit, last 8 years" />
+            <svg width={RC_W} height={RC_H + 22} viewBox={`0 0 ${RC_W} ${RC_H + 22}`} style={{ display: 'block', marginBottom: '4px' }}>
               {chartYears.map((f, i) => {
-                const revH = Math.max((f.revenue / maxRev) * (CH - 20), 2);
-                const patH = Math.max((Math.max(f.pat, 0) / maxRev) * (CH - 20), 1);
-                const x = PAD + i * bw;
+                const revH = Math.max((f.revenue / maxRev) * (RC_H - 20), 2);
+                const patH = Math.max((Math.max(f.pat, 0) / maxRev) * (RC_H - 20), 1);
+                const x = RC_PAD + i * bw;
                 return (
                   <g key={f.year}>
-                    <rect x={x + bw * 0.12} y={CH - revH} width={bw * 0.42} height={revH} fill="#fcd34d" rx="2" />
-                    <rect x={x + bw * 0.56} y={CH - patH} width={bw * 0.3} height={patH} fill="#16a34a" rx="2" />
-                    <text x={x + bw / 2} y={CH + 13} textAnchor="middle" fontSize="10" fill="#555" fontFamily="monospace">{f.year}</text>
+                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill="#fcd34d" rx="2" />
+                    <rect x={x + bw * 0.56} y={RC_H - patH} width={bw * 0.3} height={patH} fill={GAIN} rx="2" />
+                    <text x={x + bw / 2} y={RC_H + 13} textAnchor="middle" fontSize="10" fill={MUTED} fontFamily="monospace">{f.year}</text>
                   </g>
                 );
               })}
             </svg>
-            <p style={S.small}>
-              <span style={{ color: '#b45309' }}>■</span> Revenue&nbsp;&nbsp;
-              <span style={{ color: '#16a34a' }}>■</span> Net profit&nbsp;&nbsp;
-              Latest: ₹{latest.revenue.toLocaleString('en-IN')} Cr revenue, ₹{latest.pat.toLocaleString('en-IN')} Cr profit ({latest.netMargin.toFixed(1)}% margin)
+            <p style={{ fontSize: '9px', color: FAINT, margin: '0 0 14px' }}>
+              <span style={{ color: GOLD }}>■</span> Revenue&nbsp;&nbsp;<span style={{ color: GAIN }}>■</span> Net profit&nbsp;&nbsp;
+              Latest: ₹{latest.revenue.toLocaleString('en-IN')} Cr revenue · ₹{latest.pat.toLocaleString('en-IN')} Cr profit · {latest.netMargin.toFixed(1)}% margin
             </p>
-          </div>
 
-          {/* ── 9. Assumptions ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Assumptions Used</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              {[
-                { label: 'Revenue Growth', value: `${assumptions.revenueGrowthRate}% p.a.` },
-                { label: 'Net Margin', value: `${assumptions.netMarginAssumption}%` },
-                { label: 'Exit Multiple', value: `${assumptions.exitMultiple}x` },
-                { label: 'Horizon', value: `${assumptions.years} years` },
-                { label: 'Earnings Quality', value: `${quality.label} (${quality.score}/100)` },
-                { label: 'Model', value: profile.exitMultipleLabel },
-              ].map(a => (
-                <div key={a.label} style={{ fontSize: '12px' }}>
-                  <span style={{ color: '#888' }}>{a.label}: </span>
-                  <strong>{a.value}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── 10. Historical financials ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Historical Financials</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <SecTitle kicker="Annual" title="Ten-year financials" />
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
               <thead>
-                <tr style={{ background: '#f9fafb' }}>
-                  {['Year', 'Revenue (Cr)', 'Rev Growth', 'PAT (Cr)', 'Net Margin', 'EPS', 'OCF (Cr)'].map(h => (
-                    <th key={h} style={{ padding: '6px 8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontWeight: 600, color: '#555' }}>
-                      {h}
-                    </th>
-                  ))}
+                <tr style={{ background: PAPER }}>
+                  {['Year', 'Revenue (Cr)', 'Growth', 'PAT (Cr)', 'Margin', 'EPS', 'OCF (Cr)'].map(h => <th key={h} style={th}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {financials.map((f, i) => (
-                  <tr key={f.year} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                    <td style={{ ...S.cell, fontWeight: 700, color: '#d97706', fontFamily: 'inherit' }}>{f.year}</td>
-                    <td style={S.cell}>₹{f.revenue.toLocaleString('en-IN')}</td>
-                    <td style={{ ...S.cell, color: f.revenueGrowth >= 0 ? '#16a34a' : '#dc2626' }}>
-                      {f.revenueGrowth >= 0 ? '+' : ''}{f.revenueGrowth.toFixed(1)}%
-                    </td>
-                    <td style={S.cell}>₹{f.pat.toLocaleString('en-IN')}</td>
-                    <td style={S.cell}>{f.netMargin.toFixed(1)}%</td>
-                    <td style={S.cell}>₹{f.eps.toFixed(2)}</td>
-                    <td style={S.cell}>{f.ocf ? `₹${f.ocf.toLocaleString('en-IN')}` : '—'}</td>
+                  <tr key={f.year} style={{ background: i % 2 ? PAPER : '#fff' }}>
+                    <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{f.year}</td>
+                    <td style={td}>₹{f.revenue.toLocaleString('en-IN')}</td>
+                    <td style={{ ...td, color: f.revenueGrowth >= 0 ? GAIN : LOSS }}>{f.revenueGrowth >= 0 ? '+' : ''}{f.revenueGrowth.toFixed(1)}%</td>
+                    <td style={td}>₹{f.pat.toLocaleString('en-IN')}</td>
+                    <td style={td}>{f.netMargin.toFixed(1)}%</td>
+                    <td style={td}>₹{f.eps.toFixed(2)}</td>
+                    <td style={td}>{f.ocf ? `₹${f.ocf.toLocaleString('en-IN')}` : '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {quarters.length > 0 && (
+              <>
+                <SecTitle kicker="Quarterly" title="Last six quarters" />
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: PAPER }}>
+                      {['Quarter', 'Revenue (Cr)', 'PAT (Cr)', 'OPM %', 'EPS'].map(h => <th key={h} style={th}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quarters.map((q, i) => (
+                      <tr key={q.quarter} style={{ background: i % 2 ? PAPER : '#fff' }}>
+                        <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{q.quarter}</td>
+                        <td style={td}>₹{q.revenue.toLocaleString('en-IN')}</td>
+                        <td style={{ ...td, color: q.pat >= 0 ? INK : LOSS }}>₹{q.pat.toLocaleString('en-IN')}</td>
+                        <td style={td}>{q.opm.toFixed(1)}%</td>
+                        <td style={td}>₹{q.eps.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
           </div>
 
-          {/* ── 11. Sector benchmark ── */}
-          <div style={S.section}>
-            <h2 style={S.h2}>Sector Benchmarks — {bench.label}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '12px' }}>
+          {/* ════════ CHAPTER 6 · PEERS & SECTOR ════════ */}
+          <div className="pr-chapter">
+            <Brand company={company} page="Peers & sector" />
+            {peers.length > 1 && (
+              <>
+                <SecTitle kicker="Competition" title="How it stacks up against peers" />
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
+                  <thead>
+                    <tr style={{ background: PAPER }}>
+                      <th style={{ ...th, textAlign: 'left' }}>Company</th>
+                      {['Price', 'P/E', 'P/B', 'ROE %', 'D/E', 'Margin %'].map(h => <th key={h} style={th}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {peers.slice(0, 8).map((p, i) => (
+                      <tr key={p.symbol} style={{ background: p.isSelf ? CREAM : i % 2 ? PAPER : '#fff' }}>
+                        <td style={{ padding: '6px 8px', fontSize: '11px', fontWeight: p.isSelf ? 700 : 400, color: p.isSelf ? GOLD : INK }}>
+                          {p.isSelf ? '★ ' : ''}{p.name || p.symbol}
+                        </td>
+                        <td style={td}>{p.currentPrice ? `₹${Math.round(p.currentPrice).toLocaleString('en-IN')}` : '—'}</td>
+                        <td style={td}>{p.pe && p.pe > 0 ? p.pe.toFixed(1) : '—'}</td>
+                        <td style={td}>{p.pb && p.pb > 0 ? p.pb.toFixed(1) : '—'}</td>
+                        <td style={td}>{p.roe != null ? p.roe.toFixed(1) : '—'}</td>
+                        <td style={td}>{p.de != null ? p.de.toFixed(2) : '—'}</td>
+                        <td style={td}>{p.netMargin != null ? p.netMargin.toFixed(1) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+
+            <SecTitle kicker="Sector" title={`Benchmarks — ${bench.label}`} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
               {[
-                { label: 'Sector P/E', company: `${company.pe.toFixed(1)}x`, sector: `${bench.pe}x` },
-                { label: 'Sector P/B', company: `${company.pb.toFixed(1)}x`, sector: `${bench.pb}x` },
+                { label: 'P/E', company: `${company.pe.toFixed(1)}x`, sector: `${bench.pe}x` },
+                { label: 'P/B', company: `${company.pb.toFixed(1)}x`, sector: `${bench.pb}x` },
                 { label: 'ROE', company: `${company.roe.toFixed(1)}%`, sector: `${bench.roe}%` },
-                { label: 'Net Margin', company: `${latest.netMargin.toFixed(1)}%`, sector: `${bench.netMargin}%` },
-                { label: 'D/E Ratio', company: `${company.debtToEquity.toFixed(2)}x`, sector: `${bench.debtToEquity}x` },
-                { label: 'Div Yield', company: `${company.dividendYield.toFixed(2)}%`, sector: '—' },
+                { label: 'Net margin', company: `${latest.netMargin.toFixed(1)}%`, sector: `${bench.netMargin}%` },
+                { label: 'D/E', company: `${company.debtToEquity.toFixed(2)}x`, sector: `${bench.debtToEquity}x` },
+                { label: 'Div yield', company: `${company.dividendYield.toFixed(2)}%`, sector: '—' },
               ].map(b => (
-                <div key={b.label} style={{ padding: '8px', background: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                  <div style={{ color: '#888', marginBottom: '2px' }}>{b.label}</div>
-                  <div><strong>{b.company}</strong> <span style={{ color: '#aaa' }}>vs {b.sector}</span></div>
+                <div key={b.label} style={{ padding: '9px 11px', background: PAPER, borderRadius: '8px', border: `1px solid ${LINE}`, fontSize: '11px' }}>
+                  <div style={{ color: MUTED, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>{b.label}</div>
+                  <strong style={{ fontFamily: 'monospace' }}>{b.company}</strong> <span style={{ color: FAINT }}>vs sector {b.sector}</span>
                 </div>
               ))}
             </div>
+
+            {/* ── Glossary ── */}
+            <div style={{ marginTop: '20px' }}>
+              <SecTitle kicker="No jargon" title="What these words mean" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+                {[
+                  ['Fair value', 'What the business is worth based on its profits — like valuing a shop by its earnings, not its paint job.'],
+                  ['P/E ratio', 'Price you pay for ₹1 of yearly profit. P/E 20 = you pay ₹20 for every ₹1 the company earns.'],
+                  ['CAGR', 'Average yearly growth rate, like interest on a fixed deposit.'],
+                  ['Exit multiple', 'The P/E we assume the market will pay in the future when you sell.'],
+                  ['Reverse DCF', 'Works backwards: what growth must the company deliver to justify today’s price?'],
+                  ['Monte Carlo', 'Rolls the dice 1,000 times with slightly different futures to see how often you win.'],
+                  ['Growth fade', 'No company grows fast forever — our numbers slow growth toward the sector average over time.'],
+                  ['Red flags', 'Quick health checks: too much debt, weak cash, pledged shares — danger signs before you invest.'],
+                ].map(([t, d]) => (
+                  <div key={t} style={{ fontSize: '10px', lineHeight: 1.5 }}>
+                    <strong style={{ fontFamily: 'Georgia, serif' }}>{t}.</strong> <span style={{ color: MUTED }}>{d}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Footer ── */}
+            <div style={{ borderTop: `2px solid ${TERRA}`, marginTop: '20px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '9px', color: FAINT, lineHeight: 1.5, maxWidth: '70%' }}>
+                Generated by Robu Terminal on {today}. For personal research only — not SEBI-registered investment advice.
+                Projections are based on stated assumptions and historical data; markets can and will surprise. Always do your own research.
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '11px' }}>R</div>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: TERRA, letterSpacing: '1px' }}>ROBU TERMINAL</span>
+              </div>
+            </div>
           </div>
 
-          {/* ── Footer ── */}
-          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', fontSize: '10px', color: '#aaa' }}>
-            Generated by Robu Terminal on {today} · For personal research only · Not SEBI registered investment advice
-          </div>
         </div>
       </div>
     </div>
