@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel, pegModel, earningsYieldModel, earningsQualityScore } from '@/lib/forecastUtils';
@@ -114,6 +115,9 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   const [peers, setPeers]         = useState<Peer[]>([]);
   const [quarters, setQuarters]   = useState<Quarter[]>([]);
   const [peStats, setPeStats]     = useState<HistStats | null>(null);
+  const [mounted, setMounted]     = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!company?.symbol) return;
@@ -140,7 +144,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
     return () => { dead = true; };
   }, [company?.symbol]);
 
-  if (!financials.length) return null;
+  if (!mounted || !financials.length) return null;
 
   const profile = getCompanyProfile(company);
   const bench   = BENCHMARKS[company.sector] || DEFAULT_BENCHMARK;
@@ -218,7 +222,9 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   const th: React.CSSProperties = { padding: '6px 8px', textAlign: 'right', borderBottom: `1px solid ${LINE}`, fontWeight: 600, color: MUTED, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' };
   const td: React.CSSProperties = { padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace', fontSize: '11px' };
 
-  return (
+  // Portal: render directly under <body>, OUTSIDE the app's overflow-hidden
+  // containers — otherwise everything after page 1 is clipped when printing.
+  return createPortal(
     <div className="print-only" style={{ display: 'none' }}>
       <div id="print-report">
         <div style={{ fontFamily: 'Georgia, serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
@@ -658,6 +664,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

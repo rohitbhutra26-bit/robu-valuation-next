@@ -404,17 +404,15 @@ input[type='number'] { -moz-appearance: textfield; }
 
 /* ── Print ────────────────────────────────────────────────────────────────── */
 @media print {
-  /* Hide the ENTIRE app — only the print report is visible on paper */
-  body * { visibility: hidden !important; }
-  #print-report, #print-report * { visibility: visible !important; }
+  /* The report is portaled to <body> — hide every OTHER body child entirely.
+     display:none (not visibility) so the app contributes zero pages. */
+  body > *:not(.print-only) { display: none !important; }
   .print-only { display: block !important; }
-  #print-report {
-    display: block !important;
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-  }
+  #print-report { display: block !important; }
+  html, body { height: auto !important; overflow: visible !important; }
   body { background: #fff !important; color: #111 !important; font-family: Georgia, serif !important; font-size: 12px; }
+  /* Print the actual colors — verdict banners, score bars, flag chips */
+  #print-report * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   @page { margin: 14mm; size: A4 portrait; }
   .pr-chapter { page-break-before: always; }
   .pr-keep { page-break-inside: avoid; }
