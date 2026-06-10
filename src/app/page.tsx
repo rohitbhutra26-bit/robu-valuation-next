@@ -34,6 +34,7 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Filter } from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
@@ -637,6 +638,9 @@ export default function Home() {
                   <>
                     {/* Verdict — one-line plain-English answer at the very top */}
                     <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+
+                    {/* Wealth projection — fair value translated into rupees you can feel */}
+                    <WealthProjection company={company} financials={financials} assumptions={assumptions} />
 
                     {/* Data quality banner — shown before anything else if issues exist */}
                     {dataQuality && <DataQualityBanner quality={dataQuality} />}

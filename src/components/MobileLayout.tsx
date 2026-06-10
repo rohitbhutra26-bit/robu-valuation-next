@@ -24,6 +24,7 @@ import ForecastChart from './ForecastChart';
 import IndustryBenchmarks from './IndustryBenchmarks';
 import PeerCompare from './PeerCompare';
 import VerdictCard from './VerdictCard';
+import WealthProjection from './WealthProjection';
 import WatchlistView from './WatchlistView';
 import PortfolioView from './PortfolioView';
 import StockScreener from './StockScreener';
@@ -504,6 +505,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   return (
     <div className="px-4 pt-4 pb-32 space-y-4">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+
+      <WealthProjection company={company} financials={financials} assumptions={assumptions} />
 
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">

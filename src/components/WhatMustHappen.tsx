@@ -94,13 +94,16 @@ function VerdictBanner({ feasibility, summary }: { feasibility: Feasibility; sum
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+const HORIZONS = [3, 5, 7, 10] as const;
+
 export default function WhatMustHappen({ company, financials, assumptions }: Props) {
   const profile = getCompanyProfile(company);
 
   const [targetInput, setTargetInput] = useState('');
   const [targetPrice, setTargetPrice] = useState<number | null>(null);
+  const [horizon, setHorizon] = useState<number>(assumptions.years);
 
-  // Compute on every target change
+  // Compute on every target change — for the selected horizon
   const result = useMemo(() => {
     if (!targetPrice || targetPrice <= company.currentPrice) return null;
     return computeTargetPath(
@@ -108,9 +111,27 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
       profile.model,
       company,
       financials,
-      assumptions,
+      { ...assumptions, years: horizon },
       profile.defaultExitMultiple,
     );
+  }, [targetPrice, company, financials, assumptions, horizon, profile]);
+
+  // Same target across ALL horizons — shows how time changes difficulty
+  const horizonComparison = useMemo(() => {
+    if (!targetPrice || targetPrice <= company.currentPrice) return null;
+    const out: { years: number; requiredCAGR: number; overall: Feasibility }[] = [];
+    for (const h of HORIZONS) {
+      const r = computeTargetPath(
+        targetPrice,
+        profile.model,
+        company,
+        financials,
+        { ...assumptions, years: h },
+        profile.defaultExitMultiple,
+      );
+      if (r) out.push({ years: h, requiredCAGR: r.requiredCAGR, overall: r.overall });
+    }
+    return out;
   }, [targetPrice, company, financials, assumptions, profile]);
 
   function handleApply() {
@@ -143,14 +164,31 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
 
       {/* ── Target price input ── */}
       <div className="bg-border/20 rounded-xl p-4">
-        <p className="text-xs text-muted mb-3">
-          Current price:{' '}
-          <span className="text-primary font-mono font-semibold">
-            ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </span>
-          {' '}· Horizon:{' '}
-          <span className="text-primary font-mono font-semibold">{assumptions.years} years</span>
-        </p>
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <p className="text-xs text-muted">
+            Current price:{' '}
+            <span className="text-primary font-mono font-semibold">
+              ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </span>
+          </p>
+          {/* Horizon selector */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-muted uppercase tracking-wider">Horizon</span>
+            {HORIZONS.map(h => (
+              <button
+                key={h}
+                onClick={() => setHorizon(h)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold border transition-all ${
+                  horizon === h
+                    ? 'bg-gold text-terminal border-gold'
+                    : 'text-muted border-border hover:text-primary hover:border-gold/40'
+                }`}
+              >
+                {h}y
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Input row */}
         <div className="flex gap-2 mb-3">
@@ -223,6 +261,36 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
               <p className="text-lg font-bold font-mono text-accent">{result.requiredCAGR.toFixed(1)}% p.a.</p>
             </div>
           </div>
+
+          {/* Time makes targets easier — same target across all horizons */}
+          {horizonComparison && (
+            <div className="bg-border/20 rounded-xl p-3">
+              <p className="text-[10px] text-muted uppercase tracking-wider mb-2">
+                Same target, more time → easier
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {horizonComparison.map(hc => {
+                  const f = FEASIBILITY[hc.overall];
+                  const active = hc.years === horizon;
+                  return (
+                    <button
+                      key={hc.years}
+                      onClick={() => setHorizon(hc.years)}
+                      className={`rounded-lg border p-2 text-center transition-all ${
+                        active ? `${f.bg} ${f.border}` : 'border-border/50 hover:border-border'
+                      }`}
+                    >
+                      <p className="text-[10px] text-muted font-mono">{hc.years} yrs</p>
+                      <p className={`text-sm font-bold font-mono ${f.color}`}>
+                        {hc.requiredCAGR.toFixed(0)}%
+                      </p>
+                      <p className={`text-[9px] font-semibold ${f.color}`}>{f.label}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Three requirements */}
           <div className="divide-y divide-border/30">
