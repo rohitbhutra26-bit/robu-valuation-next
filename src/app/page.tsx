@@ -48,13 +48,12 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TMPV','TMCV','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'financials' | 'watchlist' | 'portfolio';
+type ActiveView = 'valuation' | 'watchlist' | 'portfolio';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string; global?: boolean }[] = [
-  { view: 'valuation',  Icon: Calculator, label: 'Valuation',    desc: "What's it worth?"          },
-  { view: 'financials', Icon: Table2,     label: 'Financials',   desc: 'Revenue, profit & history'  },
+  { view: 'valuation',  Icon: Calculator, label: 'Report',       desc: 'Full stock analysis'        },
   { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
   { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
 
@@ -760,9 +759,14 @@ export default function Home() {
                   <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
                 )}
 
-                {/* ── VIEW: FINANCIALS ── */}
-                {activeView === 'financials' && (
+                {/* ── SECTION: FINANCIALS — part of the single report ── */}
+                {activeView === 'valuation' && (
                   <>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Table2 size={14} className="text-gold" />
+                      <h2 className="text-sm font-semibold text-primary">Financials — the raw numbers</h2>
+                      <div className="flex-1 border-t border-border/60" />
+                    </div>
                     <QuarterlyFlash company={company} />
                     <KeyMetrics company={company} financials={financials} />
                     {financials.length > 0 && (
@@ -807,9 +811,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-primary mb-1">
-                    {activeView === 'valuation' ? 'Search a stock to see valuation' :
-                     activeView === 'financials' ? 'Search a stock to see financials' :
-
+                    {activeView === 'valuation' ? 'Search a stock to see the full report' :
                      'Search any Indian stock above'}
                   </p>
                   <p className="text-xs text-muted max-w-xs">

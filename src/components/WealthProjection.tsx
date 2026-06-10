@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';
-import { runPrimaryModel, revenueVolatility, earningsQualityScore } from '@/lib/forecastUtils';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
+import { runPrimaryModel } from '@/lib/forecastUtils';
+import { buildScenarioConfigs, fmtINR } from '@/lib/scenarioEngine';
 
 interface Props {
   company: Company;
@@ -18,13 +19,6 @@ const AMOUNT_PRESETS = [
   { label: '₹10L', value: 1000000 },
   { label: '₹25L', value: 2500000 },
 ];
-
-// ₹ formatter — Indian style: 1.4L, 2.3Cr
-function fmtINR(v: number): string {
-  if (v >= 1e7) return `₹${(v / 1e7).toFixed(v >= 1e8 ? 1 : 2)}Cr`;
-  if (v >= 1e5) return `₹${(v / 1e5).toFixed(1)}L`;
-  return `₹${Math.round(v).toLocaleString('en-IN')}`;
-}
 
 interface ScenarioRow {
   name: 'Bear' | 'Base' | 'Bull';
@@ -42,32 +36,8 @@ export default function WealthProjection({ company, financials, assumptions }: P
     if (!financials.length || !company.currentPrice) return null;
 
     const profile = getCompanyProfile(company);
-    const sigma   = revenueVolatility(financials);
-    const deltas  = getDynamicDeltas(profile, sigma);
-    const quality = earningsQualityScore(financials);
-    const qualAdjMultiple = assumptions.exitMultiple * quality.multiplier;
-
-    // Same scenario definitions as ScenarioCards — one source of truth for the user
-    const configs = [
-      {
-        name: 'Bear' as const, emoji: '🐻', color: '#EF4444',
-        growthRate:       Math.max(assumptions.revenueGrowthRate + deltas.bearGrowthDelta, 1),
-        marginAssumption: Math.max(assumptions.netMarginAssumption + deltas.bearMarginDelta, 1),
-        exitMultiple:     Math.max(qualAdjMultiple + deltas.bearMultipleDelta, profile.exitMultipleMin),
-      },
-      {
-        name: 'Base' as const, emoji: '📊', color: '#3b82f6',
-        growthRate:       assumptions.revenueGrowthRate,
-        marginAssumption: assumptions.netMarginAssumption,
-        exitMultiple:     assumptions.exitMultiple,
-      },
-      {
-        name: 'Bull' as const, emoji: '🚀', color: '#10B981',
-        growthRate:       assumptions.revenueGrowthRate + deltas.bullGrowthDelta,
-        marginAssumption: assumptions.netMarginAssumption + deltas.bullMarginDelta,
-        exitMultiple:     Math.min(qualAdjMultiple + deltas.bullMultipleDelta, profile.exitMultipleMax),
-      },
-    ];
+    // Shared scenario definitions — same source of truth as ScenarioCards & print report
+    const configs = buildScenarioConfigs(company, financials, assumptions);
 
     try {
       return configs.map(cfg => {
