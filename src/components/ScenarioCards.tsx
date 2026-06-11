@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ValuationAssumptions, ScenarioResult } from '@/lib/types';
+import { ValuationAssumptions } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
 import { Company } from '@/lib/types';
 import { getCompanyProfile, getDynamicDeltas } from '@/lib/sectorModelMap';

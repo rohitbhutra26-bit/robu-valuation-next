@@ -114,6 +114,7 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
               {onWatchlistToggle && (
                 <button
                   onClick={onWatchlistToggle}
+                  aria-label={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
                   title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
                   className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                     isWatchlisted

@@ -9,7 +9,6 @@ import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
 import WatchlistView from '@/components/WatchlistView';
 import PortfolioView from '@/components/PortfolioView';
-import StockScreener from '@/components/StockScreener';
 import QuarterlyFlash from '@/components/QuarterlyFlash';
 import ExportReport, { PrintableReport } from '@/components/ExportReport';
 import AddToPortfolioModal from '@/components/AddToPortfolioModal';
@@ -40,9 +39,9 @@ import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
 import ModeToggle from '@/components/ModeToggle';
-import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Filter } from '@/lib/icons';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase } from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
-import { getPortfolio, isInPortfolio, addToPortfolio } from '@/lib/portfolio';
+import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
 
 // ── Session-level cache — survives re-renders, cleared on page refresh ────────
 // Like a hedge fund's in-memory data store — once fetched, instant on re-visit

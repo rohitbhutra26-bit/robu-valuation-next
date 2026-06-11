@@ -428,3 +428,15 @@ input[type='number'] { -moz-appearance: textfield; }
    Analyst → hide hand-holding hints meant for beginners (.simple-only)        */
 [data-mode='simple'] .analyst-only { display: none !important; }
 [data-mode='analyst'] .simple-only { display: none !important; }
+
+/* ── Accessibility: respect reduced-motion preference ─────────────────────────
+   Users with vestibular disorders (or who just dislike motion) get a calm UI:
+   every CSS animation/transition collapses to near-instant.                   */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

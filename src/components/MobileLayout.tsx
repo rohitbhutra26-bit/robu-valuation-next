@@ -3,13 +3,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
-  Search, TrendingUp, SlidersHorizontal, Sparkles, Table2, Users,
+  Search, TrendingUp, Users,
   AlertTriangle, Pencil, RotateCcw, Bookmark, Briefcase, Filter,
   ChevronRight,
 } from '@/lib/icons';
 import ThemeToggle from './ThemeToggle';
 import ModeToggle from './ModeToggle';
-import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
+import { getCompanyProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
 import ScenarioCards from './ScenarioCards';
@@ -29,7 +29,6 @@ import ValuationCaveatBanner from './ValuationCaveatBanner';
 import WealthProjection from './WealthProjection';
 import WatchlistView from './WatchlistView';
 import PortfolioView from './PortfolioView';
-import StockScreener from './StockScreener';
 import ROBUScoreCard from './ROBUScoreCard';
 import ScenarioBuilder from './ScenarioBuilder';
 import AnnouncementsFeed from './AnnouncementsFeed';
@@ -116,6 +115,9 @@ function BottomNav({
             <button
               key={id}
               onClick={() => !disabled && onChange(id)}
+              aria-label={label}
+              aria-current={isOn ? 'page' : undefined}
+              aria-disabled={disabled}
               className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-w-0
                 ${disabled ? 'opacity-25 cursor-not-allowed' : ''}`}
             >
@@ -703,11 +705,6 @@ export default function MobileLayout({
   function handleStockTab(tab: StockTab) {
     mountedStock.current.add(tab);
     setStockTab(tab);
-  }
-
-  // When screener selects a symbol, go to stock tab
-  function handleScreenerSelect(symbol: string) {
-    handleSelect(symbol);
   }
 
   const showStockContent = mainTab === 'stock';

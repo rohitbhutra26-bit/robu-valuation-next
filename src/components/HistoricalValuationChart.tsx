@@ -30,13 +30,12 @@ interface Props {
 
 // ─── SVG line chart ───────────────────────────────────────────────────────────
 function LineChart({
-  values, dates, stats, currentVal, label, color,
+  values, dates, stats, currentVal, color,
 }: {
   values: (number | null)[];
   dates: string[];
   stats: ValStats;
   currentVal: number;
-  label: string;
   color: string;
 }) {
   const W = 560;
@@ -304,7 +303,7 @@ export default function HistoricalValuationChart({ company }: Props) {
               dates={dates}
               stats={data.stats.pe}
               currentVal={company.pe}
-              label="P/E Ratio"
+
               color="#3b82f6"
             />
           )}
@@ -314,7 +313,7 @@ export default function HistoricalValuationChart({ company }: Props) {
               dates={dates}
               stats={data.stats.pb}
               currentVal={company.pb}
-              label="P/B Ratio"
+
               color="#3B82F6"
             />
           )}

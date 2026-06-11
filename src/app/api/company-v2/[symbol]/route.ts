@@ -4,8 +4,7 @@ const DATA_SERVER = process.env.DATA_SERVER_URL || 'http://localhost:8000';
 
 // Screener.in-backed company data — accurate BSE-filed fundamentals overlaid on Yahoo live price.
 // Falls back to Yahoo Finance inside the data server if Screener is unavailable.
-export async function GET(
-  request: NextRequest,
+export async function GET(_request: NextRequest,
   { params }: { params: { symbol: string } }
 ) {
   const symbol = params.symbol.toUpperCase();

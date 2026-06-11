@@ -6,7 +6,7 @@ import {
 } from '@/lib/portfolio';
 import {
   Briefcase, Trash2, AlertCircle, TrendingUp, TrendingDown,
-  Minus, RefreshCw, Edit2, Check, X, Upload, ChevronDown, ChevronUp,
+  RefreshCw, Edit2, Check, X, Upload,
 } from '@/lib/icons';
 
 interface LiveData {
@@ -29,13 +29,6 @@ function fmt(n: number): string {
   return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 }
 
-function timeAgo(ms: number): string {
-  const d = Math.floor((Date.now() - ms) / 86400000);
-  if (d >= 1) return `${d}d ago`;
-  const h = Math.floor((Date.now() - ms) / 3600000);
-  if (h >= 1) return `${h}h ago`;
-  return 'just now';
-}
 
 // ── CSV / XLSX import parser ───────────────────────────────────────────────────
 interface ImportRow { symbol: string; qty: number; buyPrice: number; buyDate?: string }

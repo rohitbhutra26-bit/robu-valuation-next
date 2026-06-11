@@ -113,6 +113,7 @@ export default function WealthProjection({ company, financials, assumptions }: P
           <input
             type="number"
             placeholder="Custom ₹…"
+            aria-label="Custom investment amount in rupees"
             value={amountInput}
             onChange={e => setAmountInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && applyCustom()}

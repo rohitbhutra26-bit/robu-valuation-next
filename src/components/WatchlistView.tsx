@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getWatchlist, removeFromWatchlist, WatchlistEntry } from '@/lib/watchlist';
-import { Bookmark, X, Clock, TrendingUp, TrendingDown, RefreshCw, AlertCircle } from '@/lib/icons';
+import { Bookmark, X, Clock, RefreshCw, AlertCircle } from '@/lib/icons';
 
 interface WatchlistViewProps {
   onSelectSymbol: (symbol: string) => void;
@@ -98,11 +98,6 @@ export default function WatchlistView({ onSelectSymbol, currentSymbol }: Watchli
       fetchQuotes(list.map(e => e.symbol));
     }
   }, [list, fetchQuotes]);
-
-  const gainers = list.filter(e => {
-    const q = quotes[e.symbol];
-    return q && !q.loading && !q.error && q.price > 0;
-  }).length;
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4">
