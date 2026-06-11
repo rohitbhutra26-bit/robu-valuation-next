@@ -103,8 +103,8 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
           { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade as 'A'|'B'|'C'|'D', color: 'bg-gold', max: 40 },
         ] as Array<{ label: string; sublabel: string; value: number; g: 'A'|'B'|'C'|'D'; color: string; max: number }>).map(({ label, sublabel, value, g, color }) => (
           <div key={label} className="bg-border/20 rounded-lg p-3 min-w-0">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-xs font-semibold text-primary truncate">{label}</span>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[11px] font-semibold text-primary leading-tight">{label}</span>
               <GradeChip grade={g} />
             </div>
             <span className="text-[11px] text-muted">{sublabel}</span>
@@ -141,7 +141,7 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
       </div>
 
       {/* Margin quality */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0">
         {([
           { label: `Net Margin (${latest.year})`, value: latest.netMargin, suffix: '%', g: marginGrade as 'A'|'B'|'C'|'D', threshold: '15% = A' },
           { label: `EBITDA Margin (${latest.year})`, value: latest.ebitdaMargin, suffix: '%', g: ebitdaGrade as 'A'|'B'|'C'|'D', threshold: '25% = A' },
@@ -150,7 +150,7 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
         ] as Array<{ label: string; value: number; suffix: string; g: 'A'|'B'|'C'|'D'; threshold: string }>).map(({ label, value, suffix, g, threshold }) => (
           <div key={label} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/50 last:border-0">
             <div className="min-w-0">
-              <p className="text-xs text-muted truncate">{label}</p>
+              <p className="text-xs text-muted leading-snug">{label}</p>
               <p className="text-[11px] text-muted/60">{threshold}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">

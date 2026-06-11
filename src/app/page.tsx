@@ -30,10 +30,12 @@ import PriceChart from '@/components/PriceChart';
 import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
 import ScenarioBuilder from '@/components/ScenarioBuilder';
+import SectionHeader from '@/components/SectionHeader';
 import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Filter } from '@/lib/icons';
@@ -639,17 +641,26 @@ export default function Home() {
                     {/* Verdict — one-line plain-English answer at the very top */}
                     <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
-                    {/* Wealth projection — fair value translated into rupees you can feel */}
-                    <WealthProjection company={company} financials={financials} assumptions={assumptions} />
+                    {/* Honesty banner — when our own models shouldn't be trusted */}
+                    <ValuationCaveatBanner company={company} financials={financials} />
 
                     {/* Data quality banner — shown before anything else if issues exist */}
                     {dataQuality && <DataQualityBanner quality={dataQuality} />}
 
-                    {/* Danger before dreams — red flags up top, linked from header badge */}
+                    <SectionHeader
+                      emoji="🚩"
+                      title="Danger Check"
+                      desc="Quick health tests before anything else — too much debt, weak cash, pledged promoter shares. Like a doctor checking your pulse before prescribing medicine."
+                    />
                     <div id="red-flags-card">
                       <RedFlagsCard company={company} financials={financials} />
                     </div>
 
+                    <SectionHeader
+                      emoji="💰"
+                      title="Your Inputs & Your Money"
+                      desc="Set your expectations with the sliders, then see what ₹1 lakh could become. Example: if the company grows 12% a year for 5 years, ₹1L ≈ ₹1.8L."
+                    />
                     {/* Assumptions panel */}
                     {(() => {
                       const sectorProfile = getCompanyProfile(company);
@@ -749,10 +760,23 @@ export default function Home() {
                       );
                     })()}
 
+                    {/* Wealth projection — lives with the assumptions that drive it */}
+                    <WealthProjection company={company} financials={financials} assumptions={assumptions} />
+
+                    <SectionHeader
+                      emoji="📈"
+                      title="The Evidence"
+                      desc="Price history with cheap/fair/pricey bands, the forecast your assumptions imply, and three futures — bear (things go wrong), base (your inputs), bull (things go right)."
+                    />
                     <PriceChart company={company} financials={financials} />
                     <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
 
+                    <SectionHeader
+                      emoji="🧪"
+                      title="Stress Tests"
+                      desc="We attack our own answer to see if it survives. Example: 'what growth does today's price silently assume — and has the company ever delivered it?'"
+                    />
                     {/* Proof tier — stress-tests of the story above */}
                     <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
                     <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
@@ -782,11 +806,11 @@ export default function Home() {
                 {/* ── SECTION: FINANCIALS — part of the single report ── */}
                 {activeView === 'valuation' && (
                   <>
-                    <div className="flex items-center gap-2 pt-2">
-                      <Table2 size={14} className="text-gold" />
-                      <h2 className="text-sm font-semibold text-primary">Financials — the raw numbers</h2>
-                      <div className="flex-1 border-t border-border/60" />
-                    </div>
+                    <SectionHeader
+                      emoji="📊"
+                      title="The Raw Numbers"
+                      desc="Ten years of revenue, profit and margins — the actual track record everything above is built on. Example: steady margins = a business in control of its prices."
+                    />
                     <QuarterlyFlash company={company} />
                     <KeyMetrics company={company} financials={financials} />
                     {financials.length > 0 && (
@@ -800,7 +824,14 @@ export default function Home() {
 
                 {/* ── VIEW: PEERS ── */}
                 {activeView === 'valuation' && company && financials.length >= 3 && (
-                  <ROBUScoreCard company={company} financials={financials} />
+                  <>
+                    <SectionHeader
+                      emoji="🏆"
+                      title="Quality Score & Alternatives"
+                      desc="One grade for overall business quality, recent company announcements, and stronger options in the same sector if this one doesn't convince you."
+                    />
+                    <ROBUScoreCard company={company} financials={financials} />
+                  </>
                 )}
                 {activeView === 'valuation' && company && (
                   <AnnouncementsFeed company={company} />

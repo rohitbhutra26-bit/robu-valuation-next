@@ -36,7 +36,7 @@ export default function FinancialsTable({ financials }: FinancialsTableProps) {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border bg-border/20">
-              <th className="sticky left-0 bg-card/95 text-left px-4 py-2.5 text-muted font-medium uppercase tracking-wide whitespace-nowrap z-10">
+              <th className="sticky left-0 bg-card text-left px-4 py-2.5 text-muted font-medium uppercase tracking-wide whitespace-nowrap z-10 border-r border-border/40">
                 Metric
               </th>
               {financials.map((f) => (

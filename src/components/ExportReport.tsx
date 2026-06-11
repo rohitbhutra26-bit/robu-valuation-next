@@ -8,6 +8,7 @@ import { runPrimaryModel, pegModel, earningsYieldModel, earningsQualityScore } f
 import { redFlags, monteCarloFairValue, reverseDcfVerdict, FlagStatus } from '@/lib/advancedModels';
 import { buildScenarioConfigs, fmtINR } from '@/lib/scenarioEngine';
 import { computeROBUScore } from '@/lib/robuScore';
+import { valuationReliability } from '@/lib/valuationReliability';
 import { generateInsight } from '@/lib/aiInsight';
 import { BENCHMARKS, DEFAULT_BENCHMARK } from './IndustryBenchmarks';
 import { Download } from '@/lib/icons';
@@ -152,6 +153,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   const quality = earningsQualityScore(financials);
   const robu    = computeROBUScore(financials, company);
   const insight = generateInsight(company, financials);
+  const reliability = valuationReliability(company, financials);
 
   const primaryResult = runPrimaryModel(
     profile.model, financials, company,
@@ -268,6 +270,14 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', color: vColor }}>{compositeUp >= 0 ? '+' : ''}{compositeUp.toFixed(1)}%</div>
             </div>
           </div>
+
+          {/* Honesty caveat — when our own models shouldn't be trusted */}
+          {!reliability.reliable && (
+            <div className="pr-keep" style={{ padding: '12px 16px', background: CREAM, border: `1px solid ${GOLD}`, borderRadius: '10px', marginBottom: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: GOLD, marginBottom: '3px' }}>⚠ {reliability.title}</div>
+              <div style={{ fontSize: '10px', color: MUTED, lineHeight: 1.55 }}>{reliability.note}</div>
+            </div>
+          )}
 
           {/* ROBU score */}
           <div className="pr-keep" style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>

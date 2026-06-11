@@ -24,6 +24,7 @@ import ForecastChart from './ForecastChart';
 import IndustryBenchmarks from './IndustryBenchmarks';
 import PeerCompare from './PeerCompare';
 import VerdictCard from './VerdictCard';
+import ValuationCaveatBanner from './ValuationCaveatBanner';
 import WealthProjection from './WealthProjection';
 import WatchlistView from './WatchlistView';
 import PortfolioView from './PortfolioView';
@@ -388,6 +389,8 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
     <div className="px-4 pt-4 pb-32 space-y-3 max-w-2xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
+      <ValuationCaveatBanner company={company} financials={financials} />
+
       {/* Price card */}
       <div className="bg-card rounded-2xl p-4 border border-border">
         <div className="mb-2">
@@ -513,7 +516,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
     <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
-      <WealthProjection company={company} financials={financials} assumptions={assumptions} />
+      <ValuationCaveatBanner company={company} financials={financials} />
 
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
         <div className="flex items-center gap-2">
@@ -582,6 +585,9 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
 
       <PriceChart company={company} financials={financials} />
       <ForecastChart financials={financials} assumptions={assumptions} />
+      {/* Wealth projection — right below the assumptions that drive it */}
+      <WealthProjection company={company} financials={financials} assumptions={assumptions} />
+
       <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} compact />
       <ValuationEngine company={company} financials={financials} assumptions={assumptions} compact />
       <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
