@@ -31,6 +31,7 @@ import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
 import ScenarioBuilder from '@/components/ScenarioBuilder';
 import SectionHeader from '@/components/SectionHeader';
+import StickyTicker from '@/components/StickyTicker';
 import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
@@ -618,6 +619,9 @@ export default function Home() {
 
             ) : company ? (
               <div className="p-4 space-y-4">
+                {/* Sticky mini-ticker — appears once you scroll past the header */}
+                <StickyTicker company={company} financials={financials} assumptions={assumptions} />
+
                 {/* Company header — always visible */}
                 <div className="flex items-start gap-2">
                   <div className="flex-1 min-w-0">
@@ -634,6 +638,8 @@ export default function Home() {
                     <ExportReport company={company} financials={financials} assumptions={assumptions} />
                   </div>
                 </div>
+                {/* Sentinel: when this scrolls out of view, the mini-ticker fades in */}
+                <div id="ticker-sentinel" className="h-px -mt-4" />
 
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (

@@ -28,7 +28,7 @@ export default function FinancialsTable({ financials }: FinancialsTableProps) {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-primary">5-Year Financials</h3>
+        <h3 className="text-sm font-semibold text-primary">{financials.length}-Year Financials</h3>
         <span className="text-xs text-muted hidden sm:block">All figures in ₹ Crore except EPS</span>
         <span className="text-xs text-muted sm:hidden">₹ Crore</span>
       </div>

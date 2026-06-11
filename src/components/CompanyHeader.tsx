@@ -7,6 +7,7 @@ import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { redFlags } from '@/lib/advancedModels';
 import { Bookmark, Briefcase } from '@/lib/icons';
 import { slideDown } from '@/lib/animations';
+import Tooltip from '@/components/Tooltip';
 
 interface CompanyHeaderProps {
   company: Company;
@@ -43,22 +44,24 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
     document.getElementById('red-flags-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Metric chip with semantic color + plain meaning
-  const chips: { label: string; value: string; tone?: 'gain' | 'gold' | 'loss' }[] = [
-    { label: 'Mkt Cap', value: formatCr(company.marketCap) },
-    { label: 'P/E', value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)' },
-    { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
+  // Metric chip with semantic color + plain kid-level meaning (tap the ⓘ)
+  const chips: { label: string; value: string; tone?: 'gain' | 'gold' | 'loss'; tip: string }[] = [
+    { label: 'Mkt Cap', value: formatCr(company.marketCap), tip: 'Total price tag to buy the whole company — all its shares together.' },
+    { label: 'P/E', value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)', tip: 'What you pay for ₹1 of yearly profit. P/E 20 = ₹20 paid per ₹1 earned. Lower is usually cheaper.' },
+    { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—', tip: 'Price compared to the company\'s own net assets ("book"). P/B 2 = paying double what the assets are worth on paper.' },
     {
       label: 'ROE',
       value: `${company.roe.toFixed(1)}%`,
       tone: company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'gold' : 'loss',
+      tip: 'Profit made per ₹100 of shareholders\' money. 20%+ is excellent, under 12% is weak.',
     },
     {
       label: 'D/E',
       value: `${company.debtToEquity.toFixed(2)}x`,
       tone: company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'gold' : 'loss',
+      tip: 'Loans vs own money. D/E 1 = ₹1 of debt per ₹1 of own funds. Under 1 is comfortable (banks are naturally higher).',
     },
-    { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
+    { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—', tip: 'Yearly cash paid to you per ₹100 of share price — like rent from a flat you own.' },
   ];
 
   const toneClass = { gain: 'text-gain', gold: 'text-gold', loss: 'text-loss' };
@@ -159,7 +162,10 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
       <div className="mt-4 flex flex-wrap gap-2 items-center">
         {chips.map(c => (
           <div key={c.label} className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-            <span className="text-[11px] text-muted font-medium">{c.label}</span>
+            <span className="text-[11px] text-muted font-medium inline-flex items-center gap-0.5">
+              {c.label}
+              <Tooltip text={c.tip} />
+            </span>
             <span className={`text-xs font-semibold font-mono ${c.tone ? toneClass[c.tone] : 'text-primary'}`}>
               {c.value}
             </span>
