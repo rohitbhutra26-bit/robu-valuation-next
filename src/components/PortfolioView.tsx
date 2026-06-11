@@ -210,7 +210,7 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
             <div>
               <p className="text-xs font-semibold text-primary mb-2">Preview — {preview.length} holdings found</p>
               <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[1fr_64px_80px] gap-x-3 px-3 py-1.5 bg-border/20 border-b border-border text-[9px] text-muted uppercase tracking-wide">
+                <div className="grid grid-cols-[1fr_64px_80px] gap-x-3 px-3 py-1.5 bg-border/20 border-b border-border text-[10px] text-muted uppercase tracking-wide">
                   <span>Symbol</span><span className="text-right">Qty</span><span className="text-right">Buy Price</span>
                 </div>
                 <div className="divide-y divide-border/30 max-h-40 overflow-y-auto">
@@ -343,12 +343,12 @@ function HoldingCard({
         {/* P&L grid */}
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-border/20 rounded-lg p-2.5">
-            <p className="text-[9px] text-muted mb-0.5">Invested</p>
+            <p className="text-[10px] text-muted mb-0.5">Invested</p>
             <p className="text-sm font-bold font-mono text-primary">{fmt(invested)}</p>
-            <p className="text-[9px] text-muted mt-0.5 font-mono">{entry.qty}×₹{entry.buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+            <p className="text-[10px] text-muted mt-0.5 font-mono">{entry.qty}×₹{entry.buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
           </div>
           <div className="bg-border/20 rounded-lg p-2.5">
-            <p className="text-[9px] text-muted mb-0.5">Current</p>
+            <p className="text-[10px] text-muted mb-0.5">Current</p>
             {live.loading ? (
               <div className="h-4 w-14 bg-border/50 rounded animate-pulse" />
             ) : live.error ? (
@@ -356,12 +356,12 @@ function HoldingCard({
             ) : (
               <>
                 <p className="text-sm font-bold font-mono text-primary">{fmt(currentVal)}</p>
-                <p className="text-[9px] font-mono text-muted mt-0.5">₹{live.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} CMP</p>
+                <p className="text-[10px] font-mono text-muted mt-0.5">₹{live.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} CMP</p>
               </>
             )}
           </div>
           <div className="bg-border/20 rounded-lg p-2.5">
-            <p className="text-[9px] text-muted mb-0.5">P&L</p>
+            <p className="text-[10px] text-muted mb-0.5">P&L</p>
             {live.loading ? (
               <div className="h-4 w-12 bg-border/50 rounded animate-pulse" />
             ) : live.error ? (
@@ -371,7 +371,7 @@ function HoldingCard({
                 <p className={`text-sm font-bold font-mono ${isUp ? 'text-gain' : 'text-loss'}`}>
                   {isUp ? '+' : ''}{pnlPct.toFixed(1)}%
                 </p>
-                <p className={`text-[9px] font-mono mt-0.5 ${isUp ? 'text-gain' : 'text-loss'}`}>
+                <p className={`text-[10px] font-mono mt-0.5 ${isUp ? 'text-gain' : 'text-loss'}`}>
                   {isUp ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </p>
               </>

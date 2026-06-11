@@ -51,7 +51,7 @@ function SliderRow({
       <div className="flex justify-between items-center mb-1.5">
         <div className="min-w-0 pr-2">
           <span className="text-xs text-muted">{label}</span>
-          {hint && <p className="text-[10px] text-muted/60 leading-tight mt-0.5">{hint}</p>}
+          {hint && <p className="simple-only text-[10px] text-muted/60 leading-tight mt-0.5">{hint}</p>}
         </div>
         {/* Editable number input — no upper clamp beyond inputMax */}
         <div className="flex items-center gap-0.5">
@@ -153,7 +153,7 @@ export default function AssumptionsPanel({
         <div className="flex justify-between items-center mb-2">
           <div>
             <span className="text-xs text-muted">Projection Period</span>
-            <p className="text-[10px] text-muted/60 leading-tight mt-0.5">How many years ahead the model looks</p>
+            <p className="simple-only text-[10px] text-muted/60 leading-tight mt-0.5">How many years ahead the model looks</p>
           </div>
           <span className="text-sm font-semibold font-mono text-primary">{assumptions.years} Years</span>
         </div>

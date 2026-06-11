@@ -29,7 +29,7 @@ function score(p: Peer): number {
 
 function Badge({ text, color }: { text: string; color: string }) {
   return (
-    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border tracking-wide ${color}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border tracking-wide ${color}`}>
       {text}
     </span>
   );
@@ -113,7 +113,7 @@ export default function SectorAlternatives({ company, onSelectSymbol }: SectorAl
                   <p className={`text-sm font-bold font-mono ${s >= 60 ? 'text-gain' : s >= 40 ? 'text-gold' : 'text-loss'}`}>
                     {s}/100
                   </p>
-                  {isBetter && <p className="text-[9px] text-gain font-bold">↑ Better</p>}
+                  {isBetter && <p className="text-[10px] text-gain font-bold">↑ Better</p>}
                 </div>
               </div>
               <div className="flex gap-3 mt-2">

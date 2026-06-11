@@ -421,3 +421,10 @@ input[type='number'] { -moz-appearance: textfield; }
   .pr-keep { page-break-inside: avoid; }
 }
 .print-only { display: none; }
+
+/* ── Simple / Analyst view mode ───────────────────────────────────────────────
+   Toggled via data-mode on <html> (see ModeToggle.tsx).
+   Simple  → hide formulas, σ, score breakdowns (.analyst-only)
+   Analyst → hide hand-holding hints meant for beginners (.simple-only)        */
+[data-mode='simple'] .analyst-only { display: none !important; }
+[data-mode='analyst'] .simple-only { display: none !important; }

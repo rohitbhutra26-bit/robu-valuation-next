@@ -288,7 +288,7 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
                       <p className={`text-sm font-bold font-mono ${f.color}`}>
                         {hc.requiredCAGR.toFixed(0)}%
                       </p>
-                      <p className={`text-[9px] font-semibold ${f.color}`}>{f.label}</p>
+                      <p className={`text-[10px] font-semibold ${f.color}`}>{f.label}</p>
                     </button>
                   );
                 })}

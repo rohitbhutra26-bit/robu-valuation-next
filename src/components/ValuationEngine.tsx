@@ -55,9 +55,9 @@ function MethodCard({
   const upside    = fairValue > 0 ? (fairValue / currentPrice - 1) * 100 : 0;
   const isUp      = upside >= 0;
   const buyPrice  = fairValue > 0 ? fairValue * (1 - marginOfSafety / 100) : 0;
-  const verdict   = upside >= 20 ? { label: 'UNDERVALUED', cls: 'text-gain bg-gain/10 border-gain/20' }
-                  : upside <= -15 ? { label: 'OVERVALUED',  cls: 'text-loss bg-loss/10 border-loss/20' }
-                  :                 { label: 'FAIR VALUE',  cls: 'text-gold bg-gold/10 border-gold/20' };
+  const verdict   = upside >= 20 ? { label: 'Looks cheap',  cls: 'text-gain bg-gain/10 border-gain/20' }
+                  : upside <= -15 ? { label: 'Looks pricey', cls: 'text-loss bg-loss/10 border-loss/20' }
+                  :                 { label: 'About right',  cls: 'text-gold bg-gold/10 border-gold/20' };
 
   return (
     <div className={`rounded-xl p-3 border transition-all ${
@@ -67,7 +67,7 @@ function MethodCard({
     }`}>
       <div className="flex items-start justify-between mb-1.5 gap-1">
         <span className={`text-[11px] font-semibold leading-tight ${primary ? 'text-gold' : 'text-muted'}`}>{method}</span>
-        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border tracking-wide flex-shrink-0 ${verdict.cls}`}>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border flex-shrink-0 ${verdict.cls}`}>
           {verdict.label}
         </span>
       </div>
@@ -84,10 +84,11 @@ function MethodCard({
           Buy ≤ ₹{buyPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({marginOfSafety}% MoS)
         </p>
       )}
+      {/* Simple mode sees the plain explanation; Analyst mode sees the formula */}
       {METHOD_PLAIN[method] && (
-        <p className="text-[10px] text-primary/70 leading-relaxed mb-1">{METHOD_PLAIN[method]}</p>
+        <p className="simple-only text-[10px] text-primary/70 leading-relaxed mb-1">{METHOD_PLAIN[method]}</p>
       )}
-      <p className="text-[10px] text-muted leading-relaxed line-clamp-3 font-mono">{desc}</p>
+      <p className="analyst-only text-[10px] text-muted leading-relaxed line-clamp-3 font-mono">{desc}</p>
     </div>
   );
 }
@@ -329,7 +330,8 @@ export default function ValuationEngine({ company, financials, assumptions, comp
             {quality.label}
             <Tooltip text={quality.breakdown} position="bottom" />
           </span>
-          <span className="text-[10px] font-bold text-gold bg-gold/10 border border-gold/20 px-2 py-0.5 rounded font-mono">
+          {/* Badge diet: model name is context, not status — muted, analyst-only */}
+          <span className="analyst-only text-[10px] text-muted border border-border px-2 py-0.5 rounded font-mono">
             {modelBadge}
           </span>
         </div>

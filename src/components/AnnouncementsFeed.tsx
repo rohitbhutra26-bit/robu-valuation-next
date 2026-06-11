@@ -45,10 +45,10 @@ export default function AnnouncementsFeed({ company }: { company: Company }) {
             className="block rounded-lg border border-border hover:border-accent/40 hover:bg-accent/3 transition-all p-3">
             <div className="flex items-start justify-between gap-2">
               <p className="text-xs text-primary leading-snug line-clamp-2">{item.subject}</p>
-              <span className="text-[9px] text-muted font-mono flex-shrink-0 mt-0.5">{item.date}</span>
+              <span className="text-[10px] text-muted font-mono flex-shrink-0 mt-0.5">{item.date}</span>
             </div>
             {item.category && (
-              <span className="text-[9px] text-muted mt-1 inline-block">{item.category}</span>
+              <span className="text-[10px] text-muted mt-1 inline-block">{item.category}</span>
             )}
           </a>
         ))}

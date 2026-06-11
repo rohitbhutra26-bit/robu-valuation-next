@@ -8,6 +8,7 @@ import {
   ChevronRight,
 } from '@/lib/icons';
 import ThemeToggle from './ThemeToggle';
+import ModeToggle from './ModeToggle';
 import { getSectorProfile, getCompanyProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
 import AIOverview from './AIOverview';
@@ -119,7 +120,7 @@ function BottomNav({
                 ${disabled ? 'opacity-25 cursor-not-allowed' : ''}`}
             >
               {icon}
-              <span className={`text-[9px] font-medium leading-none ${isOn ? 'text-gold' : 'text-muted'}`}>
+              <span className={`text-[10px] font-medium leading-none ${isOn ? 'text-gold' : 'text-muted'}`}>
                 {label}
               </span>
               {isOn && <div className="w-4 h-0.5 rounded-full bg-gold mt-0.5" />}
@@ -222,6 +223,7 @@ function MobileHeader({
               </div>
             </>
           )}
+          <ModeToggle />
           <ThemeToggle />
         </div>
       </div>

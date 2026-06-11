@@ -167,7 +167,7 @@ export default function QuarterlyFlash({ company }: QuarterlyFlashProps) {
                     <td className="py-1.5 pr-3 text-right font-mono text-primary">
                       {q.revenue > 0 ? q.revenue.toLocaleString('en-IN') : '—'}
                       {revChg !== null && (
-                        <span className={`ml-1 text-[9px] ${revChg >= 0 ? 'text-gain' : 'text-loss'}`}>
+                        <span className={`ml-1 text-[10px] ${revChg >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {revChg >= 0 ? '▲' : '▼'}{Math.abs(revChg).toFixed(0)}%
                         </span>
                       )}

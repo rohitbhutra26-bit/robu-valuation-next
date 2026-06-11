@@ -120,7 +120,7 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
 
         {/* Gemini badge once loaded */}
         {isAI && !aiLoading && (
-          <span className="text-[9px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono flex-shrink-0">
+          <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono flex-shrink-0">
             Gemini
           </span>
         )}

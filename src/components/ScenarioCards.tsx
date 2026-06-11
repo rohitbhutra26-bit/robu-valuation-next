@@ -94,7 +94,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                   <span className="text-xs font-bold" style={{ color: s.color }}>{s.name}</span>
-                  <span className="text-[9px] font-bold px-1 rounded ml-auto" style={{ color: s.color, backgroundColor: `${s.color}20` }}>
+                  <span className="text-[10px] font-bold px-1 rounded ml-auto" style={{ color: s.color, backgroundColor: `${s.color}20` }}>
                     {s.probability}%
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
           <p className="text-[11px] text-muted mt-0.5">
             Bear = things go wrong · Base = your inputs · Bull = things go right
           </p>
-          <p className="text-[11px] text-muted mt-0.5">
+          <p className="analyst-only text-[11px] text-muted mt-0.5">
             Model: <span className="text-gold font-medium">{profile.exitMultipleLabel}</span>
             {' · '}
             {deltas.isCompanySpecific

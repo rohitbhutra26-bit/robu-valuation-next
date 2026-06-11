@@ -30,15 +30,18 @@ const antiFlashScript = `
   try {
     var t = localStorage.getItem('robu-theme') || 'light';
     document.documentElement.setAttribute('data-theme', t);
+    var m = localStorage.getItem('robu-mode') || 'simple';
+    document.documentElement.setAttribute('data-mode', m);
   } catch(e) {
     document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.setAttribute('data-mode', 'simple');
   }
 })();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en" data-theme="light" data-mode="simple">
       <head>
         <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

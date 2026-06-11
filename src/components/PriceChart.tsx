@@ -286,10 +286,10 @@ export default function PriceChart({ company, financials = [] }: Props) {
               { label: 'Pricey', price: bands.expensive, pe: bands.priceyPE, pct: (bands.expensive / price - 1) * 100, bg: 'bg-loss/10', border: 'border-loss/25', text: 'text-loss' },
             ] as const).map(b => (
               <div key={b.label} className={`text-center p-2 sm:p-2.5 rounded-lg ${b.bg} border ${b.border}`}>
-                <p className={`text-[9px] sm:text-[10px] ${b.text} font-bold uppercase tracking-wide mb-0.5`}>{b.label}</p>
+                <p className={`text-[10px] sm:text-[10px] ${b.text} font-bold uppercase tracking-wide mb-0.5`}>{b.label}</p>
                 <p className={`text-xs sm:text-sm font-bold font-mono ${b.text} leading-tight`}>{inr(b.price)}</p>
-                <p className="text-[9px] sm:text-[10px] text-muted mt-0.5">{b.pe}x P/E</p>
-                <p className={`text-[9px] sm:text-[10px] font-mono mt-0.5 ${b.pct >= 0 ? 'text-gain' : 'text-loss'}`}>
+                <p className="text-[10px] sm:text-[10px] text-muted mt-0.5">{b.pe}x P/E</p>
+                <p className={`text-[10px] sm:text-[10px] font-mono mt-0.5 ${b.pct >= 0 ? 'text-gain' : 'text-loss'}`}>
                   {b.pct >= 0 ? '+' : ''}{b.pct.toFixed(0)}%
                 </p>
               </div>

@@ -39,6 +39,7 @@ import VerdictCard from '@/components/VerdictCard';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
+import ModeToggle from '@/components/ModeToggle';
 import { Calculator, Table2, Users, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Filter } from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio, addToPortfolio } from '@/lib/portfolio';
@@ -427,6 +428,7 @@ export default function Home() {
             >
               ⚡ Pro
             </a>
+            <ModeToggle />
             <ThemeToggle />
           </div>
         </div>

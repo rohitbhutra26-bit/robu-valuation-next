@@ -130,7 +130,7 @@ export default function PeerCompare({ company }: { company: Company }) {
         </div>
         <div className="flex items-center gap-2">
           {isAISource && (
-            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono">
+            <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent font-mono">
               <Sparkles size={9} /> AI peers
             </span>
           )}

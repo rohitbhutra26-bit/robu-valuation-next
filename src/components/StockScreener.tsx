@@ -150,7 +150,7 @@ function QualityBar({ score }: { score: number }) {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
-      <span className="text-[9px] font-bold font-mono" style={{ color }}>{score}</span>
+      <span className="text-[10px] font-bold font-mono" style={{ color }}>{score}</span>
     </div>
   );
 }
@@ -268,7 +268,7 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
             <Filter size={11} />
             Filters
             {activeFilterCount > 0 && (
-              <span className="text-[9px] font-bold bg-accent text-terminal px-1 rounded">
+              <span className="text-[10px] font-bold bg-accent text-terminal px-1 rounded">
                 {activeFilterCount}
               </span>
             )}
@@ -446,12 +446,12 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
                   <button
                     key={col}
                     onClick={() => toggleSort(col)}
-                    className="text-right text-[9px] text-muted uppercase tracking-wide hover:text-primary flex items-center justify-end gap-0.5"
+                    className="text-right text-[10px] text-muted uppercase tracking-wide hover:text-primary flex items-center justify-end gap-0.5"
                   >
                     {label} {sortCol === col ? (sortAsc ? '↑' : '↓') : ''}
                   </button>
                 ) : (
-                  <span key={label} className="text-[9px] text-muted uppercase tracking-wide">{label}</span>
+                  <span key={label} className="text-[10px] text-muted uppercase tracking-wide">{label}</span>
                 )
               )}
             </div>
@@ -486,7 +486,7 @@ export default function StockScreener({ onSelectSymbol }: StockScreenerProps) {
                           )}
                         </div>
                         <p className="text-xs text-primary truncate mt-0.5">{r.name}</p>
-                        <p className="text-[9px] text-muted font-mono">
+                        <p className="text-[10px] text-muted font-mono">
                           ₹{r.price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                           {r.revenueGrowth5Y !== 0 && (
                             <span className={r.revenueGrowth5Y > 0 ? ' text-gain' : ' text-loss'}>
