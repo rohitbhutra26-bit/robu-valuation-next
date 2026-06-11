@@ -72,6 +72,8 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
             bull:         data.bull,
             bear:         data.bear,
             verdictColor: '',  // driven by VERDICT_CONFIG
+            thesis:       data.thesis ?? [],
+            watch:        data.watch ?? [],
           };
           aiCache.set(company.symbol, upgraded);
           setAiInsight(upgraded);

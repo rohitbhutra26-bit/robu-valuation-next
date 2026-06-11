@@ -26,6 +26,15 @@ export function valuationReliability(
 ): ReliabilityResult {
   if (!financials.length || company.currentPrice <= 0) return OK;
 
+  // Pattern 0 — SME / recent listing with very short public history
+  if (financials.length < 3) {
+    return {
+      reliable: false,
+      title: 'Very short financial history — treat all numbers as rough',
+      note: `Only ${financials.length} year${financials.length === 1 ? '' : 's'} of published financials available (common for SME and recently listed companies). Growth rates, fair value and scores built on so little history are guesses, not analysis. For SME stocks, check the DRHP/annual report directly and weight the promoter's track record more than any model.`,
+    };
+  }
+
   const profile = getCompanyProfile(company);
   const label   = `${profile.sectorLabel} ${company.industry || ''} ${company.sector || ''}`.toLowerCase();
   const isConglomerate = /conglomerate|diversified|holding|infra/.test(label);

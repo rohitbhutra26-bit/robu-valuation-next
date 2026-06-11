@@ -19,16 +19,51 @@ interface ExportReportProps {
   assumptions: ValuationAssumptions;
 }
 
-export default function ExportReport(_props: ExportReportProps) {
+export default function ExportReport({ company }: ExportReportProps) {
+  const [busy, setBusy] = useState(false);
+
+  async function handleDownload() {
+    if (busy) return;
+    const wrapper = document.querySelector('.print-only') as HTMLElement | null;
+    const report  = document.getElementById('print-report');
+    if (!wrapper || !report) { window.print(); return; }
+
+    setBusy(true);
+    // Reveal the hidden report off-screen so html2canvas can rasterise it
+    wrapper.style.cssText = 'display:block;position:fixed;left:-9999px;top:0;width:860px;background:#fff;z-index:-1;';
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const today = new Date().toISOString().slice(0, 10);
+      const opts = {
+        margin:      [8, 8, 10, 8],
+        filename:    `${company.symbol}-Robu-Report-${today}.pdf`,
+        image:       { type: 'jpeg', quality: 0.96 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:   { mode: ['css', 'legacy'], before: '.pr-chapter', avoid: '.pr-keep' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any;
+      await html2pdf().set(opts).from(report).save();
+    } catch (e) {
+      console.error('[export] PDF generation failed, falling back to print dialog', e);
+      wrapper.style.cssText = '';
+      window.print();
+    } finally {
+      wrapper.style.cssText = '';
+      setBusy(false);
+    }
+  }
+
   return (
     <button
-      onClick={() => window.print()}
-      className="group flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-terminal transition-all shadow-sm"
-      title="Download the full multi-page stock report as PDF"
+      onClick={handleDownload}
+      disabled={busy}
+      className="group flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-terminal transition-all shadow-sm disabled:opacity-60 disabled:cursor-wait"
+      title="Download the full multi-page stock report as a PDF file"
     >
       <Download size={14} />
       <span className="leading-tight text-left">
-        Download full
+        {busy ? 'Preparing…' : 'Download full'}
         <span className="block font-serif text-[13px] tracking-wide">STOCK REPORT</span>
       </span>
     </button>
@@ -59,7 +94,6 @@ const FLAG_COLORS: Record<FlagStatus, { bg: string; fg: string; icon: string }> 
 
 const HORIZONS = [3, 5, 7, 10];
 
-interface Candle { time: string; close: number }
 interface Peer {
   symbol: string; name?: string; currentPrice?: number; pe?: number; pb?: number;
   roe?: number; de?: number; netMargin?: number; marketCap?: number; isSelf?: boolean;
@@ -112,7 +146,6 @@ function Bar({ value, color, height = 7 }: { value: number; color: string; heigh
 // ─── Main printable report ────────────────────────────────────────────────────
 
 export function PrintableReport({ company, financials, assumptions }: ExportReportProps) {
-  const [candles, setCandles]     = useState<Candle[]>([]);
   const [peers, setPeers]         = useState<Peer[]>([]);
   const [quarters, setQuarters]   = useState<Quarter[]>([]);
   const [peStats, setPeStats]     = useState<HistStats | null>(null);
@@ -128,15 +161,12 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
       try { const r = await fetch(url); return r.ok ? await r.json() : null; } catch { return null; }
     };
     (async () => {
-      const [oh, pe, qt, hi] = await Promise.all([
-        grab(`/api/ohlc/${sym}`),
+      const [pe, qt, hi] = await Promise.all([
         grab(`/api/peers/${sym}`),
         grab(`/api/quarterly/${sym}`),
         grab(`/api/historical/${sym}`),
       ]);
       if (dead) return;
-      const arr = Array.isArray(oh) ? oh : (oh?.candles ?? []);
-      setCandles(arr.filter((c: Candle) => c?.close > 0));
       const plist = Array.isArray(pe) ? pe : (pe?.peers ?? []);
       setPeers(plist);
       setQuarters(Array.isArray(qt) ? qt.slice(0, 6) : []);
@@ -193,20 +223,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   const flags = redFlags(financials, company, profile.model);
   const mc    = monteCarloFairValue(profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
   const rdcf  = reverseDcfVerdict(financials, company, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
-
-  // Price chart geometry
-  const PC_W = 700, PC_H = 150;
-  const closes = candles.map(c => c.close);
-  const pcMin = closes.length ? Math.min(...closes) : 0;
-  const pcMax = closes.length ? Math.max(...closes) : 1;
-  const pricePath = closes.length > 1
-    ? closes.map((c, i) => {
-        const x = (i / (closes.length - 1)) * PC_W;
-        const y = PC_H - ((c - pcMin) / Math.max(pcMax - pcMin, 0.01)) * (PC_H - 14) - 7;
-        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ')
-    : '';
-  const periodReturn = closes.length > 1 ? ((closes[closes.length - 1] / closes[0]) - 1) * 100 : 0;
 
   // Revenue/PAT chart geometry
   const chartYears = financials.slice(-8);
@@ -317,28 +333,31 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
             ))}
           </div>
 
-          {/* Price chart */}
-          {pricePath && (
-            <div className="pr-keep" style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Price · last {Math.round(candles.length / 250) || 1}y</span>
-                <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700, color: periodReturn >= 0 ? GAIN : LOSS }}>
-                  {periodReturn >= 0 ? '+' : ''}{periodReturn.toFixed(1)}% over period
-                </span>
-              </div>
-              <svg width={PC_W} height={PC_H} viewBox={`0 0 ${PC_W} ${PC_H}`} style={{ display: 'block', border: `1px solid ${LINE}`, borderRadius: '8px', background: '#fff' }}>
-                <path d={pricePath} fill="none" stroke={TERRA} strokeWidth="1.8" />
-                <text x="6" y="14" fontSize="9" fill={FAINT} fontFamily="monospace">high ₹{Math.round(pcMax).toLocaleString('en-IN')}</text>
-                <text x="6" y={PC_H - 6} fontSize="9" fill={FAINT} fontFamily="monospace">low ₹{Math.round(pcMin).toLocaleString('en-IN')}</text>
-              </svg>
-            </div>
-          )}
-
-          {/* ════════ CHAPTER 2 · THE STORY ════════ */}
+          {/* ════════ CHAPTER 2 · THE WRITTEN CASE ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="The story" />
-            <SecTitle kicker="In plain english" title="What's going on with this company?" />
-            <p style={{ fontSize: '13px', lineHeight: 1.75, color: INK, margin: '0 0 14px' }}>{insight.summary}</p>
+            <Brand company={company} page="The written case" />
+            <SecTitle kicker="Research summary" title="Why consider this stock — or not" />
+            <p style={{ fontSize: '13px', lineHeight: 1.75, color: INK, margin: '0 0 12px', fontWeight: 600 }}>{insight.summary}</p>
+
+            {/* Full written thesis — the researched reasoning */}
+            {insight.thesis.map((para, i) => (
+              <p key={i} style={{ fontSize: '12px', lineHeight: 1.8, color: INK, margin: '0 0 12px' }}>
+                <span style={{ fontWeight: 700, color: GOLD }}>{['The business. ', 'The quality test. ', 'The price. '][i] || ''}</span>
+                {para.replace(/^The (business|quality test|price): /, '')}
+              </p>
+            ))}
+
+            {/* What to watch — the owner's quarterly checklist */}
+            {insight.watch.length > 0 && (
+              <div className="pr-keep" style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>If you own it, watch these</div>
+                {insight.watch.map((w, i) => (
+                  <div key={i} style={{ fontSize: '11px', color: INK, lineHeight: 1.6, display: 'flex', gap: '7px' }}>
+                    <span style={{ color: GOLD }}>▸</span><span>{w}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
               <Card accent="#86efac" style={{ background: '#f0fdf4' }}>
