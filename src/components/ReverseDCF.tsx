@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { reverseDcfVerdict } from '@/lib/advancedModels';
+import Tooltip from '@/components/Tooltip';
 
 interface Props {
   company: Company;
@@ -43,7 +44,10 @@ export default function ReverseDCF({ company, financials, assumptions }: Props) 
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-primary">What Is the Market Expecting?</h3>
+          <h3 className="text-sm font-semibold text-primary flex items-center gap-1">
+            What Is the Market Expecting?
+            <Tooltip text="Reverse DCF, explained simply: instead of guessing what the stock is worth, we ask — for today's price to be fair, how fast must the company grow? Then we check if it has EVER grown that fast. If the price assumes 25% forever and the company has done 10%, someone is dreaming." />
+          </h3>
           <p className="text-[11px] text-muted mt-0.5">
             Growth already baked into the price vs what the company has actually delivered
           </p>

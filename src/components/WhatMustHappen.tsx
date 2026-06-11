@@ -5,6 +5,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { computeTargetPath, Feasibility, PathRequirement } from '@/lib/targetPathEngine';
 import { Clock } from '@/lib/icons';
+import Tooltip from '@/components/Tooltip';
 
 interface Props {
   company: Company;
@@ -151,7 +152,10 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
             <div className="w-6 h-6 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center">
               <Clock size={13} className="text-gold" />
             </div>
-            <h3 className="text-sm font-semibold text-primary">What Must Happen?</h3>
+            <h3 className="text-sm font-semibold text-primary flex items-center gap-1">
+              What Must Happen?
+              <Tooltip text="Pick a dream price (say 2× today). This card works backwards and tells you exactly what the company must achieve to get there — how fast it must grow, what margins it needs. Then it grades how realistic that is. Bigger dreams need more years." />
+            </h3>
           </div>
           <p className="text-[11px] text-muted mt-1">
             Set a target price → see exactly what needs to be true to get there

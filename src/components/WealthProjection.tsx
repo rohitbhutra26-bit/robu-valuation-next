@@ -5,6 +5,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 import { buildScenarioConfigs, fmtINR } from '@/lib/scenarioEngine';
+import Tooltip from '@/components/Tooltip';
 
 interface Props {
   company: Company;
@@ -83,7 +84,10 @@ export default function WealthProjection({ company, financials, assumptions }: P
           <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center text-[13px]">
             💰
           </div>
-          <h3 className="text-sm font-semibold text-primary">If You Invested {fmtINR(amount)} Today</h3>
+          <h3 className="text-sm font-semibold text-primary flex items-center gap-1">
+            If You Invested {fmtINR(amount)} Today
+            <Tooltip text="🐻 Bear = things go wrong (slower growth, market pays less). 📊 Base = exactly your slider settings. 🚀 Bull = things go right. Three weather forecasts for your money — pack for all three." />
+          </h3>
         </div>
         <p className="text-[11px] text-muted mt-1">
           What your money could grow to — based on your assumptions, with growth fade built in. Dividends not included.

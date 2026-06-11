@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Company, FinancialYear } from '@/lib/types';
 import { staggerContainer, staggerItem } from '@/lib/animations';
+import Tooltip from '@/components/Tooltip';
 
 interface KeyMetricsProps {
   company: Company;
@@ -15,12 +16,14 @@ function MetricCard({
   subValue,
   color = 'text-primary',
   trend,
+  tip,
 }: {
   label: string;
   value: string;
   subValue?: string;
   color?: string;
   trend?: 'up' | 'down' | 'neutral';
+  tip?: string;
 }) {
   return (
     <motion.div
@@ -28,7 +31,10 @@ function MetricCard({
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
       className="bg-card border border-border rounded-xl p-3 flex-1 min-w-0"
     >
-      <p className="text-xs text-muted uppercase tracking-wide mb-1 truncate">{label}</p>
+      <p className="text-xs text-muted uppercase tracking-wide mb-1 flex items-center gap-0.5">
+        <span className="truncate">{label}</span>
+        {tip && <Tooltip text={tip} />}
+      </p>
       <p className={`text-lg font-bold font-mono ${color}`}>{value}</p>
       {subValue && (
         <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
@@ -76,6 +82,7 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
         subValue={`${revCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={revCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
+        tip="Total sales for the year — everything customers paid the company. CAGR = average yearly growth, like FD interest."
       />
       <MetricCard
         label={`Profit (${latest.year})`}
@@ -83,12 +90,14 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
         subValue={`${patCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={patCAGR > 0 ? 'up' : 'down'}
         color={latest.pat > 0 ? 'text-gain' : 'text-loss'}
+        tip="What's left after ALL costs and taxes (PAT). The real take-home of the business."
       />
       <MetricCard
         label="EBITDA Margin"
         value={`${latest.ebitdaMargin.toFixed(1)}%`}
         subValue={`Net: ${latest.netMargin.toFixed(1)}%`}
         color={latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary'}
+        tip="Out of every ₹100 in sales, how much survives the day-to-day running costs. Higher = the business keeps more of what it sells."
       />
       <MetricCard
         label={`EPS (${latest.year})`}
@@ -96,18 +105,21 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
         subValue={`${epsCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={epsCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
+        tip="Profit cut into per-share slices — your share of the year's earnings for each share you own."
       />
       <MetricCard
         label="ROE"
         value={`${company.roe.toFixed(1)}%`}
         subValue={company.roe >= 20 ? 'Excellent' : company.roe >= 12 ? 'Good' : 'Below avg'}
         color={company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss'}
+        tip="Profit made per ₹100 of shareholders' own money. 20%+ excellent, under 12% weak."
       />
       <MetricCard
         label="Debt / Equity"
         value={`${company.debtToEquity.toFixed(2)}x`}
         subValue={company.debtToEquity < 1 ? 'Low leverage' : company.debtToEquity < 3 ? 'Moderate' : 'High leverage'}
         color={company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}
+        tip="Loans compared to own money. Like your home loan vs your savings — under 1x is comfortable (banks naturally run higher)."
       />
     </motion.div>
   );
