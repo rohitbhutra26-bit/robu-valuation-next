@@ -404,14 +404,14 @@ function HoldingCard({
                          { text: 'Fair Range',  cls: 'text-gold bg-gold/10 border-gold/20' };
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className="group bg-card border border-border rounded-xl overflow-hidden">
       {/* Weight bar at top */}
       <div className="h-0.5 bg-border">
         <div className="h-full bg-gold/60 transition-all duration-500" style={{ width: `${Math.min(weight, 100)}%` }} />
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Top: symbol + name + actions */}
+        {/* Top: symbol + name on left · live price + day move on right */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0 cursor-pointer" onClick={onSelect}>
             <div className="flex items-center gap-2 flex-wrap">
@@ -427,15 +427,38 @@ function HoldingCard({
             </div>
             <p className="text-sm font-semibold text-primary mt-1 truncate">{entry.name}</p>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button onClick={() => setEditing(v => !v)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/40 hover:text-gold hover:bg-gold/10 transition-all">
-              <Edit2 size={12} />
-            </button>
-            <button onClick={onRemove}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/40 hover:text-loss hover:bg-loss/10 transition-all">
-              <Trash2 size={12} />
-            </button>
+
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+            {/* Live price + today's move */}
+            <div className="text-right cursor-pointer min-w-[64px]" onClick={onSelect}>
+              {live.loading ? (
+                <div className="h-4 w-14 bg-border/50 rounded animate-pulse ml-auto" />
+              ) : live.error || live.currentPrice <= 0 ? (
+                <p className="text-xs text-muted/50">—</p>
+              ) : (
+                <>
+                  <p className="text-sm font-bold font-mono text-primary leading-none">
+                    ₹{live.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </p>
+                  {live.changePct !== 0 && (
+                    <p className={`text-[10px] font-mono font-semibold mt-1 ${live.changePct >= 0 ? 'text-gain' : 'text-loss'}`}>
+                      {live.changePct >= 0 ? '▲' : '▼'} {Math.abs(live.changePct).toFixed(2)}%
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+            {/* Actions — revealed on hover/focus */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <button onClick={() => setEditing(v => !v)} aria-label="Edit holding"
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-muted/50 hover:text-gold hover:bg-gold/10 transition-all">
+                <Edit2 size={11} />
+              </button>
+              <button onClick={onRemove} aria-label="Remove holding"
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-muted/50 hover:text-loss hover:bg-loss/10 transition-all">
+                <Trash2 size={11} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -461,7 +484,7 @@ function HoldingCard({
             ) : (
               <>
                 <p className="text-sm font-bold font-mono text-primary">{fmt(currentVal)}</p>
-                <p className="text-[10px] font-mono text-muted mt-0.5">₹{live.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })} CMP</p>
+                <p className="text-[10px] font-mono text-muted mt-0.5">{entry.qty}×₹{live.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
               </>
             )}
           </div>
@@ -499,7 +522,7 @@ function HoldingCard({
 }
 
 // ── Summary header ────────────────────────────────────────────────────────────
-function SummaryHeader({ portfolio, liveMap }: { portfolio: PortfolioEntry[]; liveMap: Record<string, LiveData> }) {
+function SummaryHeader({ portfolio, liveMap, asOf }: { portfolio: PortfolioEntry[]; liveMap: Record<string, LiveData>; asOf: Date | null }) {
   let totalInvested = 0, totalCurrent = 0, loaded = 0, gainers = 0;
 
   for (const e of portfolio) {
@@ -522,7 +545,15 @@ function SummaryHeader({ portfolio, liveMap }: { portfolio: PortfolioEntry[]; li
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       {/* Big P&L bar */}
       <div className={`px-5 py-4 ${isUp ? 'bg-gain/5' : 'bg-loss/5'}`}>
-        <p className="text-[11px] text-muted mb-1">Total Portfolio P&L</p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[11px] text-muted">Total Portfolio P&L</p>
+          {asOf && loaded > 0 && (
+            <span className="flex items-center gap-1.5 text-[10px] text-muted font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-gain inline-block" />
+              Live · {asOf.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
         {loaded > 0 ? (
           <div className="flex items-end gap-3 flex-wrap">
             <p className={`text-3xl font-bold font-mono ${isUp ? 'text-gain' : 'text-loss'}`}>
@@ -839,12 +870,7 @@ export default function PortfolioView({ onSelectSymbol }: PortfolioViewProps) {
       </div>
 
       {/* ── Summary ── */}
-      <SummaryHeader portfolio={portfolio} liveMap={liveMap} />
-      {asOf && (
-        <p className="text-[10px] text-muted text-right -mt-2">
-          Prices as of {asOf.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · EOD/delayed
-        </p>
-      )}
+      <SummaryHeader portfolio={portfolio} liveMap={liveMap} asOf={asOf} />
 
       {/* ── Key insights — the "so what" of your portfolio ── */}
       <PortfolioInsights portfolio={portfolio} liveMap={liveMap} />
