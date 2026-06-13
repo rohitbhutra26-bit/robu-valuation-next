@@ -125,31 +125,43 @@ export default function CompanySearch({ onSelect, selectedSymbol }: CompanySearc
         >
           {results.map((r, i) => {
             const isBSE = r.exchange === 'BSE';
+            const isFuzzy = r.match === 'fuzzy';
+            // First fuzzy row gets a "Did you mean?" divider above it
+            const showDidYouMean = isFuzzy && (i === 0 || results[i - 1].match !== 'fuzzy');
             return (
-              <button
-                key={r.symbol}
-                onClick={() => handleSelect(r.symbol)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
-                  i === activeIndex ? 'bg-border' : 'hover:bg-border/50'
-                } ${r.symbol === selectedSymbol ? 'border-l-2 border-gold' : ''}`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div>
-                    <span className="text-sm font-semibold text-gold font-mono">{r.symbol}</span>
-                    <p className="text-xs text-muted mt-0.5 truncate max-w-[150px]">{r.name}</p>
+              <div key={r.symbol}>
+                {showDidYouMean && (
+                  <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
+                    <span className="text-[10px] font-semibold text-gold/90 uppercase tracking-wide">
+                      {i === 0 ? 'Did you mean…' : 'Close matches'}
+                    </span>
+                    <span className="h-px flex-1 bg-border" />
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded ${
-                    isBSE
-                      ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-                      : 'bg-gain/10 text-gain border border-gain/20'
-                  }`}>
-                    {r.exchange || 'NSE'}
-                  </span>
-                  <p className="text-[10px] text-muted truncate max-w-[80px]">{r.sector}</p>
-                </div>
-              </button>
+                )}
+                <button
+                  onClick={() => handleSelect(r.symbol)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
+                    i === activeIndex ? 'bg-border' : 'hover:bg-border/50'
+                  } ${r.symbol === selectedSymbol ? 'border-l-2 border-gold' : ''} ${isFuzzy ? 'opacity-85' : ''}`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div>
+                      <span className="text-sm font-semibold text-gold font-mono">{r.symbol}</span>
+                      <p className="text-xs text-muted mt-0.5 truncate max-w-[150px]">{r.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded ${
+                      isBSE
+                        ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                        : 'bg-gain/10 text-gain border border-gain/20'
+                    }`}>
+                      {r.exchange || 'NSE'}
+                    </span>
+                    <p className="text-[10px] text-muted truncate max-w-[80px]">{r.sector}</p>
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>

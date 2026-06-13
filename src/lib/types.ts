@@ -98,4 +98,7 @@ export interface SearchResult {
   exchange?: string;
   currentPrice?: number;
   changePercent?: number;
+  /** How the backend matched this row: exact | starts | contains | fuzzy.
+   *  'fuzzy' rows are typo-tolerant suggestions ("did you mean…"). */
+  match?: 'exact' | 'starts' | 'contains' | 'fuzzy';
 }

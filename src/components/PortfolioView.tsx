@@ -113,7 +113,7 @@ function parseImportCSV(text: string): ImportRow[] {
 // live universe so the user imports REAL stocks — never garbage symbols that
 // silently fetch wrong or no data.
 export interface VerifiedRow extends ImportRow {
-  status: 'checking' | 'ok' | 'fail';
+  status: 'checking' | 'ok' | 'review' | 'fail';
   resolved?: { symbol: string; name: string; sector: string };
 }
 
@@ -126,20 +126,40 @@ function cleanQuery(s: string): string {
     .trim();
 }
 
+type SearchHit = { symbol: string; name: string; sector?: string; match?: 'exact' | 'starts' | 'contains' | 'fuzzy' };
+
 async function resolveRow(row: ImportRow): Promise<VerifiedRow> {
   const q = cleanQuery(row.symbol);
+  const qU = q.toUpperCase();
   try {
     const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
     if (!res.ok) throw new Error();
-    const results: { symbol: string; name: string; sector?: string }[] = await res.json();
+    const results: SearchHit[] = await res.json();
     if (!Array.isArray(results) || results.length === 0) throw new Error();
-    // Prefer an exact symbol match; otherwise trust the top fuzzy result
-    const exact = results.find(r => r.symbol.toUpperCase() === q.toUpperCase());
-    const hit   = exact || results[0];
-    return { ...row, status: 'ok', resolved: { symbol: hit.symbol, name: hit.name, sector: hit.sector || '' } };
+
+    // 1) Exact symbol match — always trustworthy
+    const exact = results.find(r => r.symbol.toUpperCase() === qU);
+    if (exact) return { ...row, status: 'ok', resolved: pick(exact) };
+
+    // 2) Strong match — backend tagged it starts/contains AND it really relates
+    //    to the query (symbol or company name). Safe to auto-accept.
+    const strong = results.find(r =>
+      (r.match === 'starts' || r.match === 'contains') &&
+      (r.symbol.toUpperCase().includes(qU) || r.name.toUpperCase().includes(qU))
+    );
+    if (strong) return { ...row, status: 'ok', resolved: pick(strong) };
+
+    // 3) Only fuzzy guesses left — do NOT silently import (that caused wrong
+    //    stocks). Surface the best guess and let the user verify it.
+    const fuzzy = results[0];
+    return { ...row, status: 'review', resolved: pick(fuzzy) };
   } catch {
     return { ...row, status: 'fail' };
   }
+}
+
+function pick(r: SearchHit) {
+  return { symbol: r.symbol, name: r.name, sector: r.sector || '' };
 }
 
 // ── Import modal ──────────────────────────────────────────────────────────────
@@ -170,6 +190,12 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
     }
     setText(raw);
   }
+
+  // Confirm a fuzzy ("review") guess, or skip it
+  const acceptRow = (i: number) =>
+    setPreview(p => p.map((r, j) => (j === i && r.status === 'review' ? { ...r, status: 'ok' } : r)));
+  const rejectRow = (i: number) =>
+    setPreview(p => p.map((r, j) => (j === i && r.status === 'review' ? { ...r, status: 'fail' } : r)));
 
   async function handleFile(file: File) {
     const content = await file.text();
@@ -250,6 +276,7 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
           {/* Preview table — every row verified against the live universe */}
           {preview.length > 0 && (() => {
             const ok       = preview.filter(r => r.status === 'ok');
+            const review   = preview.filter(r => r.status === 'review');
             const fails    = preview.filter(r => r.status === 'fail');
             const checking = preview.filter(r => r.status === 'checking');
             return (
@@ -257,24 +284,32 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
                 <p className="text-xs font-semibold text-primary mb-2">
                   {checking.length > 0
                     ? `Verifying ${checking.length} of ${preview.length} holdings…`
-                    : `${ok.length} verified${fails.length > 0 ? ` · ${fails.length} unrecognised (will be skipped)` : ' — all matched ✓'}`}
+                    : `${ok.length} verified${review.length > 0 ? ` · ${review.length} to confirm` : ''}${fails.length > 0 ? ` · ${fails.length} not found` : (review.length === 0 ? ' — all matched ✓' : '')}`}
                 </p>
                 <div className="bg-card border border-border rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-[18px_1fr_56px_72px] gap-x-2 px-3 py-1.5 bg-border/20 border-b border-border text-[10px] text-muted uppercase tracking-wide">
+                  <div className="grid grid-cols-[18px_1fr_52px_64px] gap-x-2 px-3 py-1.5 bg-border/20 border-b border-border text-[10px] text-muted uppercase tracking-wide">
                     <span /><span>Matched stock</span><span className="text-right">Qty</span><span className="text-right">Buy ₹</span>
                   </div>
-                  <div className="divide-y divide-border/30 max-h-44 overflow-y-auto">
+                  <div className="divide-y divide-border/30 max-h-52 overflow-y-auto">
                     {preview.map((r, i) => (
-                      <div key={i} className={`grid grid-cols-[18px_1fr_56px_72px] gap-x-2 px-3 py-2 text-xs items-center ${r.status === 'fail' ? 'opacity-50' : ''}`}>
+                      <div key={i} className={`grid grid-cols-[18px_1fr_52px_64px] gap-x-2 px-3 py-2 text-xs items-center ${r.status === 'fail' ? 'opacity-50' : ''}`}>
                         <span aria-hidden="true">
                           {r.status === 'checking' ? <span className="inline-block w-3 h-3 rounded-full border-2 border-gold/40 border-t-gold animate-spin" />
                            : r.status === 'ok' ? <span className="text-gain font-bold">✓</span>
+                           : r.status === 'review' ? <span className="text-gold font-bold">≈</span>
                            : <span className="text-loss font-bold">✗</span>}
                         </span>
                         <span className="min-w-0">
                           <span className="font-bold font-mono text-gold">{r.resolved?.symbol || r.symbol}</span>
                           {r.resolved && r.resolved.name !== r.resolved.symbol && (
                             <span className="block text-[10px] text-muted truncate">{r.resolved.name}</span>
+                          )}
+                          {r.status === 'review' && (
+                            <span className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] text-gold/80">from &ldquo;{r.symbol}&rdquo; — confirm?</span>
+                              <button onClick={() => acceptRow(i)} className="text-[10px] font-semibold text-gain border border-gain/30 bg-gain/10 px-1.5 py-0.5 rounded hover:bg-gain/20 transition-all">Use</button>
+                              <button onClick={() => rejectRow(i)} className="text-[10px] font-semibold text-loss/80 border border-loss/30 px-1.5 py-0.5 rounded hover:bg-loss/10 transition-all">Skip</button>
+                            </span>
                           )}
                           {r.status === 'fail' && (
                             <span className="block text-[10px] text-loss/70">not found — check the symbol</span>
@@ -651,7 +686,7 @@ export default function PortfolioView({ onSelectSymbol }: PortfolioViewProps) {
     setRefreshing(true);
     const init: Record<string, LiveData> = {};
     for (const sym of symbols)
-      init[sym] = { currentPrice: 0, fairValue: 0, upside: 0, loading: true, error: false };
+      init[sym] = { currentPrice: 0, changePct: 0, fairValue: 0, upside: 0, sector: '', name: sym, loading: true, error: false };
     setLiveMap(prev => ({ ...prev, ...init }));
 
     await Promise.allSettled(symbols.map(async sym => {
