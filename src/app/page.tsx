@@ -468,13 +468,13 @@ export default function Home() {
             <RobuLogo size={76} />
 
             {/* Heading — friendly sans */}
-            <h1 className="mt-5 text-5xl font-bold text-primary tracking-tight font-serif">
+            <h1 className="mt-6 text-6xl font-bold text-primary tracking-tight font-serif">
               Robu
             </h1>
-            <p className="mt-3 text-lg text-primary font-medium text-center leading-snug">
+            <p className="mt-5 text-2xl text-primary font-semibold text-center leading-snug max-w-[520px]">
               Should you buy this stock? Find out in 10 seconds.
             </p>
-            <p className="mt-2 text-sm text-muted text-center leading-relaxed max-w-[440px]">
+            <p className="mt-3 text-base text-muted text-center leading-relaxed max-w-[480px]">
               Type any Indian stock. Robu tells you if it looks{' '}
               <em className="not-italic font-semibold text-gain">cheap</em>,{' '}
               <em className="not-italic font-semibold text-warning">fair</em>, or{' '}
@@ -700,7 +700,7 @@ export default function Home() {
               </div>
 
             ) : company ? (
-              <div className="p-4 space-y-4">
+              <div className="px-5 sm:px-8 lg:px-10 py-7 space-y-5 max-w-4xl mx-auto">
                 {/* Sticky mini-ticker — appears once you scroll past the header */}
                 <StickyTicker company={company} financials={financials} assumptions={assumptions} />
 
