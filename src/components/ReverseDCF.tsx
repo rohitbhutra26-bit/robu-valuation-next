@@ -28,10 +28,12 @@ export default function ReverseDCF({ company, financials, assumptions }: Props) 
     () => reverseDcfVerdict(
       financials, company,
       assumptions.netMarginAssumption,
-      assumptions.exitPE,
+      // Use the sector-NORMALIZED exit multiple, not the stock's own current PE.
+      // Feeding current PE made the reverse-DCF circular → implied growth ≈ 0%.
+      assumptions.exitMultiple,
       assumptions.years,
     ),
-    [financials, company, assumptions.netMarginAssumption, assumptions.exitPE, assumptions.years],
+    [financials, company, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years],
   );
 
   if (!result) return null;

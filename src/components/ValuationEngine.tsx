@@ -180,8 +180,9 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   const buyPrice = compositeFV > 0 ? compositeFV * (1 - mos_input / 100) : 0;
   const mos = compositeFV > 0 ? ((compositeFV - company.currentPrice) / compositeFV) * 100 : 0;
 
-  // Implied growth baked into current price
-  const impliedG = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, assumptions.exitPE, assumptions.years);
+  // Implied growth baked into current price — measured against a sector-normalized
+  // exit multiple (NOT the stock's own current PE, which made the answer circular ≈0%).
+  const impliedG = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
 
   // Current PEG
   const currentPEG = pegResult.currentPEG;

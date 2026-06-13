@@ -772,9 +772,13 @@ export function impliedGrowthRate(
   if (price <= 0 || margin <= 0 || exitPE <= 0 || baseline.revenue <= 0) return 0;
 
   const targetMultiple = (price * shares) / (exitPE * margin * baseline.revenue);
-  if (targetMultiple <= fadeCompound(0, years)) return 0;
 
-  let lo = 0, hi = 100;
+  // Search a band wide enough to express cheap stocks the market is pricing
+  // for DECLINE (negative implied growth). The old floor of lo=0 plus an early
+  // "return 0" bunched every value/cheap stock at a misleading flat 0%.
+  let lo = -15, hi = 100;
+  if (targetMultiple <= fadeCompound(lo, years)) return lo; // priced below -15% — clamp
+  if (targetMultiple >= fadeCompound(hi, years)) return hi; // priced above 100% — clamp
   for (let i = 0; i < 40; i++) {
     const mid = (lo + hi) / 2;
     if (fadeCompound(mid, years) < targetMultiple) lo = mid; else hi = mid;
