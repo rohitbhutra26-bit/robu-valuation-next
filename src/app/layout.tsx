@@ -6,12 +6,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
-  themeColor: '#EDE9E3',
+  themeColor: '#F4F5F8',
 };
 
 export const metadata: Metadata = {
-  title: 'Robu Terminal® | Indian Stock Analysis',
-  description: 'Institutional-grade stock valuation for Indian equities — NSE & BSE',
+  title: 'Robu | Know any stock in plain English',
+  description: 'Search any Indian stock and instantly see if it looks cheap, fair, or expensive — explained simply.',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Robu Terminal',
+    title: 'Robu',
   },
 };
 

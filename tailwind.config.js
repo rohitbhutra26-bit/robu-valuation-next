@@ -37,13 +37,20 @@ module.exports = {
         'slow':     '300ms',
         'spring':   '450ms',
       },
-      // CDS border radius
+      // Border radius — rounder defaults = friendlier feel app-wide.
+      // Overriding Tailwind's stock md/lg/xl/2xl so every existing rounded-*
+      // class softens without touching component markup.
       borderRadius: {
-        'cds-sm':   '4px',
-        'cds-md':   '6px',
-        'cds-lg':   '8px',
-        'cds-xl':   '12px',
-        'cds-2xl':  '16px',
+        'md':       '10px',
+        'lg':       '14px',
+        'xl':       '18px',
+        '2xl':      '24px',
+        '3xl':      '30px',
+        'cds-sm':   '8px',
+        'cds-md':   '10px',
+        'cds-lg':   '14px',
+        'cds-xl':   '18px',
+        'cds-2xl':  '24px',
       },
       // CDS box shadows
       boxShadow: {

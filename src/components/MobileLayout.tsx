@@ -58,9 +58,10 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <text x="50" y="79"
-        fontFamily="Lora, Georgia, 'Times New Roman', serif"
-        fontSize="82" fontWeight="700" fill="#C4511A"
+      <rect x="4" y="4" width="92" height="92" rx="26" fill="#6366F1" />
+      <text x="50" y="73"
+        fontFamily="'DM Sans', system-ui, sans-serif"
+        fontSize="62" fontWeight="700" fill="#FFFFFF"
         textAnchor="middle" dominantBaseline="auto">R</text>
     </svg>
   );
@@ -173,7 +174,7 @@ function MobileHeader({
   const isPos = company ? company.changePercent >= 0 : true;
 
   const pageTitle: Record<MainTab, string> = {
-    home:      'Robu Terminal',
+    home:      'Robu',
     
     watchlist: 'Watchlist',
     portfolio: 'Portfolio',
@@ -309,7 +310,7 @@ function HomeView({
       {/* Hero */}
       <div className="flex flex-col items-center pt-12 pb-6 px-4">
         <RobuLogo size={60} />
-        <h1 className="text-3xl font-bold text-primary mt-4 tracking-tight font-serif">Robu Terminal</h1>
+        <h1 className="text-3xl font-bold text-primary mt-4 tracking-tight font-serif">Robu</h1>
         <p className="text-sm text-muted mt-2 text-center leading-relaxed">
           Find out if any Indian stock is{' '}
           <span className="font-semibold text-primary">cheap</span>,{' '}
@@ -740,7 +741,7 @@ export default function MobileLayout({
               </div>
             ) : (
               <span className="text-sm font-bold text-primary tracking-tight">
-                {{ home: 'Robu Terminal', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab as string] || 'Robu Terminal'}
+                {{ home: 'Robu', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab as string] || 'Robu'}
               </span>
             )}
           </div>

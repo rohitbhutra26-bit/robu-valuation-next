@@ -1,5 +1,5 @@
 /**
- * Shared framer-motion animation variants for Robu Terminal
+ * Shared framer-motion animation variants for Robu
  * Keep animations fast and tasteful — financial UI should feel snappy, not showey
  */
 

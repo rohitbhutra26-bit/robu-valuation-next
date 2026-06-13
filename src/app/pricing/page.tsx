@@ -26,7 +26,7 @@ const FEATURES = [
 const FAQS = [
   { q: 'What payment methods are accepted?',  a: 'UPI, Debit/Credit Card, Net Banking via Razorpay. All payments in ₹ INR.' },
   { q: 'Can I cancel anytime?',               a: 'No auto-renewals. Pay once, access the full duration you chose.' },
-  { q: 'Is this SEBI registered advice?',     a: 'No. Robu Terminal is a personal research tool. All valuations are models — not buy/sell recommendations.' },
+  { q: 'Is this SEBI registered advice?',     a: 'No. Robu is a personal research tool. All valuations are models — not buy/sell recommendations.' },
   { q: 'What data sources does Robu use?',    a: 'NSE Bhavcopy for live prices, Yahoo Finance for fundamentals, Gemini AI for analysis.' },
   { q: 'Do I need an account for free plan?', a: 'No signup needed. Open the app and start analysing any stock instantly.' },
 ];
@@ -80,7 +80,7 @@ export default function PricingPage() {
             <div style={{ width:28, height:28, borderRadius:8, background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <Zap size={14} color={blue}/>
             </div>
-            <span style={{ fontWeight:800, fontSize:14, color:'#e8eaed' }}>Robu Terminal</span>
+            <span style={{ fontWeight:800, fontSize:14, color:'#e8eaed' }}>Robu</span>
           </Link>
           <Link href="/" style={{ fontSize:13, fontWeight:600, color:muted, textDecoration:'none' }}>← Back to app</Link>
         </div>
@@ -275,10 +275,10 @@ export default function PricingPage() {
           <div style={{ width:24, height:24, borderRadius:6, background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <Zap size={11} color={blue}/>
           </div>
-          <span style={{ fontSize:13, fontWeight:900, color:'#e8eaed' }}>Robu Terminal</span>
+          <span style={{ fontSize:13, fontWeight:900, color:'#e8eaed' }}>Robu</span>
         </div>
         <p style={{ fontSize:11, color:muted, textAlign:'center', margin:0 }}>Not SEBI registered · Personal research only · Data from NSE, Yahoo Finance</p>
-        <p style={{ fontSize:11, color:muted, margin:0 }}>© 2025 Robu Terminal</p>
+        <p style={{ fontSize:11, color:muted, margin:0 }}>© 2025 Robu</p>
       </div>
 
     </div>

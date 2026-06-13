@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════════════════════════
-   ROBU TERMINAL — Claude Design System (CDS)
-   Tokens sourced directly from live claude.ai CSS inspection
+   ROBU — Friendly Design System (v2)
+   Goal: approachable for total beginners. Clean white cards, soft background,
+   friendly indigo brand accent, rounder corners, intuitive traffic-light
+   verdict colours. Same semantic token names as before, so every component
+   re-skins from this one file. ('gold' token = brand indigo; 'warning' = amber
+   caution; gain = green; loss = red.)
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* ── Easing functions (sourced from CDS) ─────────────────────────────────── */
@@ -32,60 +36,58 @@
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
 
-  /* CDS radius scale */
-  --radius-xs:   2px;
-  --radius-sm:   4px;    /* base cds-radius */
-  --radius-md:   6px;    /* buttons */
-  --radius-lg:   8px;    /* small cards */
-  --radius-xl:   12px;   /* cards */
-  --radius-2xl:  16px;   /* panels */
+  /* Radius scale — rounder = friendlier */
+  --radius-xs:   4px;
+  --radius-sm:   8px;    /* base */
+  --radius-md:   10px;   /* buttons */
+  --radius-lg:   14px;   /* small cards */
+  --radius-xl:   18px;   /* cards */
+  --radius-2xl:  24px;   /* panels */
   --radius-full: 9999px; /* pills */
 
-  /* Fonts — Anthropic's stack, using publicly available equivalents */
+  /* Fonts — friendly geometric sans throughout. 'serif' is mapped to the same
+     friendly sans so existing .font-serif headings instantly de-formalise
+     (no longer editorial). Mono kept for tabular financial numbers. */
   --font-sans:  'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: 'Lora', Georgia, 'Arial Hebrew', 'Times New Roman', Times, serif;
+  --font-serif: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono:  'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
 }
 
-/* ── Light theme — warm cream (Claude editorial) ─────────────────────────── */
-/* Measured from the Claude design trial screenshot                           */
+/* ── Light theme — clean & friendly ──────────────────────────────────────── */
 :root,
 [data-theme="light"] {
-  --color-terminal: 237 233 227;   /* #EDE9E3 — warm cream page bg */
-  --color-card:     252 250 247;   /* #FCFAF7 — warm white card */
-  --color-border:   180 174 167;   /* warm mid gray — readable as fill + subtle as border */
-  --color-gold:     196 81 26;     /* #C4511A — terracotta accent */
-  --color-gain:     22 163 74;     /* #16A34A */
-  --color-loss:     220 38 38;     /* #DC2626 */
-  --color-primary:  28 25 23;      /* #1C1917 — warm near-black */
-  --color-muted:    120 113 108;   /* #78716C */
-  --color-accent:   196 81 26;     /* #C4511A */
-  --color-warning:  180 83 9;      /* #B45309 */
+  --color-terminal: 244 245 248;   /* #F4F5F8 — soft cool-white page bg */
+  --color-card:     255 255 255;   /* #FFFFFF — clean white card */
+  --color-border:   209 213 223;   /* #D1D5DF — soft neutral */
+  --color-gold:     99 102 241;    /* #6366F1 — friendly indigo brand accent */
+  --color-gain:     22 163 74;     /* #16A34A — green */
+  --color-loss:     239 68 68;     /* #EF4444 — red */
+  --color-primary:  24 27 39;      /* #181B27 — soft cool near-black */
+  --color-muted:    100 107 122;   /* #646B7A — calm grey */
+  --color-accent:   99 102 241;    /* #6366F1 — indigo */
+  --color-warning:  217 119 6;     /* #D97706 — amber caution / 'fair' */
 
-  /* Light-specific: warm alpha border */
-  --border-subtle:  rgba(28, 25, 23, 0.10);
-  --border-strong:  rgba(28, 25, 23, 0.18);
-  --shadow-color:   rgba(0, 0, 0, 0.06);
+  --border-subtle:  rgba(24, 27, 39, 0.09);
+  --border-strong:  rgba(24, 27, 39, 0.16);
+  --shadow-color:   rgba(24, 27, 60, 0.06);
 }
 
-/* ── Dark theme — exact CDS values from live claude.ai ──────────────────── */
-/* Measured: body bg=rgb(31,31,30), card=rgb(44,44,42), nav=rgb(31,31,30)   */
+/* ── Dark theme — true neutral black (no blue tint) ──────────────────────── */
 [data-theme="dark"] {
-  --color-terminal: 31 31 30;      /* #1F1F1E — CDS exact page bg */
-  --color-card:     44 44 42;      /* #2C2C2A — CDS exact surface */
-  --color-border:   70 68 65;      /* warm dark gray — readable as fill; border lines use --border-subtle */
-  --color-gold:     229 110 58;    /* #E56E3A — warm terracotta in dark */
+  --color-terminal: 10 10 11;      /* #0A0A0B — near-black neutral page bg */
+  --color-card:     23 23 24;      /* #171718 — neutral dark surface */
+  --color-border:   42 42 45;      /* #2A2A2D — neutral grey */
+  --color-gold:     129 140 248;   /* #818CF8 — indigo brand accent (only colour pop) */
   --color-gain:     52 211 153;    /* #34D399 */
   --color-loss:     248 113 113;   /* #F87171 */
-  --color-primary:  248 248 246;   /* #F8F8F6 — CDS exact primary text */
-  --color-muted:    195 194 183;   /* #C3C2B7 — CDS exact secondary text */
-  --color-accent:   229 110 58;
-  --color-warning:  251 191 36;
+  --color-primary:  245 245 246;   /* #F5F5F6 — neutral near-white text */
+  --color-muted:    160 160 164;   /* #A0A0A4 — neutral grey */
+  --color-accent:   129 140 248;   /* #818CF8 */
+  --color-warning:  251 191 36;    /* #FBBF24 — amber */
 
-  /* Dark-specific: warm alpha border (Claude's exact approach) */
-  --border-subtle:  rgba(226, 225, 218, 0.12);
-  --border-strong:  rgba(226, 225, 218, 0.22);
-  --shadow-color:   rgba(0, 0, 0, 0.35);
+  --border-subtle:  rgba(255, 255, 255, 0.09);
+  --border-strong:  rgba(255, 255, 255, 0.18);
+  --shadow-color:   rgba(0, 0, 0, 0.55);
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */

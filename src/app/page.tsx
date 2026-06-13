@@ -39,7 +39,7 @@ import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
 import ModeToggle from '@/components/ModeToggle';
-import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar } from '@/lib/icons';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight } from '@/lib/icons';
 import DiscoveryView from '@/components/DiscoveryView';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
@@ -134,6 +134,14 @@ export default function Home() {
   function handlePortfolioToggle() {
     if (!company) return;
     setShowPortfolioModal(true);
+  }
+
+  // Reveal the full deep-dive: flip the whole app into Analyst mode.
+  // Mirrors ModeToggle — sets data-mode on <html>, persisted in localStorage.
+  function switchToAnalyst() {
+    document.documentElement.setAttribute('data-mode', 'analyst');
+    try { localStorage.setItem('robu-mode', 'analyst'); } catch {}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
@@ -380,8 +388,8 @@ export default function Home() {
           <button onClick={goHome} className="flex items-center gap-3 group">
             <RobuLogo size={30} />
             <div className="text-left">
-              <p className="text-sm font-bold text-primary tracking-tight font-serif group-hover:text-gold transition-colors">Robu Terminal</p>
-              <p className="text-[11px] text-muted leading-none">Indian Equities Research</p>
+              <p className="text-sm font-bold text-primary tracking-tight font-serif group-hover:text-gold transition-colors">Robu</p>
+              <p className="text-[11px] text-muted leading-none">Stocks in plain English</p>
             </div>
           </button>
 
@@ -456,18 +464,22 @@ export default function Home() {
         <main className="flex-1 flex items-center justify-center overflow-y-auto">
           <div className="w-full max-w-[680px] px-8 py-14 flex flex-col items-center">
 
-            {/* Logo — serif R in terracotta */}
+            {/* Logo — friendly indigo R */}
             <RobuLogo size={76} />
 
-            {/* Heading — editorial serif */}
+            {/* Heading — friendly sans */}
             <h1 className="mt-5 text-5xl font-bold text-primary tracking-tight font-serif">
-              Robu Terminal
+              Robu
             </h1>
-            <p className="mt-3 text-base text-muted text-center leading-relaxed">
-              Search any Indian stock and instantly find out if it&apos;s{' '}
-              <em className="not-italic font-medium text-primary">cheap</em>,{' '}
-              <em className="not-italic font-medium text-primary">fair</em>, or{' '}
-              <em className="not-italic font-medium text-primary">expensive</em>.
+            <p className="mt-3 text-lg text-primary font-medium text-center leading-snug">
+              Should you buy this stock? Find out in 10 seconds.
+            </p>
+            <p className="mt-2 text-sm text-muted text-center leading-relaxed max-w-[440px]">
+              Type any Indian stock. Robu tells you if it looks{' '}
+              <em className="not-italic font-semibold text-gain">cheap</em>,{' '}
+              <em className="not-italic font-semibold text-warning">fair</em>, or{' '}
+              <em className="not-italic font-semibold text-loss">expensive</em>{' '}
+              — explained simply, no finance degree needed.
             </p>
 
             {/* Search — pill shape */}
@@ -602,6 +614,33 @@ export default function Home() {
                 );
               })}
 
+              {/* On this page — jump links into the open report.
+                  Analyst-only sections auto-hide in Simple mode via CSS. */}
+              {activeView === 'valuation' && company && (
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <p className="text-[10px] text-muted/80 uppercase tracking-[1.2px] font-semibold px-2 mb-1.5">On this page</p>
+                  {([
+                    { id: 'sec-verdict',      label: 'Verdict',       Icon: Sparkles },
+                    { id: 'sec-danger',       label: 'Danger Check',  Icon: ShieldAlert },
+                    { id: 'sec-money',        label: 'Your Money',    Icon: DollarSign },
+                    { id: 'sec-assumptions',  label: 'Assumptions',   Icon: SlidersHorizontal, analyst: true },
+                    { id: 'sec-evidence',     label: 'The Evidence',  Icon: LineChart,         analyst: true },
+                    { id: 'sec-stress',       label: 'Stress Tests',  Icon: Activity,          analyst: true },
+                    { id: 'sec-numbers',      label: 'Raw Numbers',   Icon: Table2,            analyst: true },
+                    { id: 'sec-quality',      label: 'Quality Score', Icon: BadgeCheck },
+                  ] as { id: string; label: string; Icon: typeof Sparkles; analyst?: boolean }[]).map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      className={`${s.analyst ? 'analyst-only ' : ''}w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-muted hover:text-primary hover:bg-card/60 transition-all`}
+                    >
+                      <s.Icon size={12} className="flex-shrink-0" />
+                      <span className="text-[11px] font-medium leading-tight truncate">{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Quick picks — only shown when no stock is loaded */}
               {!selectedSymbol && (
                 <>
@@ -688,7 +727,9 @@ export default function Home() {
                 {activeView === 'valuation' && financials.length > 0 && (
                   <>
                     {/* Verdict — one-line plain-English answer at the very top */}
-                    <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+                    <div id="sec-verdict" className="scroll-mt-20">
+                      <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+                    </div>
 
                     {/* Honesty banner — when our own models shouldn't be trusted */}
                     <ValuationCaveatBanner company={company} financials={financials} />
@@ -697,7 +738,8 @@ export default function Home() {
                     {dataQuality && <DataQualityBanner quality={dataQuality} />}
 
                     <SectionHeader
-                      emoji="🚩"
+                      id="sec-danger"
+                      Icon={ShieldAlert}
                       title="Danger Check"
                       desc="Quick health tests before anything else — too much debt, weak cash, pledged promoter shares. Like a doctor checking your pulse before prescribing medicine."
                     />
@@ -705,10 +747,24 @@ export default function Home() {
                       <RedFlagsCard company={company} financials={financials} />
                     </div>
 
+                    {/* Beginner-friendly: money outcome shown before any sliders */}
                     <SectionHeader
-                      emoji="💰"
-                      title="Your Inputs & Your Money"
-                      desc="Set your expectations with the sliders, then see what ₹1 lakh could become. Example: if the company grows 12% a year for 5 years, ₹1L ≈ ₹1.8L."
+                      id="sec-money"
+                      Icon={DollarSign}
+                      title="What your money could become"
+                      desc="If things go as expected, here's what ₹1 lakh invested today could grow into. Example: 12% growth a year for 5 years turns ₹1L into roughly ₹1.8L."
+                    />
+                    <WealthProjection company={company} financials={financials} assumptions={assumptions} />
+
+                    {/* ── Everything below is for users who want to go deeper.
+                         In Simple mode it's hidden; the 'See the full analysis'
+                         button (further down) reveals it by switching to Analyst mode. ── */}
+                    <div className="analyst-only space-y-4">
+                    <SectionHeader
+                      id="sec-assumptions"
+                      Icon={SlidersHorizontal}
+                      title="Fine-tune the assumptions"
+                      desc="Advanced: change the growth, margin and exit numbers to test your own view. The defaults are picked automatically from the company's sector and track record."
                     />
                     {/* Assumptions panel */}
                     {(() => {
@@ -809,11 +865,9 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* Wealth projection — lives with the assumptions that drive it */}
-                    <WealthProjection company={company} financials={financials} assumptions={assumptions} />
-
                     <SectionHeader
-                      emoji="📈"
+                      id="sec-evidence"
+                      Icon={LineChart}
                       title="The Evidence"
                       desc="Price history with cheap/fair/pricey bands, the forecast your assumptions imply, and three futures — bear (things go wrong), base (your inputs), bull (things go right)."
                     />
@@ -822,7 +876,8 @@ export default function Home() {
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
 
                     <SectionHeader
-                      emoji="🧪"
+                      id="sec-stress"
+                      Icon={Activity}
                       title="Stress Tests"
                       desc="We attack our own answer to see if it survives. Example: 'what growth does today's price silently assume — and has the company ever delivered it?'"
                     />
@@ -845,6 +900,24 @@ export default function Home() {
                         <ScenarioBuilder company={company} financials={financials} />
                       </div>
                     </details>
+                    </div>{/* end .analyst-only */}
+
+                    {/* Simple mode only: invite beginners to reveal the deep-dive */}
+                    <button
+                      onClick={switchToAnalyst}
+                      className="simple-only group w-full flex items-center gap-3 text-left bg-gold/10 border border-gold/30 rounded-2xl p-4 hover:bg-gold/15 hover:border-gold/50 transition-all"
+                    >
+                      <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex-shrink-0">
+                        <SlidersHorizontal size={18} />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-bold text-primary">See the full analysis</span>
+                        <span className="block text-xs text-muted leading-snug mt-0.5">
+                          Charts, forecasts, stress tests and the raw 10-year numbers. For when you want to dig deeper.
+                        </span>
+                      </span>
+                      <ChevronRight size={18} className="text-gold flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
                   </>
                 )}
 
@@ -852,11 +925,12 @@ export default function Home() {
                   <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
                 )}
 
-                {/* ── SECTION: FINANCIALS — part of the single report ── */}
+                {/* ── SECTION: FINANCIALS — advanced, hidden in Simple mode ── */}
                 {activeView === 'valuation' && (
-                  <>
+                  <div className="analyst-only space-y-4">
                     <SectionHeader
-                      emoji="📊"
+                      id="sec-numbers"
+                      Icon={Table2}
                       title="The Raw Numbers"
                       desc="Ten years of revenue, profit and margins — the actual track record everything above is built on. Example: steady margins = a business in control of its prices."
                     />
@@ -868,14 +942,15 @@ export default function Home() {
                         <EarningsQuality financials={financials} />
                       </>
                     )}
-                  </>
+                  </div>
                 )}
 
-                {/* ── VIEW: PEERS ── */}
+                {/* ── Quality score — friendly grade, shown in both modes ── */}
                 {activeView === 'valuation' && company && financials.length >= 3 && (
                   <>
                     <SectionHeader
-                      emoji="🏆"
+                      id="sec-quality"
+                      Icon={BadgeCheck}
                       title="Quality Score & Alternatives"
                       desc="One grade for overall business quality, recent company announcements, and stronger options in the same sector if this one doesn't convince you."
                     />

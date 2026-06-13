@@ -1,5 +1,5 @@
 /**
- * watchlist.ts — localStorage-based watchlist for Robu Terminal.
+ * watchlist.ts — localStorage-based watchlist for Robu.
  * No accounts, no backend. Saved per browser per device.
  */
 
