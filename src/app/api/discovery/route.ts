@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import curated from './discovery_data.json';
 
 /**
- * /api/discovery — ROBU Discovery Engine feed (Phase 1 skeleton)
+ * /api/discovery — ROBU Discovery Engine feed
  *
- * Architecture (see ROBU_Discovery_Engine_Architecture.docx):
- *   Heavy thinking runs as a NIGHTLY BATCH in the Python data server, which
- *   writes a ranked "Discovery Store". This route just reads that store and
- *   serves it to the UI — it never runs the 7 agents on a user request.
- *
- * Phase 1: the data server endpoint doesn't exist yet, so we serve curated
- * sample records in the FINAL output shape. When the batch job ships, flip
- * USE_DATA_SERVER to true — the UI contract does not change.
+ * Source priority:
+ *   1. discovery_data.json — hand-grade analyst research (Claude), refreshed
+ *      daily and committed to the repo. Authoritative, survives redeploys.
+ *   2. Python data server /discovery — nightly AI batch (if env enabled).
+ *   3. Built-in SAMPLE — last-resort so the feed is never empty.
  */
 
 const DATA_SERVER = process.env.DATA_SERVER_URL || 'http://localhost:8000';
-// Live data server is now implemented (discovery/ package). Toggle via env:
-//   DISCOVERY_USE_DATA_SERVER=true  → serve the real nightly feed
-//   unset / false                   → serve the curated sample feed below
-// Falls back to sample automatically if the data server is unreachable.
 const USE_DATA_SERVER = process.env.DISCOVERY_USE_DATA_SERVER === 'true';
 
 export type DiscoveryCategory =
@@ -132,33 +126,43 @@ const SAMPLE: DiscoveryRecord[] = [
   },
 ];
 
+const CURATED = (curated?.records ?? []) as DiscoveryRecord[];
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
 
-  let records: DiscoveryRecord[] = SAMPLE;
+  // Priority 1: hand-grade analyst research committed to the repo.
+  let records: DiscoveryRecord[] = CURATED.length > 0 ? CURATED : SAMPLE;
+  let generatedAt = curated?.generatedAt as string | undefined;
 
-  if (USE_DATA_SERVER) {
+  // Priority 2: live data server (only if no curated file present).
+  if (CURATED.length === 0 && USE_DATA_SERVER) {
     try {
       const res = await fetch(`${DATA_SERVER}/discovery`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        records = (data.records ?? data) as DiscoveryRecord[];
+        const live = (data.records ?? data) as DiscoveryRecord[];
+        if (Array.isArray(live) && live.length > 0) {
+          records = live;
+          generatedAt = data.generatedAt;
+        }
       }
     } catch {
       // fall back to sample silently
     }
   }
 
-  records = [...records].sort((a, b) => b.discoveryScore - a.discoveryScore);
+  const newCount = records.filter(r => r.isNew).length;
 
+  records = [...records].sort((a, b) => b.discoveryScore - a.discoveryScore);
   if (category && category !== 'All') {
     records = records.filter(r => r.category === category);
   }
 
   return NextResponse.json({
-    generatedAt: records[0]?.generatedAt ?? new Date().toISOString(),
-    newCount: SAMPLE.filter(r => r.isNew).length,
+    generatedAt: generatedAt ?? records[0]?.generatedAt ?? new Date().toISOString(),
+    newCount,
     total: records.length,
     records,
   });

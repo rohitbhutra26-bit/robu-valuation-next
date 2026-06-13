@@ -1,0 +1,680 @@
+{
+  "generatedAt": "2026-06-13T23:24:03.833377+00:00",
+  "curatedBy": "Claude (analyst research)",
+  "newCount": 6,
+  "total": 21,
+  "records": [
+    {
+      "symbol": "TATAELXSI",
+      "name": "Tata Elxsi",
+      "sector": "Technology",
+      "discoveryScore": 84,
+      "grade": "A",
+      "category": "Emerging Leader",
+      "aiConviction": "High",
+      "isNew": true,
+      "whyFound": "Among the very few listed Indian pure-plays on automotive software, AI-led design and media tech, earning a 38% ROE and 48% ROCE with zero debt — capital efficiency most IT services firms never reach.",
+      "whyNow": "Software-defined vehicles and generative-AI product design are turning Elxsi's project work into higher-value, stickier engagements just as global auto OEMs outsource more R&D to India.",
+      "futureTailwinds": [
+        "Software-defined vehicles (SDV) outsourcing",
+        "Generative-AI design tooling",
+        "Premium design margins vs commodity IT"
+      ],
+      "futureThreats": [
+        "High client concentration in a few auto OEMs",
+        "Discretionary R&D budgets can be cut in a downturn",
+        "Rich valuation (~48x) leaves little room for a miss"
+      ],
+      "hiddenOptionality": "If AI accelerators convert bespoke projects into repeatable platforms, margins and multiple both re-rate.",
+      "narrativeShift": "From niche design vendor to core SDV and AI-engineering partner for global OEMs.",
+      "whyMarketMayBeWrong": "The market still benchmarks it against commodity IT services on a P/E basis, missing that it sells design IP with structurally higher returns.",
+      "keyRisks": [
+        "Valuation rich at ~48x earnings",
+        "Auto-OEM demand cyclicality"
+      ],
+      "industryTransformationScore": 88,
+      "futureReadinessScore": 86,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "PERSISTENT",
+      "name": "Persistent Systems",
+      "sector": "Technology",
+      "discoveryScore": 80,
+      "grade": "A",
+      "category": "Emerging Leader",
+      "aiConviction": "High",
+      "isNew": true,
+      "whyFound": "A mid-cap IT compounder growing ~28% over five years — more than double large-cap peers — with a credible, early enterprise-AI engineering positioning and a 25% ROE.",
+      "whyNow": "While the market debates whether AI threatens IT services, Persistent is already monetising AI-led modernisation deals, sustaining sector-leading growth.",
+      "futureTailwinds": [
+        "Enterprise AI & cloud modernisation spend",
+        "Above-peer revenue growth",
+        "Deepening large-client mining"
+      ],
+      "futureThreats": [
+        "Premium valuation vs larger peers",
+        "AI could compress per-seat services pricing long term",
+        "Wage and talent-cost inflation"
+      ],
+      "hiddenOptionality": "AI delivery accelerators could lift utilisation and margins beyond what the Street models.",
+      "narrativeShift": "From mid-cap IT vendor to AI-native engineering partner of choice.",
+      "whyMarketMayBeWrong": "Lumped with legacy IT names feared as AI losers, when it is in fact an AI beneficiary.",
+      "keyRisks": [
+        "Rich multiple (~52x)",
+        "Slowdown in discretionary tech spend"
+      ],
+      "industryTransformationScore": 82,
+      "futureReadinessScore": 85,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "COFORGE",
+      "name": "Coforge",
+      "sector": "Technology",
+      "discoveryScore": 77,
+      "grade": "A-",
+      "category": "Emerging Leader",
+      "aiConviction": "Medium",
+      "isNew": true,
+      "whyFound": "High-growth mid-cap IT (24%+ 5Y) with a 28% ROE and an order-book-led visibility model that larger, slower peers lack.",
+      "whyNow": "Large multi-year deal wins are compounding into durable revenue visibility just as clients consolidate vendors toward focused specialists.",
+      "futureTailwinds": [
+        "Vendor consolidation toward focused specialists",
+        "Large multi-year deal momentum",
+        "BFSI and travel verticals recovering"
+      ],
+      "futureThreats": [
+        "Lower margins (~9% net) than peers",
+        "Integration risk from acquisitions",
+        "Some debt vs debt-free IT peers"
+      ],
+      "hiddenOptionality": "Margin expansion as scale and offshore mix improve could surprise consensus.",
+      "narrativeShift": "From acquisitive challenger to consistent compounding mid-cap leader.",
+      "whyMarketMayBeWrong": "Seen as a low-margin roll-up; the market under-rates the quality of its order book and execution.",
+      "keyRisks": [
+        "Margins below peer set",
+        "Acquisition-integration risk"
+      ],
+      "industryTransformationScore": 79,
+      "futureReadinessScore": 80,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "IRCTC",
+      "name": "IRCTC",
+      "sector": "Services",
+      "discoveryScore": 76,
+      "grade": "A-",
+      "category": "Hidden Compounder",
+      "aiConviction": "High",
+      "isNew": true,
+      "whyFound": "A genuine government-granted monopoly on online rail ticketing, catering and rail packaged water, with a 28% ROE, 28% net margin and effectively no competition.",
+      "whyNow": "Digitisation of rail travel and rising discretionary tourism keep volumes compounding, while the convenience-fee and catering engines throw off high-margin cash.",
+      "futureTailwinds": [
+        "Structural monopoly economics",
+        "Rail digitisation & tourism growth",
+        "Asset-light, cash-generative model"
+      ],
+      "futureThreats": [
+        "Regulatory cap risk on convenience fees",
+        "Government ownership / policy overhang",
+        "High valuation for a regulated entity"
+      ],
+      "hiddenOptionality": "Optionality from new revenue streams (Bharat Gaurav tourism, data monetisation) not in current numbers.",
+      "narrativeShift": "From PSU ticketing utility to a digital travel-and-services platform.",
+      "whyMarketMayBeWrong": "Discounted as a 'PSU' despite monopoly economics and FMCG-like margins.",
+      "keyRisks": [
+        "Fee regulation could cap upside",
+        "Policy/ownership overhang"
+      ],
+      "industryTransformationScore": 70,
+      "futureReadinessScore": 78,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "name": "Bajaj Auto",
+      "sector": "Automobile",
+      "discoveryScore": 75,
+      "grade": "A-",
+      "category": "Hidden Compounder",
+      "aiConviction": "High",
+      "isNew": false,
+      "whyFound": "Best-in-class two/three-wheeler franchise with a 25% ROE, 30% ROCE and zero debt — a quality compounder hiding in a 'boring' sector.",
+      "whyNow": "Exports plus a credible electric two- and three-wheeler ramp give it two growth legs the market treats as one mature business.",
+      "futureTailwinds": [
+        "Electric 2W/3W ramp (Chetak, RE)",
+        "Export recovery across Africa & LatAm",
+        "Debt-free, high-return core"
+      ],
+      "futureThreats": [
+        "Export-market currency and demand risk",
+        "EV competition from new entrants",
+        "Rural demand cyclicality"
+      ],
+      "hiddenOptionality": "EV portfolio could re-rate it from a value ICE play to a growth EV name.",
+      "narrativeShift": "From mature ICE exporter to multi-powertrain global mobility brand.",
+      "whyMarketMayBeWrong": "Valued as an ex-growth ICE maker, ignoring the EV and export optionality.",
+      "keyRisks": [
+        "EV transition execution",
+        "Export-demand volatility"
+      ],
+      "industryTransformationScore": 72,
+      "futureReadinessScore": 76,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "COALINDIA",
+      "name": "Coal India",
+      "sector": "Metals & Mining",
+      "discoveryScore": 74,
+      "grade": "A-",
+      "category": "Deep Value",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "Cash machine trading at ~8x earnings with a 43% ROE, 52% ROCE and a near-6% dividend yield, yet priced as if in terminal decline.",
+      "whyNow": "India's base-load power demand keeps rising and payouts stay generous, while the market over-discounts an energy transition that is still decades from displacing coal here.",
+      "futureTailwinds": [
+        "Resilient base-load power demand",
+        "Near-6% dividend yield",
+        "Diversification into mining services & renewables"
+      ],
+      "futureThreats": [
+        "Long-term energy-transition headwind",
+        "ESG-driven investor de-rating",
+        "Regulated pricing and wage costs"
+      ],
+      "hiddenOptionality": "Land banks, evacuation logistics and renewable-energy ambitions are free options the market ignores.",
+      "narrativeShift": "From 'dying coal' to a cash-return plus transition-optionality play.",
+      "whyMarketMayBeWrong": "Prices in a rapid decline that India's actual energy demand does not support.",
+      "keyRisks": [
+        "Structural transition risk over the long run",
+        "Government pricing intervention"
+      ],
+      "industryTransformationScore": 48,
+      "futureReadinessScore": 55,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "EICHERMOT",
+      "name": "Eicher Motors",
+      "sector": "Automobile",
+      "discoveryScore": 74,
+      "grade": "A-",
+      "category": "Hidden Compounder",
+      "aiConviction": "High",
+      "isNew": false,
+      "whyFound": "Royal Enfield owner with an extraordinary 21% net margin, 30% ROCE and a brand moat that lets it dominate the mid-size motorcycle segment globally.",
+      "whyNow": "Premiumisation of Indian two-wheelers and a widening international footprint extend a long growth runway the market treats as cyclical.",
+      "futureTailwinds": [
+        "Premium-motorcycle aspiration in India",
+        "International expansion (LatAm, Europe, APAC)",
+        "Brand-driven pricing power"
+      ],
+      "futureThreats": [
+        "Single-brand dependence on Royal Enfield",
+        "New-launch execution risk",
+        "Competition in mid-size bikes"
+      ],
+      "hiddenOptionality": "Commercial-vehicle JV (VECV) and EV motorcycles are under-appreciated optionality.",
+      "narrativeShift": "From cyclical bike maker to a global premium-mobility brand.",
+      "whyMarketMayBeWrong": "Treated as a cyclical auto stock, not the brand-moat compounder it is.",
+      "keyRisks": [
+        "Brand concentration risk",
+        "Premium-demand cyclicality"
+      ],
+      "industryTransformationScore": 70,
+      "futureReadinessScore": 75,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "name": "Bajaj Finance",
+      "sector": "Financial Services",
+      "discoveryScore": 74,
+      "grade": "A-",
+      "category": "Smart Money",
+      "aiConviction": "High",
+      "isNew": false,
+      "whyFound": "Premier consumer-lending franchise compounding ~28% with a 21% ROE, best-in-class underwriting and a deepening digital ecosystem.",
+      "whyNow": "Cross-sell across a vast customer base plus the build-out of payments and the app keep the growth flywheel turning faster than peers.",
+      "futureTailwinds": [
+        "Consumer-credit penetration in India",
+        "Digital ecosystem & cross-sell",
+        "Best-in-class underwriting"
+      ],
+      "futureThreats": [
+        "Asset-quality risk if cycle turns",
+        "Regulatory tightening on unsecured lending",
+        "Rich multiple vs banks"
+      ],
+      "hiddenOptionality": "The fintech/app platform could unlock fee income the market doesn't yet value.",
+      "narrativeShift": "From NBFC lender to a full consumer financial-services platform.",
+      "whyMarketMayBeWrong": "Skeptics over-fear a credit-cycle turn while under-rating the franchise's cross-sell durability.",
+      "keyRisks": [
+        "Unsecured-lending regulation",
+        "Credit-cycle deterioration"
+      ],
+      "industryTransformationScore": 76,
+      "futureReadinessScore": 80,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "TMPV",
+      "name": "Tata Motors PV",
+      "sector": "Automobile",
+      "discoveryScore": 73,
+      "grade": "A-",
+      "category": "Turnaround",
+      "aiConviction": "Medium",
+      "isNew": true,
+      "whyFound": "India's EV passenger-vehicle market-share leader, now showing a 31% ROE as the business deleverages and free cash flow inflects after years of losses.",
+      "whyNow": "Margin recovery and net-debt reduction are arriving faster than consensus, even as Tata defends its early EV lead.",
+      "futureTailwinds": [
+        "India EV adoption curve",
+        "Deleveraging-driven re-rating",
+        "Portfolio premiumisation"
+      ],
+      "futureThreats": [
+        "Intensifying EV competition compressing margins",
+        "Commodity and battery-cost swings",
+        "Overall auto-demand cyclicality"
+      ],
+      "hiddenOptionality": "Eventual value crystallisation of the EV business as a separately funded entity.",
+      "narrativeShift": "From debt-laden laggard to profitable domestic EV leader.",
+      "whyMarketMayBeWrong": "Still discounts past losses rather than the improving cash generation and EV franchise.",
+      "keyRisks": [
+        "EV price wars compress margins",
+        "Macro auto slowdown"
+      ],
+      "industryTransformationScore": 79,
+      "futureReadinessScore": 74,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "INDIGO",
+      "name": "IndiGo (InterGlobe)",
+      "sector": "Services",
+      "discoveryScore": 72,
+      "grade": "A-",
+      "category": "Smart Money",
+      "aiConviction": "Medium",
+      "isNew": true,
+      "whyFound": "India's dominant low-cost carrier with ~60% domestic share, a fortress cost position and 24%+ revenue growth — a structural winner in an underpenetrated air-travel market.",
+      "whyNow": "Capacity additions and international expansion are compounding traffic just as weaker rivals exit, widening IndiGo's moat.",
+      "futureTailwinds": [
+        "Underpenetrated Indian air travel",
+        "International network expansion",
+        "Scale-driven cost leadership"
+      ],
+      "futureThreats": [
+        "Fuel-price and currency exposure",
+        "Lease-heavy balance sheet",
+        "Intensely cyclical, low-margin industry"
+      ],
+      "hiddenOptionality": "Loyalty, cargo and international premium could add high-margin revenue streams.",
+      "narrativeShift": "From domestic LCC to a pan-Asian network carrier.",
+      "whyMarketMayBeWrong": "Market keeps applying airline-sector skepticism, under-rating IndiGo's durable cost moat and share gains.",
+      "keyRisks": [
+        "Fuel & forex shocks",
+        "Aviation demand cyclicality"
+      ],
+      "industryTransformationScore": 74,
+      "futureReadinessScore": 73,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "LT",
+      "name": "Larsen & Toubro",
+      "sector": "Capital Goods",
+      "discoveryScore": 72,
+      "grade": "A-",
+      "category": "Capacity Expansion",
+      "aiConviction": "High",
+      "isNew": false,
+      "whyFound": "India's premier engineering and construction house and the cleanest proxy on the national infrastructure and capex super-cycle, with a record order book.",
+      "whyNow": "Government and private capex are accelerating across infrastructure, energy and defence — exactly L&T's wheelhouse — driving multi-year revenue visibility.",
+      "futureTailwinds": [
+        "India infrastructure & capex up-cycle",
+        "Defence and green-energy order inflows",
+        "Record, diversified order book"
+      ],
+      "futureThreats": [
+        "Execution and working-capital intensity",
+        "Margin pressure on fixed-price projects",
+        "Dependence on government payment cycles"
+      ],
+      "hiddenOptionality": "Its IT subsidiaries and new green-hydrogen/data-centre bets are embedded optionality.",
+      "narrativeShift": "From cyclical EPC contractor to diversified infra-plus-tech conglomerate.",
+      "whyMarketMayBeWrong": "Valued on near-term EPC margins, under-appreciating the order-book visibility and tech optionality.",
+      "keyRisks": [
+        "Project-execution risk",
+        "Working-capital and payment cycles"
+      ],
+      "industryTransformationScore": 75,
+      "futureReadinessScore": 74,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "ITC",
+      "name": "ITC",
+      "sector": "Consumer Goods",
+      "discoveryScore": 71,
+      "grade": "B+",
+      "category": "Hidden Compounder",
+      "aiConviction": "High",
+      "isNew": false,
+      "whyFound": "Cash-rich FMCG-plus-cigarettes conglomerate with a 28% ROE, 34% ROCE and a ~3% dividend yield — quality and income in one, at a reasonable ~28x.",
+      "whyNow": "The FMCG business is scaling toward margin maturity while stable cigarette cash funds growth and dividends, and structural reshaping unlocks value.",
+      "futureTailwinds": [
+        "FMCG margin scale-up",
+        "Stable cigarette cash engine",
+        "Hotels demerger value unlock"
+      ],
+      "futureThreats": [
+        "Regulatory/taxation risk on cigarettes",
+        "ESG screens limit some investor demand",
+        "Slow FMCG margin ramp"
+      ],
+      "hiddenOptionality": "Demergers (hotels, potentially others) can surface conglomerate-discounted value.",
+      "narrativeShift": "From cigarette cash-cow to a re-rated FMCG-and-cash-return compounder.",
+      "whyMarketMayBeWrong": "A persistent conglomerate and ESG discount under-values the FMCG franchise and cash generation.",
+      "keyRisks": [
+        "Cigarette taxation",
+        "FMCG-margin ramp speed"
+      ],
+      "industryTransformationScore": 60,
+      "futureReadinessScore": 66,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "name": "Adani Ports & SEZ",
+      "sector": "Services",
+      "discoveryScore": 70,
+      "grade": "B+",
+      "category": "Emerging Leader",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "India's largest private port operator with a 28% net margin and 18%+ growth, owning irreplaceable coastal infrastructure as trade volumes rise.",
+      "whyNow": "Cargo-volume growth and logistics integration are compounding earnings on assets that are nearly impossible to replicate.",
+      "futureTailwinds": [
+        "India trade & cargo-volume growth",
+        "Port-to-logistics integration",
+        "Irreplaceable infrastructure moat"
+      ],
+      "futureThreats": [
+        "Group-governance / leverage perception",
+        "Concentration in few large ports",
+        "Regulatory and concession risk"
+      ],
+      "hiddenOptionality": "Logistics, warehousing and SEZ build-out are optionality beyond pure port throughput.",
+      "narrativeShift": "From port operator to integrated logistics platform.",
+      "whyMarketMayBeWrong": "A group-level governance discount obscures the quality and moat of the underlying assets.",
+      "keyRisks": [
+        "Group-leverage perception",
+        "Concession/regulatory risk"
+      ],
+      "industryTransformationScore": 72,
+      "futureReadinessScore": 71,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "DIVISLAB",
+      "name": "Divi's Laboratories",
+      "sector": "Healthcare",
+      "discoveryScore": 70,
+      "grade": "B+",
+      "category": "Emerging Leader",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "One of the world's largest API and custom-synthesis manufacturers with a 25% net margin and a debt-free balance sheet — a picks-and-shovels play on global pharma.",
+      "whyNow": "Supply-chain diversification away from China ('China+1') steers more API and CDMO volume toward trusted Indian players like Divi's.",
+      "futureTailwinds": [
+        "China+1 API/CDMO shift",
+        "Global generics volume growth",
+        "Debt-free, high-margin manufacturing"
+      ],
+      "futureThreats": [
+        "Customer and product concentration",
+        "Pricing pressure in commoditised APIs",
+        "Currency and regulatory exposure"
+      ],
+      "hiddenOptionality": "Contrast-media and custom-synthesis projects could become large new growth engines.",
+      "narrativeShift": "From generic-API maker to strategic global CDMO partner.",
+      "whyMarketMayBeWrong": "Valued on near-term API pricing, under-rating the multi-year China+1 structural shift.",
+      "keyRisks": [
+        "API price erosion",
+        "Customer concentration"
+      ],
+      "industryTransformationScore": 78,
+      "futureReadinessScore": 79,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "HCLTECH",
+      "name": "HCL Technologies",
+      "sector": "Technology",
+      "discoveryScore": 70,
+      "grade": "B+",
+      "category": "Hidden Compounder",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "Large-cap IT with a differentiated products-and-engineering mix, a 25% ROE and a 3.4% dividend yield — a quality compounder with income.",
+      "whyNow": "Its software-products and engineering-services tilt positions it better than peers for AI-led infrastructure and ER&D demand.",
+      "futureTailwinds": [
+        "AI-led infrastructure & ER&D demand",
+        "Software-products differentiation",
+        "High dividend yield with growth"
+      ],
+      "futureThreats": [
+        "Products-portfolio integration risk",
+        "Discretionary-spend slowdown",
+        "Wage and currency pressures"
+      ],
+      "hiddenOptionality": "Engineering R&D services could become an outsized beneficiary of global AI capex.",
+      "narrativeShift": "From 'third of the big three' to AI-infrastructure and ER&D specialist.",
+      "whyMarketMayBeWrong": "Valued as a generic large-cap IT name, under-rating its products/ER&D differentiation.",
+      "keyRisks": [
+        "Macro IT-spend slowdown",
+        "Products integration"
+      ],
+      "industryTransformationScore": 74,
+      "futureReadinessScore": 76,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "MPHASIS",
+      "name": "Mphasis",
+      "sector": "Technology",
+      "discoveryScore": 69,
+      "grade": "B+",
+      "category": "Hidden Compounder",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "BFSI-focused IT mid-cap with a 22% ROE at a more reasonable ~28x multiple than its faster-growing peers — quality without the nosebleed valuation.",
+      "whyNow": "A recovery in banking-sector tech spend and AI-led modernisation deals revive growth from a cheaper starting multiple.",
+      "futureTailwinds": [
+        "BFSI tech-spend recovery",
+        "AI/cloud modernisation deals",
+        "Reasonable valuation vs peers"
+      ],
+      "futureThreats": [
+        "High BFSI-vertical concentration",
+        "Client-specific revenue dependence",
+        "Pricing pressure in core services"
+      ],
+      "hiddenOptionality": "Direct-international (non-DXC) revenue scaling could re-rate the stock.",
+      "narrativeShift": "From DXC-dependent vendor to diversified BFSI digital specialist.",
+      "whyMarketMayBeWrong": "Penalised for past client concentration while the diversification progress is ignored.",
+      "keyRisks": [
+        "BFSI concentration",
+        "Discretionary-spend slowdown"
+      ],
+      "industryTransformationScore": 74,
+      "futureReadinessScore": 75,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "name": "Muthoot Finance",
+      "sector": "Financial Services",
+      "discoveryScore": 69,
+      "grade": "B+",
+      "category": "Deep Value",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "India's largest gold-loan NBFC at ~18x with an 18% ROE — a high-return, collateral-backed lender trading like a slow-growth financier.",
+      "whyNow": "Gold-backed credit demand is resilient and under-served, and rising gold prices expand the lendable base.",
+      "futureTailwinds": [
+        "Resilient gold-loan demand",
+        "Rising gold prices lift collateral value",
+        "Under-penetrated formal gold credit"
+      ],
+      "futureThreats": [
+        "Gold-price volatility risk",
+        "Regulatory tightening on LTV/auctions",
+        "Competition from banks and fintechs"
+      ],
+      "hiddenOptionality": "Diversification into housing/micro-finance and digital gold loans is upside optionality.",
+      "narrativeShift": "From single-product gold lender to diversified retail-credit franchise.",
+      "whyMarketMayBeWrong": "Treated as a one-product, cyclical lender, under-rating the collateral safety and steady returns.",
+      "keyRisks": [
+        "Gold-price swings",
+        "NBFC regulation"
+      ],
+      "industryTransformationScore": 58,
+      "futureReadinessScore": 62,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "DRREDDY",
+      "name": "Dr. Reddy's Laboratories",
+      "sector": "Healthcare",
+      "discoveryScore": 68,
+      "grade": "B+",
+      "category": "Deep Value",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "Large, diversified pharma at a modest ~22x with an 18% ROE and 23% ROCE — defensive quality priced like a no-growth name.",
+      "whyNow": "A deep complex-generics pipeline and biosimilars push give it growth optionality the value-style multiple ignores.",
+      "futureTailwinds": [
+        "Complex generics & biosimilars pipeline",
+        "Emerging-markets and India branded growth",
+        "Strong balance sheet for deals"
+      ],
+      "futureThreats": [
+        "US generic price erosion",
+        "Key-product patent-cliff dependence",
+        "Regulatory (USFDA) inspection risk"
+      ],
+      "hiddenOptionality": "Biosimilars and consumer-health build-out are under-modelled growth levers.",
+      "narrativeShift": "From US-generics-dependent player to diversified, pipeline-rich pharma.",
+      "whyMarketMayBeWrong": "Priced for stagnation despite a defensible pipeline and clean balance sheet.",
+      "keyRisks": [
+        "US price erosion",
+        "USFDA compliance risk"
+      ],
+      "industryTransformationScore": 66,
+      "futureReadinessScore": 68,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "NTPC",
+      "name": "NTPC",
+      "sector": "Power",
+      "discoveryScore": 67,
+      "grade": "B+",
+      "category": "Capacity Expansion",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "India's largest power generator at ~18x with a 2%+ yield, now pivoting hard into renewables on top of a regulated, cash-generative base.",
+      "whyNow": "Surging electricity demand plus a large green-energy capacity build give a sleepy utility a genuine growth leg.",
+      "futureTailwinds": [
+        "Rising national power demand",
+        "Large renewable-capacity build-out",
+        "Regulated, predictable base returns"
+      ],
+      "futureThreats": [
+        "Coal-heavy legacy ESG overhang",
+        "Execution risk on green capex",
+        "Regulated-return ceilings"
+      ],
+      "hiddenOptionality": "The NTPC Green renewable arm could re-rate the whole entity as it scales.",
+      "narrativeShift": "From thermal utility to integrated power-and-renewables major.",
+      "whyMarketMayBeWrong": "Valued as a static thermal utility, ignoring the renewable growth pivot.",
+      "keyRisks": [
+        "Green-capex execution",
+        "Regulatory returns"
+      ],
+      "industryTransformationScore": 64,
+      "futureReadinessScore": 70,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "PIDILITIND",
+      "name": "Pidilite Industries",
+      "sector": "Chemicals",
+      "discoveryScore": 66,
+      "grade": "B+",
+      "category": "Hidden Compounder",
+      "aiConviction": "Medium",
+      "isNew": false,
+      "whyFound": "Owner of Fevicol and a near-monopoly in adhesives, with a 25% ROE and 31% ROCE — a consumer-like compounder with pricing power, though richly valued.",
+      "whyNow": "Premiumisation and rural construction recovery extend a long runway for its dominant, brand-led franchise.",
+      "futureTailwinds": [
+        "Adhesives category dominance",
+        "Construction & rural-demand recovery",
+        "Brand-led pricing power"
+      ],
+      "futureThreats": [
+        "Very rich valuation (~78x)",
+        "Raw-material (VAM) cost cyclicality",
+        "Slowdown in construction demand"
+      ],
+      "hiddenOptionality": "New product categories and B2B chemicals are under-appreciated growth legs.",
+      "narrativeShift": "From adhesives leader to a broad construction-and-consumer-chemicals platform.",
+      "whyMarketMayBeWrong": "Quality is undisputed; the debate is price — patient buyers get a rare franchise on dips.",
+      "keyRisks": [
+        "Valuation risk at ~78x",
+        "Input-cost cyclicality"
+      ],
+      "industryTransformationScore": 68,
+      "futureReadinessScore": 70,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    },
+    {
+      "symbol": "ONGC",
+      "name": "ONGC",
+      "sector": "Oil & Gas",
+      "discoveryScore": 63,
+      "grade": "B",
+      "category": "Deep Value",
+      "aiConviction": "Low",
+      "isNew": false,
+      "whyFound": "India's largest oil & gas explorer at a rock-bottom ~8x with a 4%+ dividend yield — extreme value if energy demand stays firm.",
+      "whyNow": "Steady domestic energy demand and disciplined capex support cash flows the market treats as terminal.",
+      "futureTailwinds": [
+        "Firm domestic energy demand",
+        "High dividend yield",
+        "Upside from new field ramp-ups"
+      ],
+      "futureThreats": [
+        "Crude-price volatility",
+        "Government pricing/subsidy intervention",
+        "Energy-transition long-term headwind"
+      ],
+      "hiddenOptionality": "New deepwater production and gas monetisation are under-priced call options.",
+      "narrativeShift": "From discounted PSU explorer to cash-returning energy major.",
+      "whyMarketMayBeWrong": "Priced for permanent decline despite resilient demand and dividends.",
+      "keyRisks": [
+        "Crude-price swings",
+        "Policy intervention"
+      ],
+      "industryTransformationScore": 45,
+      "futureReadinessScore": 52,
+      "generatedAt": "2026-06-13T23:24:03.833377+00:00"
+    }
+  ]
+}
