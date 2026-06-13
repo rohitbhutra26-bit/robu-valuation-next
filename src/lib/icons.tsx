@@ -18,6 +18,8 @@ export {
   ChevronsDown,
   X,
   Menu,
+  Radar,
+  Compass,
 
   // ── Valuation & Finance ───────────────────────────────────────────────────
   Calculator,
