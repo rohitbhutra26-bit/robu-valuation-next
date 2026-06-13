@@ -198,6 +198,19 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (ro
     setPreview(p => p.map((r, j) => (j === i && r.status === 'review' ? { ...r, status: 'fail' } : r)));
 
   async function handleFile(file: File) {
+    // Excel files are binary — convert the first sheet to CSV before parsing.
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name) || /sheet|excel/i.test(file.type);
+    if (isExcel) {
+      try {
+        const XLSX = await import('xlsx');
+        const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        parse(XLSX.utils.sheet_to_csv(ws));
+      } catch {
+        setError('Could not read this Excel file. Try exporting it as CSV instead.');
+      }
+      return;
+    }
     const content = await file.text();
     parse(content);
   }
