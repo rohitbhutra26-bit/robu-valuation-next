@@ -84,8 +84,12 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
             <span className="text-xs px-2 py-0.5 bg-border/50 rounded text-primary/80 border border-border/50 font-medium">
               {smartSectorLabel}
             </span>
-            <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 rounded">
-              NSE
+            <span className={`text-xs px-2 py-0.5 rounded border ${
+              company.exchange === 'BSE'
+                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                : 'bg-accent/10 text-accent border-accent/30'
+            }`}>
+              {company.exchange || 'NSE'}
             </span>
             {/* Red-flag badge — click scrolls to the full checklist */}
             {flagSummary && (

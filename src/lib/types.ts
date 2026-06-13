@@ -20,6 +20,7 @@ export interface Company {
   name: string;
   sector: string;
   industry?: string;
+  exchange?: string;   // 'NSE' | 'BSE' — resolved by the data server
   currentPrice: number;
   previousClose?: number;
   marketCap: number;
