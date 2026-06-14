@@ -46,12 +46,12 @@ export default function PricingPage() {
     overflowX: 'hidden',
     background: '#0f121b',
     color: '#e8eaed',
-    fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif",
+    fontFamily: "'Manrope', 'Inter', system-ui, sans-serif",
     WebkitOverflowScrolling: 'touch',
   };
 
-  const green  = '#00c9a7';
-  const blue   = '#4d8eff';
+  const green  = '#11A56B';
+  const blue   = '#C95E76';
   const muted  = 'rgba(232,234,237,0.5)';
   const card   = '#161b2a';
   const border = 'rgba(255,255,255,0.08)';
@@ -77,7 +77,7 @@ export default function PricingPage() {
       <div style={{ position:'sticky', top:0, zIndex:50, background:'rgba(15,18,27,0.92)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${border}` }}>
         <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 16px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
-            <div style={{ width:28, height:28, borderRadius:8, background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ width:28, height:28, borderRadius:8, background:'rgba(122,34,56,0.15)', border:'1px solid rgba(122,34,56,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <Zap size={14} color={blue}/>
             </div>
             <span style={{ fontWeight:800, fontSize:14, color:'#e8eaed' }}>Robu</span>
@@ -88,7 +88,7 @@ export default function PricingPage() {
 
       {/* Hero */}
       <div className="p-hero" style={{ textAlign:'center', padding:'72px 16px 24px', maxWidth:780, margin:'0 auto' }}>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(77,142,255,0.12)', border:'1px solid rgba(77,142,255,0.25)', borderRadius:999, padding:'6px 16px', fontSize:11, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:blue, marginBottom:28 }}>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(122,34,56,0.12)', border:'1px solid rgba(122,34,56,0.25)', borderRadius:999, padding:'6px 16px', fontSize:11, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:blue, marginBottom:28 }}>
           <Zap size={11}/> Simple pricing · No hidden fees
         </div>
         <h1 style={{ fontSize:'clamp(38px,6vw,64px)', fontWeight:900, lineHeight:1.04, letterSpacing:'-0.03em', marginBottom:20 }}>
@@ -167,11 +167,11 @@ export default function PricingPage() {
         </div>
 
         {/* Pro */}
-        <div style={{ borderRadius:20, border:'1px solid rgba(77,142,255,0.4)', background:'linear-gradient(135deg,rgba(77,142,255,0.08),rgba(0,201,167,0.04))', padding:28, display:'flex', flexDirection:'column', position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:-40, right:-40, width:180, height:180, borderRadius:'50%', background:'rgba(77,142,255,0.1)', filter:'blur(40px)', pointerEvents:'none' }}/>
+        <div style={{ borderRadius:20, border:'1px solid rgba(122,34,56,0.4)', background:'linear-gradient(135deg,rgba(122,34,56,0.08),rgba(0,201,167,0.04))', padding:28, display:'flex', flexDirection:'column', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-40, right:-40, width:180, height:180, borderRadius:'50%', background:'rgba(122,34,56,0.1)', filter:'blur(40px)', pointerEvents:'none' }}/>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
             <p style={{ fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color:blue, margin:0 }}>Pro</p>
-            <span style={{ fontSize:9, fontWeight:900, textTransform:'uppercase', background:'rgba(77,142,255,0.15)', color:blue, border:'1px solid rgba(77,142,255,0.3)', borderRadius:99, padding:'4px 10px', letterSpacing:'0.06em' }}>Unlock All</span>
+            <span style={{ fontSize:9, fontWeight:900, textTransform:'uppercase', background:'rgba(122,34,56,0.15)', color:blue, border:'1px solid rgba(122,34,56,0.3)', borderRadius:99, padding:'4px 10px', letterSpacing:'0.06em' }}>Unlock All</span>
           </div>
           <div style={{ display:'flex', alignItems:'flex-end', gap:6, marginBottom:4 }}>
             <span style={{ fontSize:48, fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, color:'#e8eaed' }}>₹{plan.price}</span>
@@ -184,12 +184,12 @@ export default function PricingPage() {
           <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, marginBottom:24 }}>
             {['Unlimited stock analysis','All valuation models','Historical P/E chart','AI-powered peer comparison','Watchlist & Portfolio','Full screener — 60+ stocks','Gemini AI analysis','PDF export reports'].map(f=>(
               <div key={f} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(77,142,255,0.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Check size={9} color={blue}/></div>
+                <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(122,34,56,0.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Check size={9} color={blue}/></div>
                 <span style={{ fontSize:13, color:'#e8eaed', opacity:0.9 }}>{f}</span>
               </div>
             ))}
           </div>
-          <button style={{ width:'100%', padding:16, borderRadius:12, background:`linear-gradient(135deg,${blue},#2962ff)`, color:'#fff', fontSize:14, fontWeight:900, border:'none', cursor:'pointer', boxShadow:'0 8px 28px rgba(77,142,255,0.4)' }}>
+          <button style={{ width:'100%', padding:16, borderRadius:12, background:`linear-gradient(135deg,${blue},#7A2238)`, color:'#fff', fontSize:14, fontWeight:900, border:'none', cursor:'pointer', boxShadow:'0 8px 28px rgba(122,34,56,0.4)' }}>
             Get Pro — ₹{plan.price}
           </button>
           <p style={{ textAlign:'center', fontSize:11, color:muted, marginTop:10 }}>One-time · No auto-renewal</p>
@@ -259,7 +259,7 @@ export default function PricingPage() {
         <h2 style={{ fontSize:32, fontWeight:900, letterSpacing:'-0.03em', marginBottom:12 }}>Start analysing smarter</h2>
         <p style={{ fontSize:14, color:muted, marginBottom:28 }}>Free forever. Go Pro when you need the full picture.</p>
         <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-          <Link href="/" style={{ padding:'14px 32px', borderRadius:12, background:`linear-gradient(135deg,${blue},#2962ff)`, color:'#fff', fontSize:14, fontWeight:900, textDecoration:'none', boxShadow:'0 8px 24px rgba(77,142,255,0.35)' }}>
+          <Link href="/" style={{ padding:'14px 32px', borderRadius:12, background:`linear-gradient(135deg,${blue},#7A2238)`, color:'#fff', fontSize:14, fontWeight:900, textDecoration:'none', boxShadow:'0 8px 24px rgba(122,34,56,0.35)' }}>
             Try for free →
           </Link>
           <button onClick={()=>{ const el = document.querySelector('[data-billing]'); el?.scrollIntoView({behavior:'smooth'}); }}
@@ -272,7 +272,7 @@ export default function PricingPage() {
       {/* Footer */}
       <div style={{ borderTop:`1px solid ${border}`, padding:'24px', display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:12, maxWidth:1100, margin:'0 auto' }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <div style={{ width:24, height:24, borderRadius:6, background:'rgba(77,142,255,0.15)', border:'1px solid rgba(77,142,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ width:24, height:24, borderRadius:6, background:'rgba(122,34,56,0.15)', border:'1px solid rgba(122,34,56,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <Zap size={11} color={blue}/>
           </div>
           <span style={{ fontSize:13, fontWeight:900, color:'#e8eaed' }}>Robu</span>

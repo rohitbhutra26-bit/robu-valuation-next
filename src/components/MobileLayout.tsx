@@ -58,11 +58,11 @@ interface Props {
 export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="4" width="92" height="92" rx="26" fill="#6366F1" />
-      <text x="50" y="73"
-        fontFamily="'DM Sans', system-ui, sans-serif"
-        fontSize="62" fontWeight="700" fill="#FFFFFF"
-        textAnchor="middle" dominantBaseline="auto">R</text>
+      <rect x="4" y="4" width="92" height="92" rx="26" fill="#7A2238" />
+      <text x="50" y="74"
+        fontFamily="'Manrope', system-ui, sans-serif"
+        fontSize="64" fontWeight="800" fill="#FFFFFF"
+        textAnchor="middle" dominantBaseline="auto">r</text>
     </svg>
   );
 }

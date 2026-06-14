@@ -12,6 +12,7 @@ module.exports = {
         card:     'rgb(var(--color-card) / <alpha-value>)',
         border:   'rgb(var(--color-border) / <alpha-value>)',
         gold:     'rgb(var(--color-gold) / <alpha-value>)',
+        tan:      'rgb(var(--color-tan) / <alpha-value>)',
         gain:     'rgb(var(--color-gain) / <alpha-value>)',
         loss:     'rgb(var(--color-loss) / <alpha-value>)',
         primary:  'rgb(var(--color-primary) / <alpha-value>)',
@@ -20,9 +21,9 @@ module.exports = {
         warning:  'rgb(var(--color-warning) / <alpha-value>)',
       },
       fontFamily: {
-        sans:  ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        sans:  ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
         mono:  ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
-        serif: ['Lora', 'Georgia', 'Times New Roman', 'serif'],
+        serif: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
       },
       // CDS easing curves
       transitionTimingFunction: {

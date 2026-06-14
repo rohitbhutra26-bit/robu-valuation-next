@@ -48,8 +48,8 @@
   /* Fonts — friendly geometric sans throughout. 'serif' is mapped to the same
      friendly sans so existing .font-serif headings instantly de-formalise
      (no longer editorial). Mono kept for tabular financial numbers. */
-  --font-sans:  'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans:  'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono:  'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
 }
 
@@ -59,13 +59,14 @@
   --color-terminal: 244 245 248;   /* #F4F5F8 — soft cool-white page bg */
   --color-card:     255 255 255;   /* #FFFFFF — clean white card */
   --color-border:   209 213 223;   /* #D1D5DF — soft neutral */
-  --color-gold:     99 102 241;    /* #6366F1 — friendly indigo brand accent */
-  --color-gain:     22 163 74;     /* #16A34A — green */
-  --color-loss:     239 68 68;     /* #EF4444 — red */
-  --color-primary:  24 27 39;      /* #181B27 — soft cool near-black */
-  --color-muted:    100 107 122;   /* #646B7A — calm grey */
-  --color-accent:   99 102 241;    /* #6366F1 — indigo */
-  --color-warning:  217 119 6;     /* #D97706 — amber caution / 'fair' */
+  --color-gold:     122 34 56;     /* #7A2238 — burgundy brand accent */
+  --color-tan:      176 124 67;    /* #B07C43 — warm tan secondary (AA on white) */
+  --color-gain:     17 165 107;    /* #11A56B — green (gains only) */
+  --color-loss:     214 69 69;     /* #D64545 — red (losses only) */
+  --color-primary:  25 20 23;      /* #191417 — warm near-black */
+  --color-muted:    122 115 120;   /* #7A7378 — calm warm grey */
+  --color-accent:   122 34 56;     /* #7A2238 — burgundy */
+  --color-warning:  180 100 30;    /* #B4641E — amber/tan caution */
 
   --border-subtle:  rgba(24, 27, 39, 0.09);
   --border-strong:  rgba(24, 27, 39, 0.16);
@@ -77,12 +78,13 @@
   --color-terminal: 10 10 11;      /* #0A0A0B — near-black neutral page bg */
   --color-card:     23 23 24;      /* #171718 — neutral dark surface */
   --color-border:   42 42 45;      /* #2A2A2D — neutral grey */
-  --color-gold:     129 140 248;   /* #818CF8 — indigo brand accent (only colour pop) */
-  --color-gain:     52 211 153;    /* #34D399 */
-  --color-loss:     248 113 113;   /* #F87171 */
-  --color-primary:  245 245 246;   /* #F5F5F6 — neutral near-white text */
-  --color-muted:    160 160 164;   /* #A0A0A4 — neutral grey */
-  --color-accent:   129 140 248;   /* #818CF8 */
+  --color-gold:     201 94 118;    /* #C95E76 — lightened burgundy, readable on dark */
+  --color-tan:      203 168 119;   /* #CBA877 — warm tan secondary */
+  --color-gain:     52 211 153;    /* #34D399 — green (gains only) */
+  --color-loss:     248 113 113;   /* #F87171 — red (losses only) */
+  --color-primary:  245 244 242;   /* #F5F4F2 — warm near-white text */
+  --color-muted:    166 162 166;   /* #A6A2A6 — warm grey */
+  --color-accent:   201 94 118;    /* #C95E76 */
   --color-warning:  251 191 36;    /* #FBBF24 — amber */
 
   --border-subtle:  rgba(255, 255, 255, 0.09);
