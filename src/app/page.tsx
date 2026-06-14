@@ -35,11 +35,12 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
 import ModeToggle from '@/components/ModeToggle';
-import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight } from '@/lib/icons';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
 import DiscoveryView from '@/components/DiscoveryView';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
@@ -621,6 +622,7 @@ export default function Home() {
                   <p className="text-[10px] text-muted/80 uppercase tracking-[1.2px] font-semibold px-2 mb-1.5">On this page</p>
                   {([
                     { id: 'sec-verdict',      label: 'Verdict',       Icon: Sparkles },
+                    { id: 'sec-why',          label: 'Why',           Icon: Lightbulb },
                     { id: 'sec-danger',       label: 'Danger Check',  Icon: ShieldAlert },
                     { id: 'sec-money',        label: 'Your Money',    Icon: DollarSign },
                     { id: 'sec-assumptions',  label: 'Assumptions',   Icon: SlidersHorizontal, analyst: true },
@@ -726,9 +728,19 @@ export default function Home() {
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
                   <>
-                    {/* Verdict — one-line plain-English answer at the very top */}
-                    <div id="sec-verdict" className="scroll-mt-20">
+                    {/* Verdict — the big plain-English answer at the very top */}
+                    <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+                    </div>
+
+                    {/* The 3 questions a worried friend would actually check */}
+                    <div id="sec-why" className="scroll-mt-24">
+                      <SectionHeader
+                        Icon={Lightbulb}
+                        title="Why? The 3 things that matter"
+                        desc="Before any charts, the three checks a sensible friend makes: does it earn money, is it loaded with debt, and is the price fair?"
+                      />
+                      <PlainReasons company={company} financials={financials} assumptions={assumptions} />
                     </div>
 
                     {/* Honesty banner — when our own models shouldn't be trusted */}

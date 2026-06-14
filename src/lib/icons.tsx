@@ -35,6 +35,8 @@ export {
   Scale,
   DollarSign,
   PieChart,
+  Tag,
+  Gauge,
 
   // ── Analysis & AI ─────────────────────────────────────────────────────────
   Sparkles,
