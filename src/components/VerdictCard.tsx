@@ -103,7 +103,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         {/* Worth vs trading */}
         <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4">
           <div>
-            <p className="text-xs text-muted">Looks worth about</p>
+            <p className="text-xs text-muted">Looks worth about <span className="text-muted/60">· {assumptions.years}-year view</span></p>
             <p className={`text-xl font-bold font-mono ${toneText}`}>₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
           </div>
           <div>
