@@ -36,6 +36,7 @@ import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
+import AssumptionsLab from '@/components/AssumptionsLab';
 import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
@@ -727,88 +728,16 @@ export default function Home() {
                       desc="Advanced: change the growth, margin and exit numbers to test your own view. The defaults are picked automatically from the company's sector and track record."
                     />
                     {/* Assumptions panel */}
-                    {(() => {
-                      const sectorProfile = getCompanyProfile(company);
-                      return (
-                        <div className="bg-card border border-border rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <SlidersHorizontal size={14} className="text-accent flex-shrink-0" />
-                            <h3 className="text-sm font-semibold text-primary min-w-0">Your Assumptions — adjust to see your target price</h3>
-                            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-                              {hasChanges && (
-                                <button
-                                  onClick={resetAssumptions}
-                                  title="Reset to algorithm-suggested defaults"
-                                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold text-loss border border-loss/30 bg-loss/5 hover:bg-loss/10 transition-all active:scale-95"
-                                >
-                                  <RotateCcw size={10} />
-                                  Reset
-                                </button>
-                              )}
-                              <span className="text-[11px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded max-w-[180px] truncate" title={`${sectorProfile.sectorLabel} — ${sectorProfile.exitMultipleLabel}`}>
-                                {sectorProfile.sectorLabel} — {sectorProfile.exitMultipleLabel}
-                              </span>
-                            </div>
-                          </div>
-                          {/* Auto-fill badge — shows where the numbers came from */}
-                          {autoFillLabel && (
-                            <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 rounded-lg bg-border/30 border border-border">
-                              <Zap size={10} className="text-accent flex-shrink-0" />
-                              <p className="text-[10px] text-muted leading-tight flex-1">{autoFillLabel}</p>
-                              <button
-                                onClick={() => setAutoFillLabel(null)}
-                                className="text-muted/50 hover:text-muted ml-1 flex-shrink-0"
-                                title="Dismiss"
-                              >
-                                <XIcon size={10} />
-                              </button>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                            <SliderInput
-                              label="Revenue Growth" value={assumptions.revenueGrowthRate}
-                              min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
-                              onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                              hint={`Fades to ${getIndustryCagr(sectorProfile.sectorLabel)}% India ${sectorProfile.sectorLabel} CAGR`}
-                            />
-                            {sectorProfile.model !== 'pb' && (
-                              <SliderInput
-                                label="Net Margin" value={assumptions.netMarginAssumption}
-                                min={1} max={50} inputMax={100} step={0.5} suffix="%" color="text-gain"
-                                onChange={(v) => setAssumptions(a => ({ ...a, netMarginAssumption: v }))}
-                                hint={`${latest?.year} actual: ${latest?.netMargin.toFixed(1)}%`}
-                              />
-                            )}
-                            {sectorProfile.model === 'pb' && (
-                              <SliderInput
-                                label="Book Value Growth" value={assumptions.revenueGrowthRate}
-                                min={1} max={40} inputMax={100} step={0.5} suffix="%" color="text-gain"
-                                onChange={(v) => setAssumptions(a => ({ ...a, revenueGrowthRate: v }))}
-                                hint={`ROE: ${company.roe.toFixed(1)}% → proxy for BV growth`}
-                              />
-                            )}
-                            <SliderInput
-                              label={sectorProfile.exitMultipleLabel}
-                              value={assumptions.exitMultiple}
-                              min={sectorProfile.exitMultipleMin}
-                              max={sectorProfile.exitMultipleMax}
-                              inputMax={sectorProfile.model === 'pe' ? 3000 : sectorProfile.model === 'pb' ? 50 : sectorProfile.exitMultipleMax * 10}
-                              step={sectorProfile.exitMultipleStep}
-                              suffix="x"
-                              color="text-gold"
-                              onChange={(v) => setAssumptions(a => ({ ...a, exitMultiple: v, exitPE: v }))}
-                              hint={
-                                sectorProfile.model === 'pe' ? `Current P/E: ${company.pe.toFixed(1)}x` :
-                                sectorProfile.model === 'pb' ? `Current P/B: ${company.pb.toFixed(1)}x` :
-                                `Sector default: ${sectorProfile.defaultExitMultiple}x`
-                              }
-                            />
-                            {/* Global horizon removed — each card (verdict, what-must-happen)
-                                now owns its own time view, so changing one never moves the rest. */}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                    <AssumptionsLab
+                      company={company}
+                      financials={financials}
+                      assumptions={assumptions}
+                      setAssumptions={setAssumptions}
+                      autoFillLabel={autoFillLabel}
+                      setAutoFillLabel={setAutoFillLabel}
+                      hasChanges={!!hasChanges}
+                      onReset={resetAssumptions}
+                    />
 
                     <SectionHeader
                       id="sec-evidence"

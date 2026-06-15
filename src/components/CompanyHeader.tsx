@@ -48,26 +48,26 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
   }
 
   // Metric chip with semantic color + plain kid-level meaning (tap the ⓘ)
-  const chips: { label: string; value: string; tone?: 'gain' | 'gold' | 'loss'; tip: string }[] = [
+  const chips: { label: string; value: string; tone?: 'gain' | 'warning' | 'loss'; tip: string }[] = [
     { label: 'Mkt Cap', value: formatCr(company.marketCap), tip: 'Total price tag to buy the whole company — all its shares together.' },
     { label: 'P/E', value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)', tip: 'What you pay for ₹1 of yearly profit. P/E 20 = ₹20 paid per ₹1 earned. Lower is usually cheaper.' },
     { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—', tip: 'Price compared to the company\'s own net assets ("book"). P/B 2 = paying double what the assets are worth on paper.' },
     {
       label: 'ROE',
       value: company.roe > 0 ? `${company.roe.toFixed(1)}%` : '—',
-      tone: company.roe <= 0 ? undefined : company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'gold' : 'loss',
+      tone: company.roe <= 0 ? undefined : company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'warning' : 'loss',
       tip: 'Profit made per ₹100 of shareholders\' money. 20%+ is excellent, under 12% is weak.',
     },
     {
       label: 'D/E',
       value: company.debtToEquity > 0 ? `${company.debtToEquity.toFixed(2)}x` : '—',
-      tone: company.debtToEquity <= 0 ? undefined : company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'gold' : 'loss',
+      tone: company.debtToEquity <= 0 ? undefined : company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'warning' : 'loss',
       tip: 'Loans vs own money. D/E 1 = ₹1 of debt per ₹1 of own funds. Under 1 is comfortable (banks are naturally higher).',
     },
     { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—', tip: 'Yearly cash paid to you per ₹100 of share price — like rent from a flat you own.' },
   ];
 
-  const toneClass = { gain: 'text-gain', gold: 'text-gold', loss: 'text-loss' };
+  const toneClass: Record<string, string> = { gain: 'text-gain', warning: 'text-warning', gold: 'text-gold', loss: 'text-loss' };
 
   return (
     <motion.div
