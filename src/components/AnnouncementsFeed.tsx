@@ -36,7 +36,7 @@ export default function AnnouncementsFeed({ company }: { company: Company }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-primary">NSE Announcements</h3>
+        <h3 className="text-sm font-semibold text-primary">Corporate Actions & Announcements</h3>
         <span className="text-[10px] text-muted border border-border px-1.5 py-0.5 rounded">Live</span>
       </div>
       <div className="space-y-2">

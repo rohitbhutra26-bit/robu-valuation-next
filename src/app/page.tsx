@@ -682,6 +682,9 @@ export default function Home() {
                       <CompanyBrief company={company} />
                     </div>
 
+                    {/* Corporate actions & announcements — company events, not valuation output */}
+                    <AnnouncementsFeed company={company} />
+
                     {/* The 3 questions a worried friend would actually check */}
                     <div id="sec-why" className="scroll-mt-24">
                       <SectionHeader
@@ -813,9 +816,6 @@ export default function Home() {
                     />
                     <ROBUScoreCard company={company} financials={financials} />
                   </>
-                )}
-                {activeView === 'valuation' && company && (
-                  <AnnouncementsFeed company={company} />
                 )}
                 {activeView === 'valuation' && company && (
                   <SectorAlternatives company={company} onSelectSymbol={handleSelect} />

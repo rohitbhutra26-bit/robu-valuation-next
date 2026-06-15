@@ -469,6 +469,7 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
           </div>
         </div>
       )}
+      <AnnouncementsFeed company={company} />
     </div>
   );
 }
@@ -594,7 +595,6 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <RedFlagsCard company={company} financials={financials} />
       {financials.length >= 3 && <ROBUScoreCard company={company} financials={financials} />}
       <ScenarioBuilder company={company} financials={financials} />
-      <AnnouncementsFeed company={company} />
       <SectorAlternatives company={company} onSelectSymbol={() => {}} />
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
     </div>
