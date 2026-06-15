@@ -223,13 +223,13 @@ export default function PriceChart({ company, financials = [] }: Props) {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 p-4 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5 p-4 pb-2">
         <div className="flex items-start gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
             <BarChart3 size={14} className="text-accent" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-primary">Price Chart</h3>
+            <h3 className="text-sm font-semibold text-primary whitespace-nowrap">Price Chart</h3>
             <p className="text-xs text-muted truncate">
               {company.symbol} · candlestick + volume · BSE/NSE
               {gapToFair !== null && (
@@ -242,7 +242,7 @@ export default function PriceChart({ company, financials = [] }: Props) {
         </div>
         {/* Timeframe buttons — only show if chart is loaded */}
         {allCandles.length > 0 && (
-          <div className="flex items-center gap-0.5 flex-shrink-0">
+          <div className="flex items-center gap-0.5 flex-wrap sm:flex-nowrap sm:flex-shrink-0">
             {(Object.keys(TF_DAYS) as TF[]).map(t => (
               <button
                 key={t}
@@ -282,7 +282,7 @@ export default function PriceChart({ company, financials = [] }: Props) {
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {([
               { label: 'Cheap',  price: bands.cheap,     pe: bands.cheapPE,  pct: (bands.cheap     / price - 1) * 100, bg: 'bg-gain/10', border: 'border-gain/25', text: 'text-gain' },
-              { label: 'Fair',   price: bands.fair,      pe: +bands.fairPE,  pct: gapToFair!,                           bg: 'bg-gold/10', border: 'border-gold/25', text: 'text-gold' },
+              { label: 'Fair',   price: bands.fair,      pe: +bands.fairPE,  pct: gapToFair!,                           bg: 'bg-warning/10', border: 'border-warning/25', text: 'text-warning' },
               { label: 'Pricey', price: bands.expensive, pe: bands.priceyPE, pct: (bands.expensive / price - 1) * 100, bg: 'bg-loss/10', border: 'border-loss/25', text: 'text-loss' },
             ] as const).map(b => (
               <div key={b.label} className={`text-center p-2 sm:p-2.5 rounded-lg ${b.bg} border ${b.border}`}>
