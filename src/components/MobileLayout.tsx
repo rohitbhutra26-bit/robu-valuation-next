@@ -318,20 +318,22 @@ function HomeView({
 
   return (
     <div className="flex flex-col px-4 pb-32">
-      {/* Hero */}
-      <div className="flex flex-col items-center pt-12 pb-6 px-4">
-        <RobuLogo size={60} />
-        <h1 className="text-3xl font-bold text-primary mt-4 tracking-tight font-serif">Robu</h1>
-        <p className="text-sm text-muted mt-2 text-center leading-relaxed">
-          Find out if any Indian stock is{' '}
-          <span className="font-semibold text-primary">cheap</span>,{' '}
-          <span className="font-semibold text-primary">fair</span>, or{' '}
-          <span className="font-semibold text-primary">expensive</span>.
+      {/* Hero — airy */}
+      <div className="flex flex-col items-center pt-16 pb-9 px-2">
+        <RobuWordmark height={34} className="text-gold" />
+        <h1 className="text-[26px] font-extrabold text-primary mt-9 tracking-tight text-center leading-[1.1]">
+          Should you buy<br />this stock?
+        </h1>
+        <p className="text-sm text-muted mt-3.5 text-center leading-relaxed max-w-[300px]">
+          Type any Indian stock — Robu tells you if it looks{' '}
+          <span className="font-semibold text-gain">cheap</span>,{' '}
+          <span className="font-semibold text-warning">fair</span>, or{' '}
+          <span className="font-semibold text-loss">expensive</span>.
         </p>
       </div>
 
       {/* Search */}
-      <div className="mb-5">
+      <div className="mb-6 [&_input]:rounded-full">
         <CompanySearch onSelect={onSelect} selectedSymbol={selectedSymbol} />
       </div>
 
@@ -581,22 +583,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
             `Sector default: ${sectorProfile.defaultExitMultiple}x · Base: ${yearLabel}`
           }
         />
-        <div>
-          <p className="text-sm text-muted mb-2">Projection horizon</p>
-          <div className="flex gap-2">
-            {[3, 5, 7, 10].map(y => (
-              <button
-                key={y}
-                onClick={() => setAssumptions(a => ({ ...a, years: y }))}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold font-mono transition-all active:scale-95 ${
-                  assumptions.years === y ? 'bg-gold text-terminal' : 'bg-border text-primary/70'
-                }`}
-              >
-                {y}Y
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Global horizon removed — verdict & what-must-happen own their own time view. */}
       </div>
 
       <PriceChart company={company} financials={financials} />
