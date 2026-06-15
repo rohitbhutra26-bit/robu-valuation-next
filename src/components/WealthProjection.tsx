@@ -14,7 +14,7 @@ interface Props {
   assumptions: ValuationAssumptions;
 }
 
-const HORIZONS = [3, 5, 7, 10] as const;
+const HORIZONS = [1, 3, 5, 10] as const;
 const AMOUNT_PRESETS = [
   { label: '₹1L',  value: 100000 },
   { label: '₹5L',  value: 500000 },

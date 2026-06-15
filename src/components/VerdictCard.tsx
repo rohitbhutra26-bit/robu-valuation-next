@@ -119,7 +119,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
           <span className="text-xs text-muted">Value it over</span>
           <div className="flex gap-1 bg-border/40 rounded-full p-0.5">
-            {[1, 3, 5, 7].map(y => (
+            {[1, 3, 5, 10].map(y => (
               <button
                 key={y}
                 onClick={() => setHorizon(y)}

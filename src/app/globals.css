@@ -442,6 +442,18 @@ input[type='number'] { -moz-appearance: textfield; }
 }
 .print-only { display: none; }
 
+/* ── Light-theme depth & polish (cards lift off a softly-lit page) ───────── */
+html:not([data-theme="dark"]) body {
+  background-image: radial-gradient(900px 480px at 50% -160px, rgba(122, 34, 56, 0.06), transparent 65%);
+  background-repeat: no-repeat;
+}
+html:not([data-theme="dark"]) .bg-card.rounded-xl,
+html:not([data-theme="dark"]) .bg-card.rounded-2xl,
+html:not([data-theme="dark"]) .bg-card.rounded-3xl {
+  box-shadow: 0 1px 2px rgba(23, 20, 27, 0.04), 0 6px 16px rgba(23, 20, 27, 0.05);
+  border-color: rgba(23, 20, 27, 0.06);
+}
+
 /* ── View mode removed ────────────────────────────────────────────────────────
    There is no Analyst mode anymore — the whole report is written for normal
    people, so everything is always shown. The .analyst-only / .simple-only

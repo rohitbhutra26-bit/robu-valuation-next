@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { ValuationAssumptions } from '@/lib/types';
 import { FinancialYear } from '@/lib/types';
@@ -31,6 +33,7 @@ interface Scenario {
 }
 
 export default function ScenarioCards({ financials, assumptions, currentPrice, company, compact = false }: ScenarioCardsProps) {
+  const [horizon, setHorizon] = useState<number>(assumptions.years);
   if (!financials.length) return null;
   if (!valuationReliability(company, financials).reliable) {
     return (
@@ -42,7 +45,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
   }
 
   const profile  = getCompanyProfile(company);
-  const years    = assumptions.years;
+  const years    = horizon;
 
   // Display-only context (header badges) — config math lives in the shared engine
   const sigma   = revenueVolatility(financials);
@@ -169,6 +172,17 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
       </div>
 
       {/* ── Three scenario cards ── */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[11px] text-muted">Value it over</span>
+        <div className="flex gap-1 bg-border/40 rounded-full p-0.5">
+          {[1, 3, 5, 10].map(y => (
+            <button key={y} onClick={() => setHorizon(y)}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${horizon === y ? 'bg-gold text-card shadow-sm' : 'text-muted hover:text-primary'}`}>
+              {y}yr
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {scenarios.map((s, i) => {
           const isPositive = s.upside >= 0;

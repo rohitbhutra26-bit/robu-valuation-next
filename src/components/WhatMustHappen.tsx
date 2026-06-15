@@ -96,7 +96,7 @@ function VerdictBanner({ feasibility, summary }: { feasibility: Feasibility; sum
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-const HORIZONS = [3, 5, 7, 10] as const;
+const HORIZONS = [1, 3, 5, 10] as const;
 
 export default function WhatMustHappen({ company, financials, assumptions }: Props) {
   const profile = getCompanyProfile(company);

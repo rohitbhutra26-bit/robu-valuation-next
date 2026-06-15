@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel, TERMINAL_GROWTH, getBaselineFinancial } from '@/lib/forecastUtils';
@@ -80,6 +80,7 @@ export default function AssumptionsLab({
 }: Props) {
   const profile = getCompanyProfile(company);
   const isPB = profile.model === 'pb';
+  const [horizon, setHorizon] = useState<number>(assumptions.years || 5);
 
   // Live target price from the CURRENT assumptions — updates as you drag.
   const fairValue = useMemo(() => {
@@ -87,11 +88,11 @@ export default function AssumptionsLab({
       const r = runPrimaryModel(
         profile.model, financials, company,
         assumptions.revenueGrowthRate, assumptions.netMarginAssumption,
-        assumptions.exitMultiple, assumptions.years,
+        assumptions.exitMultiple, horizon,
       );
       return Math.max(r.fairValue, 0);
     } catch { return 0; }
-  }, [profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years]);
+  }, [profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, horizon]);
 
   const price = company.currentPrice || 0;
   const upside = fairValue > 0 && price > 0 ? ((fairValue / price) - 1) * 100 : 0;
@@ -144,8 +145,19 @@ export default function AssumptionsLab({
         </div>
 
         <p className="text-[11px] text-muted/80 mt-2.5 leading-snug">
-          This is what the stock would be worth in {assumptions.years} years if your numbers below hold. Move any slider to test your own view.
+          This is what the stock would be worth in {horizon} years if your numbers below hold. Move any slider to test your own view.
         </p>
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-[11px] text-muted">Value it over</span>
+          <div className="flex gap-1 bg-card border border-border rounded-full p-0.5">
+            {[1, 3, 5, 10].map(y => (
+              <button key={y} onClick={() => setHorizon(y)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${horizon === y ? 'bg-gold text-card shadow-sm' : 'text-muted hover:text-primary'}`}>
+                {y}yr
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ── Where the defaults came from ── */}
