@@ -453,3 +453,12 @@ input[type='number'] { -moz-appearance: textfield; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Interaction & scroll polish (app-wide) ──────────────────────────────────
+   Smooth momentum scrolling and clean section-jump landings below the sticky
+   header, so jumping between sections never hides content under the header.  */
+html, [class*="overflow-y-auto"], [class*="overflow-auto"] {
+  scroll-padding-top: 96px;
+  -webkit-overflow-scrolling: touch;
+}
+[id] { scroll-margin-top: 96px; }

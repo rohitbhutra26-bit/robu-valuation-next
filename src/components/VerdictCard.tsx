@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
@@ -16,6 +16,10 @@ interface Props {
 }
 
 export default function VerdictCard({ company, financials, assumptions }: Props) {
+  // Local horizon — this card owns its own time view, independent of the global
+  // assumptions. Changing it here re-values only this card, nothing else.
+  const [horizon, setHorizon] = useState<number>(assumptions.years || 5);
+
   const fairValue = useMemo(() => {
     if (!financials.length || !company.currentPrice) return 0;
     try {
@@ -23,13 +27,13 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
       const result = runPrimaryModel(
         profile.model, financials, company,
         assumptions.revenueGrowthRate, assumptions.netMarginAssumption,
-        assumptions.exitMultiple, assumptions.years,
+        assumptions.exitMultiple, horizon,
       );
       return Math.max(result.fairValue, 0);
     } catch {
       return 0;
     }
-  }, [company, financials, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years]);
+  }, [company, financials, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, horizon]);
 
   if (!fairValue || !company.currentPrice) return null;
 
@@ -100,10 +104,28 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
           </div>
         </div>
 
+        {/* Horizon picker — this card's own time view */}
+        <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+          <span className="text-xs text-muted">Value it over</span>
+          <div className="flex gap-1 bg-border/40 rounded-full p-0.5">
+            {[1, 3, 5, 7].map(y => (
+              <button
+                key={y}
+                onClick={() => setHorizon(y)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  horizon === y ? 'bg-gold text-card shadow-sm' : 'text-muted hover:text-primary'
+                }`}
+              >
+                {y}yr
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Worth vs trading */}
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
           <div>
-            <p className="text-xs text-muted">Looks worth about <span className="text-muted/60">· {assumptions.years}-year view</span></p>
+            <p className="text-xs text-muted">Looks worth about <span className="text-muted/60">· {horizon}-year view</span></p>
             <p className={`text-xl font-bold font-mono ${toneText}`}>₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
           </div>
           <div>
