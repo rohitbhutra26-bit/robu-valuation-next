@@ -24,7 +24,7 @@ function DimensionRow({ d, expanded }: { d: DimensionScore; expanded: boolean })
       <div className="h-1.5 bg-border rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${
-            d.score >= 65 ? 'bg-gain' : d.score >= 50 ? 'bg-warning' : 'bg-loss'
+            d.score >= 65 ? 'bg-gain' : d.score >= 45 ? 'bg-warning' : 'bg-loss'
           }`}
           style={{ width: `${pct}%` }}
         />

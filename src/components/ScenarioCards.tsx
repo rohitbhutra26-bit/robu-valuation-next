@@ -245,7 +245,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
                 <motion.div
                   className="h-full rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${s.probability * 2}%` }}
+                  animate={{ width: `${Math.min(s.probability * 2, 100)}%` }}
                   transition={{ duration: 0.5, delay: i * 0.07 + 0.2, ease: 'easeOut' }}
                   style={{ backgroundColor: s.color }}
                 />
