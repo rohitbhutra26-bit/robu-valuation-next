@@ -410,65 +410,68 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
 
       <ValuationCaveatBanner company={company} financials={financials} />
 
-      {/* Price card */}
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <div className="mb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold text-gold tracking-wider">{company.symbol}</span>
-            <span className="text-[10px] px-1.5 py-0.5 bg-border/60 rounded text-muted max-w-[140px] truncate">{company.sector}</span>
-          </div>
-          <h2 className="text-base font-bold text-primary leading-snug line-clamp-2">{company.name}</h2>
-        </div>
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-3xl font-bold font-mono text-primary leading-none">
+      {/* ── Company card (brief: eyebrow → name → big mono price → change) ── */}
+      <div className="bg-card border border-border rounded-[20px] p-[18px]">
+        <p className="text-[12px] font-medium text-muted">
+          <span className="font-mono font-semibold text-gold">{company.symbol}</span>
+          {company.sector ? <span> · {company.sector}</span> : null}
+        </p>
+        {/* min-w-0 + break-words = never collapses to one-letter-per-line */}
+        <h2 className="mt-1 text-[17px] font-bold text-primary leading-snug break-words [text-wrap:balance] min-w-0">
+          {company.name}
+        </h2>
+        <div className="mt-2.5 flex items-baseline gap-2.5 flex-wrap">
+          <span className="text-[26px] font-bold font-mono text-primary leading-none">
             ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </span>
-        </div>
-        <div className={`flex items-center flex-wrap gap-x-2 gap-y-0.5 text-sm font-semibold font-mono mb-4 ${isPos ? 'text-gain' : 'text-loss'}`}>
-          <span>{isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)}</span>
-          <span>({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)</span>
-          <span className="text-xs text-muted font-normal">today</span>
+          <span className={`text-sm font-semibold font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
+            {isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)} ({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)
+            <span className="text-muted font-normal"> today</span>
+          </span>
         </div>
         {has52W && (
-          <>
-            <div className="flex justify-between text-[10px] text-muted mb-1.5 gap-2">
-              <span className="truncate">52W Low ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-              <span className="flex-shrink-0">52W High ₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+          <div className="mt-4">
+            <div className="flex justify-between text-[10.5px] font-mono text-muted/80 mb-1.5 gap-2">
+              <span className="truncate">52W ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+              <span className="flex-shrink-0">₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
             </div>
-            <div className="relative h-2 bg-border rounded-full overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-loss via-gold to-gain opacity-30 rounded-full" />
+            <div className="relative h-2 bg-border/60 rounded-full overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-loss via-warning to-gain opacity-30 rounded-full" />
               <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
                 style={{ left: `calc(${pct}% - 7px)` }} />
             </div>
-          </>
+          </div>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {stats.map((s, i) => (
-          <div key={i} className="bg-card border border-border rounded-xl p-3">
-            <p className="text-[10px] text-muted mb-1 uppercase tracking-wide">{s.label}</p>
-            <p className={`text-base font-bold font-mono ${s.color || 'text-primary'}`}>{s.value}</p>
-          </div>
-        ))}
+      {/* ── Key ratios (brief: 2-col stat tiles, mono values) ── */}
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Key ratios</p>
+        <div className="grid grid-cols-2 gap-2.5">
+          {stats.map((s, i) => (
+            <div key={i} className="bg-card border border-border rounded-[15px] px-3.5 py-3">
+              <p className="text-[11.5px] text-muted mb-1.5">{s.label}</p>
+              <p className={`text-[18px] font-semibold font-mono leading-none ${s.color || 'text-primary'}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Latest Financials */}
+      {/* ── Last reported (brief: row list, hair dividers, mono right) ── */}
       {latest && (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-[10px] text-muted uppercase tracking-wider mb-3 font-semibold">Last reported — {latest.year}</p>
-          <div className="space-y-2.5">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Last reported · {latest.year}</p>
+          <div className="bg-card border border-border rounded-[20px] px-[18px]">
             {[
-              { label: 'Revenue',         value: fmt(latest.revenue) },
-              { label: 'Net Profit (PAT)',value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
-              { label: 'EBITDA Margin',   value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-warning' : 'text-primary' },
-              { label: 'Net Margin',      value: `${latest.netMargin.toFixed(1)}%`, color: latest.netMargin >= 10 ? 'text-gain' : 'text-primary' },
-              { label: 'EPS',             value: `₹${latest.eps.toFixed(1)}` },
-            ].map((r, i) => (
-              <div key={i} className="flex items-center justify-between">
+              { label: 'Revenue',          value: fmt(latest.revenue) },
+              { label: 'Net profit (PAT)', value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
+              { label: 'EBITDA margin',    value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-warning' : 'text-primary' },
+              { label: 'Net margin',       value: `${latest.netMargin.toFixed(1)}%`, color: latest.netMargin >= 10 ? 'text-gain' : 'text-primary' },
+              { label: 'EPS',              value: `₹${latest.eps.toFixed(1)}` },
+            ].map((r, i, a) => (
+              <div key={i} className={`flex items-center justify-between py-[13px] ${i < a.length - 1 ? 'border-b border-border/60' : ''}`}>
                 <span className="text-sm text-muted">{r.label}</span>
-                <span className={`text-sm font-semibold font-mono ${r.color || 'text-primary'}`}>{r.value}</span>
+                <span className={`text-[15px] font-semibold font-mono ${r.color || 'text-primary'}`}>{r.value}</span>
               </div>
             ))}
           </div>
