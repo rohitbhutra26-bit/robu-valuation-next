@@ -160,7 +160,7 @@ function StockSubNav({
     { id: 'financials', label: 'Data' },
   ];
   return (
-    <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-b border-border bg-card/95 backdrop-blur-xl no-scrollbar">
+    <div className="flex gap-1.5 overflow-x-auto md:flex-wrap px-4 py-2 border-b border-border bg-card/95 backdrop-blur-xl no-scrollbar">
       {tabs.map(({ id, label }) => (
         <button
           key={id}
@@ -317,9 +317,9 @@ function HomeView({
   ];
 
   return (
-    <div className="flex flex-col px-4 pb-32">
+    <div className="flex flex-col px-4 md:px-6 pb-32 w-full max-w-xl md:max-w-2xl mx-auto">
       {/* Hero — airy */}
-      <div className="flex flex-col items-center pt-16 pb-9 px-2">
+      <div className="flex flex-col items-center pt-16 md:pt-20 pb-9 px-2">
         <RobuWordmark height={34} className="text-gold" />
         <h1 className="text-[26px] font-extrabold text-primary mt-9 tracking-tight text-center leading-[1.1]">
           Should you buy<br />this stock?
@@ -337,8 +337,8 @@ function HomeView({
         <CompanySearch onSelect={onSelect} selectedSymbol={selectedSymbol} />
       </div>
 
-      {/* Utility shortcuts */}
-      <div className="space-y-2 mb-5">
+      {/* Utility shortcuts — 2-up on tablet */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5">
         {shortcuts.map(s => (
           <button
             key={s.id}
@@ -404,7 +404,7 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
   ];
 
   return (
-    <div className="px-4 pt-4 pb-32 space-y-3 max-w-2xl mx-auto w-full">
+    <div className="px-4 pt-4 pb-32 space-y-3 max-w-2xl md:max-w-3xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
       <ValuationCaveatBanner company={company} financials={financials} />
@@ -531,7 +531,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   const sectorProfile = getCompanyProfile(company);
 
   return (
-    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full">
+    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
       <ValuationCaveatBanner company={company} financials={financials} />
@@ -613,7 +613,7 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company) return null;
   return (
-    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full">
+    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
       <AIOverview company={company} financials={financials} />
       <HistoricalValuationChart company={company} />
       <IndustryBenchmarks company={company} financials={financials} />
@@ -761,7 +761,7 @@ export default function MobileLayout({
 
         {/* Stock sub-tabs */}
         {showStockContent && company && (
-          <div className="flex gap-1.5 overflow-x-auto px-4 pb-2.5 no-scrollbar">
+          <div className="flex gap-1.5 overflow-x-auto md:flex-wrap px-4 pb-2.5 no-scrollbar">
             {([
               { id: 'overview' as StockTab,   label: 'Overview' },
               { id: 'valuation' as StockTab,  label: 'Valuation' },
