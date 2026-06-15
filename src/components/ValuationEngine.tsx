@@ -17,6 +17,7 @@ import {
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
 import { verdictKey } from '@/lib/verdict';
+import { valuationReliability } from '@/lib/valuationReliability';
 import { Clock } from '@/lib/icons';
 import Tooltip from '@/components/Tooltip';
 
@@ -112,6 +113,14 @@ function StatPill({ label, value, color, sub }: {
 export default function ValuationEngine({ company, financials, assumptions, compact = false }: ValuationEngineProps) {
   const [showDetails, setShowDetails] = useState(false);
   if (!financials.length) return null;
+  if (!valuationReliability(company, financials).reliable) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
+        <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so a fair value / multiple-based estimate does not apply here. See the caution under the verdict above.</p>
+      </div>
+    );
+  }
 
   const profile = getCompanyProfile(company);
   const model   = profile.model;

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { reverseDcfVerdict } from '@/lib/advancedModels';
+import { valuationReliability } from '@/lib/valuationReliability';
 import Tooltip from '@/components/Tooltip';
 
 interface Props {
@@ -37,6 +38,14 @@ export default function ReverseDCF({ company, financials, assumptions }: Props) 
   );
 
   if (!result) return null;
+  if (!valuationReliability(company, financials).reliable) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
+        <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so a fair value / multiple-based estimate does not apply here. See the caution under the verdict above.</p>
+      </div>
+    );
+  }
 
   const v = VERDICT_STYLE[result.verdict];
   const maxBar = Math.max(result.impliedGrowth, result.deliveredGrowth, 1);

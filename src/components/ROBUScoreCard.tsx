@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Company, FinancialYear } from '@/lib/types';
 import { computeROBUScore, ROBUScoreResult, DimensionScore } from '@/lib/robuScore';
+import { valuationReliability } from '@/lib/valuationReliability';
 
 function DimensionRow({ d, expanded }: { d: DimensionScore; expanded: boolean }) {
   const pct = d.score;
@@ -76,7 +77,7 @@ export default function ROBUScoreCard({
         : 'bg-loss/5 border-loss/20'
       }`}>
         <p className={`text-xs font-semibold ${gradeColor}`}>{result.verdict}</p>
-        {result.buyZone && (
+        {result.buyZone && valuationReliability(company, financials).reliable && (
           <p className="text-[11px] text-muted mt-1">
             Quality-adjusted buy zone: <span className="text-accent font-mono font-bold">₹{result.buyZone.toLocaleString('en-IN')}</span>
           </p>

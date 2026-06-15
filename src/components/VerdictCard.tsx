@@ -101,12 +101,14 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         <div className="mt-7">
           <div className="relative h-2.5 rounded-full"
                style={{ background: 'linear-gradient(90deg, rgb(var(--color-gain)), rgb(var(--color-warning)), rgb(var(--color-loss)))' }}>
+            {reliability.reliable && (
             <motion.div
               className="absolute top-1/2 w-5 h-5 rounded-full bg-card shadow-md"
               style={{ border: `3px solid ${dot}`, x: '-50%', y: '-50%' }}
               initial={{ left: '50%' }} animate={{ left: `${pos}%` }}
               transition={{ type: 'spring', stiffness: 120, damping: 18 }}
             />
+            )}
           </div>
           <div className="flex justify-between mt-2 text-[11px] font-semibold text-muted">
             <span>Cheap</span><span>Fair</span><span>Expensive</span>
@@ -135,7 +137,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
           <div>
             <p className="text-xs text-muted">Looks worth about <span className="text-muted/60">· {horizon}-year view</span></p>
-            <p className={`text-xl font-bold font-mono ${toneText}`}>₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+            <p className={`text-xl font-bold font-mono ${toneText}`}>{reliability.reliable ? `₹${fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—'}</p>
           </div>
           <div>
             <p className="text-xs text-muted">Trading at</p>

@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel, TERMINAL_GROWTH, getBaselineFinancial } from '@/lib/forecastUtils';
+import { valuationReliability } from '@/lib/valuationReliability';
 import { SlidersHorizontal, RotateCcw, Zap, X as XIcon } from '@/lib/icons';
 
 interface Props {
@@ -112,7 +113,9 @@ export default function AssumptionsLab({
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted">Your target price</p>
               <div className="flex items-baseline gap-2.5 mt-0.5">
-                {fairValue > 0 ? (
+                {!valuationReliability(company, financials).reliable ? (
+                  <span className="text-sm text-muted">Not meaningful - loss-making / negative net worth</span>
+                ) : fairValue > 0 ? (
                   <>
                     <span className="text-3xl font-bold font-mono text-primary leading-none">₹{fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
                     <span className={`text-sm font-semibold font-mono ${up ? 'text-gain' : 'text-loss'}`}>

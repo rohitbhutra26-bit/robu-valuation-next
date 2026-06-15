@@ -4,6 +4,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 import { VERDICT_CUTOFFS } from '@/lib/verdict';
+import { valuationReliability } from '@/lib/valuationReliability';
 
 interface SensitivityMatrixProps {
   financials: FinancialYear[];
@@ -25,6 +26,14 @@ export default function SensitivityMatrix({
   financials, assumptions, currentPrice, company,
 }: SensitivityMatrixProps) {
   if (!financials.length) return null;
+  if (!valuationReliability(company, financials).reliable) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
+        <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so a fair value / multiple-based estimate does not apply here. See the caution under the verdict above.</p>
+      </div>
+    );
+  }
 
   const profile = getCompanyProfile(company);
   const g       = assumptions.revenueGrowthRate;
