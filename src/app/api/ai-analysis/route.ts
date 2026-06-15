@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
+import { generateInsight } from '@/lib/aiInsight';
+import type { Company, FinancialYear } from '@/lib/types';
 
 const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 function buildPrompt(company: Record<string, unknown>, financials: Record<string, unknown>[]): string {
   const latest = financials[financials.length - 1] as Record<string, number> | undefined;
@@ -80,50 +82,57 @@ Return ONLY valid JSON — no markdown, no text outside the object:
 }
 
 export async function POST(req: NextRequest) {
+  let company: Record<string, unknown> | undefined;
+  let financials: Record<string, unknown>[] = [];
   try {
-    const { company, financials } = await req.json();
+    const body = await req.json();
+    company = body?.company;
+    financials = Array.isArray(body?.financials) ? body.financials : [];
+  } catch {
+    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+  }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'AI not configured' }, { status: 503 });
+  if (!company || typeof company !== 'object') {
+    return NextResponse.json({ error: 'company payload required' }, { status: 400 });
+  }
+  const co = company;
+
+  // Rule-based analysis — always available. Used whenever Gemini is missing, quota'd,
+  // or errors, so this endpoint degrades gracefully (200) instead of returning 5xx.
+  const fallback = () => {
+    try {
+      const i = generateInsight(co as unknown as Company, financials as unknown as FinancialYear[]);
+      return NextResponse.json({ verdict: i.verdict, confidence: i.confidence, summary: i.summary, bull: i.bull, bear: i.bear, source: 'rule-based' });
+    } catch {
+      return NextResponse.json({ error: 'analysis failed' }, { status: 500 });
     }
+  };
 
-    const prompt = buildPrompt(company, financials ?? []);
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return fallback();
 
+  try {
+    const prompt = buildPrompt(co, financials);
     const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.15,
-          maxOutputTokens: 550,
-        },
+        generationConfig: { temperature: 0.15, maxOutputTokens: 550 },
       }),
       signal: AbortSignal.timeout(12000),
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error('[ai-analysis] Gemini error:', err);
-      return NextResponse.json({ error: 'AI service error' }, { status: 502 });
+      console.error('[ai-analysis] Gemini error:', await res.text().catch(() => ''));
+      return fallback();
     }
-
     const data = await res.json();
     const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-
-    // Extract JSON even if Gemini wraps it in markdown
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error('[ai-analysis] No JSON in response:', raw);
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 502 });
-    }
-
+    if (!jsonMatch) return fallback();
     const parsed = JSON.parse(jsonMatch[0]);
-
-    if (!parsed.verdict || !parsed.summary || !parsed.bull || !parsed.bear) {
-      return NextResponse.json({ error: 'Incomplete AI response' }, { status: 502 });
-    }
+    if (!parsed.verdict || !parsed.summary || !parsed.bull || !parsed.bear) return fallback();
 
     return NextResponse.json({
       verdict:    parsed.verdict,
@@ -131,10 +140,10 @@ export async function POST(req: NextRequest) {
       summary:    parsed.summary,
       bull:       parsed.bull,
       bear:       parsed.bear,
+      source:     'ai',
     });
-
   } catch (err) {
     console.error('[ai-analysis] Error:', err);
-    return NextResponse.json({ error: 'AI analysis failed' }, { status: 500 });
+    return fallback();
   }
 }
