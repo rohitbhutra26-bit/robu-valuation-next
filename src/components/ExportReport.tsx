@@ -40,7 +40,7 @@ export default function ExportReport({ company }: ExportReportProps) {
         image:       { type: 'jpeg', quality: 0.96 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:   { mode: ['avoid-all', 'css', 'legacy'], avoid: ['.pr-keep', 'table', 'tr', '.pr-card'] },
+        pagebreak:   { mode: ['css', 'legacy'], before: '.pr-chapter', avoid: '.pr-keep' },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
       await html2pdf().set(opts).from(report).save();
@@ -58,14 +58,11 @@ export default function ExportReport({ company }: ExportReportProps) {
     <button
       onClick={handleDownload}
       disabled={busy}
-      className="group flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-terminal transition-all shadow-sm disabled:opacity-60 disabled:cursor-wait"
+      className="group inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-card transition-all disabled:opacity-60 disabled:cursor-wait whitespace-nowrap"
       title="Download the full multi-page stock report as a PDF file"
     >
       <Download size={14} />
-      <span className="leading-tight text-left">
-        {busy ? 'Preparing…' : 'Download full'}
-        <span className="block font-serif text-[13px] tracking-wide">STOCK REPORT</span>
-      </span>
+      {busy ? 'Preparing…' : 'Download report'}
     </button>
   );
 }
@@ -107,7 +104,7 @@ function Brand({ company, page }: { company: Company; page: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '10px', marginBottom: '26px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, system-ui, sans-serif', fontWeight: 800, fontSize: '14px' }}>r</div>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '14px' }}>R</div>
         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TERRA }}>Robu</span>
         <span style={{ fontSize: '10px', color: FAINT }}>· Equity Research</span>
       </div>
@@ -122,7 +119,7 @@ function SecTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
     <div style={{ margin: '4px 0 16px' }}>
       <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: GOLD, marginBottom: '4px' }}>{kicker}</div>
-      <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Manrope, system-ui, sans-serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
+      <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
     </div>
   );
 }
@@ -245,7 +242,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   return createPortal(
     <div className="print-only" style={{ display: 'none' }}>
       <div id="print-report">
-        <div style={{ fontFamily: 'Manrope, system-ui, sans-serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
+        <div style={{ fontFamily: 'Georgia, serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
 
           {/* ════════ CHAPTER 1 · COVER & VERDICT ════════ */}
           <Brand company={company} page={`Report · ${today}`} />
@@ -275,7 +272,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
           {/* Verdict banner */}
           <div className="pr-keep" style={{ padding: '18px 22px', background: vBg, border: `2px solid ${vColor}`, borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: vColor, fontFamily: 'Manrope, system-ui, sans-serif', letterSpacing: '-0.4px' }}>{verdictLabel}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: vColor, fontFamily: 'Georgia, serif' }}>{verdictLabel}</div>
               <div style={{ fontSize: '11px', color: MUTED, marginTop: '3px' }}>
                 {insight.verdict} · {insight.confidence.toLowerCase()} confidence · {flags.failCount} red flag{flags.failCount === 1 ? '' : 's'} · composite of {allFVs.length} methods over {assumptions.years} years
               </div>
@@ -297,10 +294,10 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ROBU score */}
           <div className="pr-keep" style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>
-            <Card accent={TERRA} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: '#FBF1F3' }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TERRA }}>Robu score</div>
-              <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Manrope, system-ui, sans-serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
-              <div style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, color: TERRA }}>{robu.total}/100</div>
+            <Card accent={GOLD} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: CREAM }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Robu score</div>
+              <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Georgia, serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
+              <div style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, color: GOLD }}>{robu.total}/100</div>
               <div style={{ fontSize: '10px', color: MUTED, marginTop: '4px', lineHeight: 1.4 }}>{robu.verdict}</div>
             </Card>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '7px', justifyContent: 'center' }}>
@@ -335,6 +332,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 2 · THE WRITTEN CASE ════════ */}
           <div className="pr-chapter">
+            <Brand company={company} page="The written case" />
             <SecTitle kicker="Research summary" title="Why consider this stock — or not" />
             <p style={{ fontSize: '13px', lineHeight: 1.75, color: INK, margin: '0 0 12px', fontWeight: 600 }}>{insight.summary}</p>
 
@@ -360,11 +358,11 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
               <Card accent="#86efac" style={{ background: '#f0fdf4' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: GAIN, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>The bull case — why it could work</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: GAIN, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🚀 The bull case — why it could work</div>
                 <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#14532d' }}>{insight.bull}</p>
               </Card>
               <Card accent="#fca5a5" style={{ background: '#fef2f2' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: LOSS, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>The bear case — what could go wrong</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: LOSS, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🐻 The bear case — what could go wrong</div>
                 <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#7f1d1d' }}>{insight.bear}</p>
               </Card>
             </div>
@@ -421,6 +419,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 3 · VALUATION ════════ */}
           <div className="pr-chapter">
+            <Brand company={company} page="Valuation" />
             <SecTitle kicker="Fair value" title="What is this stock actually worth?" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
               {[
@@ -497,6 +496,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 4 · HEALTH CHECK ════════ */}
           <div className="pr-chapter">
+            <Brand company={company} page="Health check" />
             <SecTitle kicker="Red flags" title={flags.verdict} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '16px' }}>
               {flags.flags.map(f => {
@@ -537,6 +537,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 5 · FINANCIALS ════════ */}
           <div className="pr-chapter">
+            <Brand company={company} page="Financials" />
             <SecTitle kicker="Track record" title="Revenue & profit, last 8 years" />
             <svg width={RC_W} height={RC_H + 22} viewBox={`0 0 ${RC_W} ${RC_H + 22}`} style={{ display: 'block', marginBottom: '4px' }}>
               {chartYears.map((f, i) => {
@@ -545,7 +546,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                 const x = RC_PAD + i * bw;
                 return (
                   <g key={f.year}>
-                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill={TERRA} rx="2" />
+                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill="#fcd34d" rx="2" />
                     <rect x={x + bw * 0.56} y={RC_H - patH} width={bw * 0.3} height={patH} fill={GAIN} rx="2" />
                     <text x={x + bw / 2} y={RC_H + 13} textAnchor="middle" fontSize="10" fill={MUTED} fontFamily="monospace">{f.year}</text>
                   </g>
@@ -553,7 +554,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               })}
             </svg>
             <p style={{ fontSize: '9px', color: FAINT, margin: '0 0 14px' }}>
-              <span style={{ color: TERRA }}>■</span> Revenue&nbsp;&nbsp;<span style={{ color: GAIN }}>■</span> Net profit&nbsp;&nbsp;
+              <span style={{ color: GOLD }}>■</span> Revenue&nbsp;&nbsp;<span style={{ color: GAIN }}>■</span> Net profit&nbsp;&nbsp;
               Latest: ₹{latest.revenue.toLocaleString('en-IN')} Cr revenue · ₹{latest.pat.toLocaleString('en-IN')} Cr profit · {latest.netMargin.toFixed(1)}% margin
             </p>
 
@@ -567,7 +568,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               <tbody>
                 {financials.map((f, i) => (
                   <tr key={f.year} style={{ background: i % 2 ? PAPER : '#fff' }}>
-                    <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Manrope, system-ui, sans-serif' }}>{f.year}</td>
+                    <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{f.year}</td>
                     <td style={td}>₹{f.revenue.toLocaleString('en-IN')}</td>
                     <td style={{ ...td, color: f.revenueGrowth >= 0 ? GAIN : LOSS }}>{f.revenueGrowth >= 0 ? '+' : ''}{f.revenueGrowth.toFixed(1)}%</td>
                     <td style={td}>₹{f.pat.toLocaleString('en-IN')}</td>
@@ -591,7 +592,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                   <tbody>
                     {quarters.map((q, i) => (
                       <tr key={q.quarter} style={{ background: i % 2 ? PAPER : '#fff' }}>
-                        <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Manrope, system-ui, sans-serif' }}>{q.quarter}</td>
+                        <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{q.quarter}</td>
                         <td style={td}>₹{q.revenue.toLocaleString('en-IN')}</td>
                         <td style={{ ...td, color: q.pat >= 0 ? INK : LOSS }}>₹{q.pat.toLocaleString('en-IN')}</td>
                         <td style={td}>{q.opm.toFixed(1)}%</td>
@@ -606,6 +607,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 6 · PEERS & SECTOR ════════ */}
           <div className="pr-chapter">
+            <Brand company={company} page="Peers & sector" />
             {peers.length > 1 && (
               <>
                 <SecTitle kicker="Competition" title="How it stacks up against peers" />
@@ -667,7 +669,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                   ['Red flags', 'Quick health checks: too much debt, weak cash, pledged shares — danger signs before you invest.'],
                 ].map(([t, d]) => (
                   <div key={t} style={{ fontSize: '10px', lineHeight: 1.5 }}>
-                    <strong style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>{t}.</strong> <span style={{ color: MUTED }}>{d}</span>
+                    <strong style={{ fontFamily: 'Georgia, serif' }}>{t}.</strong> <span style={{ color: MUTED }}>{d}</span>
                   </div>
                 ))}
               </div>
@@ -680,7 +682,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                 Projections are based on stated assumptions and historical data; markets can and will surprise. Always do your own research.
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, system-ui, sans-serif', fontWeight: 700, fontSize: '11px' }}>R</div>
+                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '11px' }}>R</div>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: TERRA, letterSpacing: '1px' }}>ROBU</span>
               </div>
             </div>

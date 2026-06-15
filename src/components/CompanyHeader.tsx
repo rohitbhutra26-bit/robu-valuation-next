@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Company, FinancialYear } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
@@ -16,6 +16,9 @@ interface CompanyHeaderProps {
   onWatchlistToggle?: () => void;
   isInPortfolio?: boolean;
   onPortfolioToggle?: () => void;
+  /** Action rendered inside the header (e.g. the export/report button) so it
+   *  stays aligned within the card instead of floating beside it. */
+  headerAction?: ReactNode;
 }
 
 function formatCr(value: number): string {
@@ -25,7 +28,7 @@ function formatCr(value: number): string {
   return `₹${value.toLocaleString('en-IN')} Cr`;
 }
 
-export default function CompanyHeader({ company, financials, isWatchlisted, onWatchlistToggle, isInPortfolio, onPortfolioToggle }: CompanyHeaderProps) {
+export default function CompanyHeader({ company, financials, isWatchlisted, onWatchlistToggle, isInPortfolio, onPortfolioToggle, headerAction }: CompanyHeaderProps) {
   const isPositive = company.changePercent >= 0;
   const smartProfile = getCompanyProfile(company);
   const smartSectorLabel = smartProfile.sectorLabel;
@@ -114,34 +117,33 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
           </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <h1 className="text-xl font-bold text-primary leading-tight">{company.name}</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {onWatchlistToggle && (
                 <button
                   onClick={onWatchlistToggle}
                   aria-label={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
-                  title={isWatchlisted ? 'Remove from your watchlist' : 'Track this stock — you don’t own it yet'}
-                  className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
+                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                     isWatchlisted
-                      ? 'text-gold bg-gold/10 border-gold/30'
-                      : 'text-muted hover:text-gold hover:bg-gold/10 border-border hover:border-gold/30'
+                      ? 'text-gold bg-gold/15 border border-gold/30'
+                      : 'text-muted/40 hover:text-gold hover:bg-gold/10 border border-transparent hover:border-gold/20'
                   }`}
                 >
-                  <Bookmark size={13} className={isWatchlisted ? 'fill-gold' : ''} />
-                  {isWatchlisted ? 'Watching' : 'Watch'}
+                  <Bookmark size={14} className={isWatchlisted ? 'fill-gold' : ''} />
                 </button>
               )}
               {onPortfolioToggle && (
                 <button
                   onClick={onPortfolioToggle}
-                  title={isInPortfolio ? 'Edit your holding (quantity & buy price)' : 'You own this — add it to track your profit & loss'}
-                  className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  title={isInPortfolio ? 'Edit portfolio position' : 'Add to portfolio'}
+                  className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all border ${
                     isInPortfolio
                       ? 'text-accent bg-accent/10 border-accent/30'
-                      : 'text-muted hover:text-accent hover:bg-accent/10 border-border hover:border-accent/30'
+                      : 'text-muted/50 hover:text-accent hover:bg-accent/10 border-transparent hover:border-accent/20'
                   }`}
                 >
-                  <Briefcase size={13} />
-                  {isInPortfolio ? 'Owned' : 'I own this'}
+                  <Briefcase size={11} />
+                  {isInPortfolio ? 'In Portfolio' : '+ Portfolio'}
                 </button>
               )}
             </div>
@@ -161,6 +163,9 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
             <p className="text-xs text-muted mt-0.5 whitespace-nowrap">
               52W: ₹{company.week52Low.toLocaleString('en-IN')} – ₹{company.week52High.toLocaleString('en-IN')}
             </p>
+          )}
+          {headerAction && (
+            <div className="mt-3 flex justify-end">{headerAction}</div>
           )}
         </div>
       </div>
