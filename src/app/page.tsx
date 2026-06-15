@@ -33,14 +33,14 @@ import SectionHeader from '@/components/SectionHeader';
 import StickyTicker from '@/components/StickyTicker';
 import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
-import MobileLayout, { RobuLogo } from '@/components/MobileLayout';
+import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
-import ModeToggle from '@/components/ModeToggle';
-import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
+import DiscoveryView from '@/components/DiscoveryView';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
 
@@ -52,11 +52,12 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TMPV','TMCV','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'valuation' | 'watchlist' | 'portfolio';
+type ActiveView = 'discovery' | 'valuation' | 'watchlist' | 'portfolio';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string; global?: boolean }[] = [
+  { view: 'discovery',  Icon: Radar,      label: 'Discovery',    desc: 'Ideas found for you', badge: 'NEW', global: true },
   { view: 'valuation',  Icon: Calculator, label: 'Report',       desc: 'Full stock analysis'        },
   { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
   { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
@@ -135,13 +136,6 @@ export default function Home() {
     setShowPortfolioModal(true);
   }
 
-  // Reveal the full deep-dive: flip the whole app into Analyst mode.
-  // Mirrors ModeToggle — sets data-mode on <html>, persisted in localStorage.
-  function switchToAnalyst() {
-    document.documentElement.setAttribute('data-mode', 'analyst');
-    try { localStorage.setItem('robu-mode', 'analyst'); } catch {}
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
 
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
   // Read directly from window.location — no useSearchParams/Suspense needed.
@@ -382,14 +376,10 @@ export default function Home() {
     <div className="hidden lg:flex h-screen bg-terminal flex-col overflow-hidden">
 
       {/* ── Header ────────────────────────────────────────── */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex-shrink-0">
-        <div className="flex items-center justify-between px-5 py-2.5">
-          <button onClick={goHome} className="flex items-center gap-3 group">
-            <RobuLogo size={30} />
-            <div className="text-left">
-              <p className="text-sm font-bold text-primary tracking-tight font-serif group-hover:text-gold transition-colors">Robu</p>
-              <p className="text-[11px] text-muted leading-none">Stocks in plain English</p>
-            </div>
+      <header className="border-b border-border/60 bg-terminal/80 backdrop-blur-md sticky top-0 z-40 flex-shrink-0">
+        <div className="flex items-center justify-between gap-6 px-7 py-4 max-w-[1400px] mx-auto w-full">
+          <button onClick={goHome} className="flex items-center group flex-shrink-0" aria-label="robu — home">
+            <RobuWordmark height={22} className="text-primary group-hover:text-gold transition-colors" />
           </button>
 
           {!homeMode && (
@@ -399,6 +389,22 @@ export default function Home() {
           )}
 
           <div className="flex items-center gap-2">
+            {/* Discovery — prominent primary entry point */}
+            <button
+              onClick={() => { setHomeMode(false); setActiveView('discovery'); }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                activeView === 'discovery'
+                  ? 'bg-gold text-terminal shadow-sm'
+                  : 'bg-gold/10 border border-gold/40 text-gold hover:bg-gold/20'
+              }`}
+            >
+              <Radar size={13} />
+              Discovery
+              <span className={`text-[8px] font-bold px-1 py-0.5 rounded leading-none ${
+                activeView === 'discovery' ? 'bg-terminal/20 text-terminal' : 'bg-gain/15 text-gain'
+              }`}>NEW</span>
+            </button>
+
             {/* Global nav shortcuts */}
             {([
               { view: 'watchlist' as ActiveView, Icon: Bookmark,  label: 'Watchlist', count: watchlistCount },
@@ -436,7 +442,6 @@ export default function Home() {
             >
               ⚡ Pro
             </a>
-            <ModeToggle />
             <ThemeToggle />
           </div>
         </div>
@@ -444,31 +449,49 @@ export default function Home() {
 
       {/* ── Home landing ──────────────────────────────────── */}
       {homeMode && (
-        <main className="flex-1 flex items-center justify-center overflow-y-auto">
-          <div className="w-full max-w-[680px] px-8 py-14 flex flex-col items-center">
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full max-w-[620px] mx-auto px-6 pt-24 pb-20 flex flex-col items-center">
 
-            {/* Logo — friendly indigo R */}
-            <RobuLogo size={76} />
+            {/* Wordmark — calm, centred */}
+            <RobuWordmark height={40} className="text-gold" />
 
-            {/* Heading — friendly sans */}
-            <h1 className="mt-6 text-6xl font-bold text-primary tracking-tight font-serif">
-              Robu
+            {/* Hero headline — big, airy */}
+            <h1 className="mt-10 text-4xl sm:text-5xl font-extrabold text-primary tracking-tight text-center leading-[1.08]">
+              Should you buy<br />this stock?
             </h1>
-            <p className="mt-5 text-2xl text-primary font-semibold text-center leading-snug max-w-[520px]">
-              Should you buy this stock? Find out in 10 seconds.
-            </p>
-            <p className="mt-3 text-base text-muted text-center leading-relaxed max-w-[480px]">
-              Type any Indian stock. Robu tells you if it looks{' '}
+            <p className="mt-5 text-lg text-muted text-center leading-relaxed max-w-[440px]">
+              Find out in 10 seconds. Type any Indian stock and Robu tells you if it looks{' '}
               <em className="not-italic font-semibold text-gain">cheap</em>,{' '}
               <em className="not-italic font-semibold text-warning">fair</em>, or{' '}
-              <em className="not-italic font-semibold text-loss">expensive</em>{' '}
-              — explained simply, no finance degree needed.
+              <em className="not-italic font-semibold text-loss">expensive</em>.
             </p>
 
-            {/* Search — pill shape */}
-            <div className="w-full mt-10 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-2xl [&_svg]:w-5 [&_svg]:h-5">
+            {/* Search — big friendly pill */}
+            <div className="w-full mt-11 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-full [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
+
+            {/* Discovery — prominent hero entry point */}
+            <button
+              onClick={() => { setHomeMode(false); setActiveView('discovery'); }}
+              className="group w-full mt-6 flex items-center gap-4 text-left bg-gold/10 border border-gold/30 rounded-2xl p-5 hover:bg-gold/15 hover:border-gold/50 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center flex-shrink-0">
+                <Radar size={22} className="text-gold" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-primary">Discovery</p>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gain/15 text-gain border border-gain/20 leading-none">NEW</span>
+                </div>
+                <p className="text-xs text-muted leading-snug mt-0.5">
+                  Don&apos;t know what to look for? ROBU scans the market overnight and hands you ideas.
+                </p>
+              </div>
+              <span className="flex items-center gap-1 text-xs font-bold text-gold flex-shrink-0">
+                Explore <span className="text-sm leading-none group-hover:translate-x-0.5 transition-transform">→</span>
+              </span>
+            </button>
 
             {/* Feature cards — left-aligned, editorial style */}
             <div className="w-full mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -647,6 +670,8 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+            ) : activeView === 'discovery' ? (
+              <DiscoveryView onSelectSymbol={(sym) => { handleSelect(sym); }} />
             ) : activeView === 'watchlist' ? (
               <div className="p-4">
                 <WatchlistView
@@ -870,24 +895,7 @@ export default function Home() {
                         <ScenarioBuilder company={company} financials={financials} />
                       </div>
                     </details>
-                    </div>{/* end .analyst-only */}
-
-                    {/* Simple mode only: invite beginners to reveal the deep-dive */}
-                    <button
-                      onClick={switchToAnalyst}
-                      className="simple-only group w-full flex items-center gap-3 text-left bg-gold/10 border border-gold/30 rounded-2xl p-4 hover:bg-gold/15 hover:border-gold/50 transition-all"
-                    >
-                      <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex-shrink-0">
-                        <SlidersHorizontal size={18} />
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-bold text-primary">See the full analysis</span>
-                        <span className="block text-xs text-muted leading-snug mt-0.5">
-                          Charts, forecasts, stress tests and the raw 10-year numbers. For when you want to dig deeper.
-                        </span>
-                      </span>
-                      <ChevronRight size={18} className="text-gold flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
+                    </div>
                   </>
                 )}
 
@@ -965,7 +973,7 @@ export default function Home() {
           </main>
 
           {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
-          {!['watchlist', 'portfolio'].includes(activeView) && (
+          {!['watchlist', 'portfolio', 'discovery'].includes(activeView) && (
             <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-terminal overflow-y-auto flex-col">
               {company ? (
                 <div className="p-3 space-y-3">
