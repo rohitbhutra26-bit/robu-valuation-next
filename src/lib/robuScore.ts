@@ -13,6 +13,7 @@
  */
 
 import { Company, FinancialYear } from './types';
+import { getCompanyProfile } from './sectorModelMap';
 
 export interface DimensionScore {
   name: string;
@@ -355,12 +356,18 @@ export function computeROBUScore(
     : 'Capital destroying — avoid';
 
   // Buy zone: fair value from Price Reality × (1 - quality discount)
-  const qualityMultiplier = total >= 75 ? 1.0 : total >= 55 ? 0.85 : 0.70;
-  const impliedFairPE = (company.eps ?? 0) > 0
-    ? company.currentPrice / (company.eps ?? 1) * qualityMultiplier
-    : null;
-  const buyZone = impliedFairPE && company.eps
-    ? Math.round(impliedFairPE * (company.eps ?? 0) * 0.80) : null;
+  // Anchor to a SECTOR-NORMALIZED P/E scaled by quality - NOT the current price.
+  // (The old formula was currentPrice x quality x 0.8: the EPS cancelled, so it was
+  // just a fixed discount to today's price, not a fair value.)
+  const eps = company.eps ?? 0;
+  const profile = getCompanyProfile(company);
+  const baselinePE = profile.model === 'pe' && profile.defaultExitMultiple > 0
+    ? profile.defaultExitMultiple : 18;
+  const qualityFactor = total >= 75 ? 1.15 : total >= 65 ? 1.0 : total >= 50 ? 0.85
+                      : total >= 35 ? 0.65 : 0.45;
+  const justifiedPE = baselinePE * qualityFactor;
+  const fairValuePerShare = eps > 0 ? justifiedPE * eps : null;
+  const buyZone = fairValuePerShare ? Math.round(fairValuePerShare * 0.80) : null; // 20% MoS
 
   // Flags
   const sorted = [...dimensions].sort((a, b) => b.score - a.score);

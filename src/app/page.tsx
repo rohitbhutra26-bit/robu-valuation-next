@@ -259,6 +259,11 @@ export default function Home() {
     // Use cleaned financials (outliers capped); fall back to raw if cleaner is empty
     const cleanFins = dq.cleanedFinancials.length > 0 ? dq.cleanedFinancials : fins;
 
+    // Make the winsorised series the single source of truth for the whole report so
+    // models/scores/scenarios AND tables use the same cleaned data (a one-off outlier
+    // year no longer distorts fair value). Data Quality banner explains any capping.
+    setFinancials(cleanFins);
+
     // Single call to suggestAssumptions — uses fade model + India sector CAGR
     const suggested = suggestAssumptions(
       companyData,

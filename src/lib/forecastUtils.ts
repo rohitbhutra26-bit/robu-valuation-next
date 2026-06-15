@@ -284,7 +284,11 @@ function fadeLabel(g: number, years: number): string {
 // We approximate from D/E ratio and book value.
 // Book Value ≈ Market Cap / P/B  (market-based book)
 // Net Debt = D/E × Book Value
-function estimateNetDebt(company: Company): number {
+function estimateNetDebt(company: Company, baseline?: FinancialYear): number {
+  // Prefer REAL balance-sheet borrowings over a market-cap-derived guess (which
+  // moves with the share price). Cash isn't published separately, so gross
+  // borrowings is a conservative net-debt proxy.
+  if (baseline && (baseline.borrowings ?? 0) > 0) return baseline.borrowings as number;
   if (company.debtToEquity <= 0 || company.pb <= 0) return 0;
   const bookValue = company.marketCap / company.pb;
   return company.debtToEquity * bookValue;
@@ -331,7 +335,7 @@ export function evEbitdaModel(
   const futureEBITDA  = futureRevenue * (ebitdaMgn / 100);
   const futureEV      = futureEBITDA * exitEVEBITDA;
 
-  const netDebt       = estimateNetDebt(company);
+  const netDebt       = estimateNetDebt(company, baseline);
   const equityValue   = Math.max(futureEV - netDebt, 0);
   const fairValue     = equityValue / shares;
 
@@ -391,7 +395,7 @@ export function evSalesModel(
 
   const futureRevenue = baseline.revenue * fadeCompound(growthRate, years);
   const futureEV      = futureRevenue * exitEVSales;
-  const netDebt       = estimateNetDebt(company);
+  const netDebt       = estimateNetDebt(company, baseline);
   const equityValue   = Math.max(futureEV - netDebt, 0);
   const fairValue     = equityValue / shares;
 
@@ -476,7 +480,13 @@ export function gordonGrowthPB(
 
   // g must be < CoE or the Gordon formula blows up (bank growing faster than its cost of capital
   // forever is mathematically impossible — we clamp it)
-  const g = Math.min(sustainableGrowthRate, coe - 1.5);
+  // A bank's sustainable book growth is ROE x retention, not its revenue growth.
+  // Feeding the revenue slider in over-states g and forces the coe-1.5 clamp for
+  // most banks. Cap at the ROE-implied ceiling. Payout ~= dividendYield x P/E.
+  const payout      = company.dividendYield > 0 && company.pe > 0
+    ? Math.min((company.dividendYield / 100) * company.pe, 0.9) : 0.3;
+  const sustainable = roe * (1 - payout);
+  const g = Math.min(sustainableGrowthRate, sustainable, coe - 1.5);
 
   if (coe <= g || roe <= 0) {
     return {
@@ -825,7 +835,7 @@ export function dcfModel(
   const terminalValue = (fcf * terminalMultiple) / Math.pow(1 + disc, years);
 
   const totalEV   = pvSum + terminalValue;
-  const netDebt   = estimateNetDebt(company);
+  const netDebt   = estimateNetDebt(company, baseline);
   const equityVal = Math.max(totalEV - netDebt, 0);
   const fairValue = equityVal / shares;
 
