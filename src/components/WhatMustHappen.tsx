@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { computeTargetPath, Feasibility, PathRequirement } from '@/lib/targetPathEngine';
+import { valuationReliability } from '@/lib/valuationReliability';
 import { Clock } from '@/lib/icons';
 import Tooltip from '@/components/Tooltip';
 
@@ -141,6 +142,15 @@ export default function WhatMustHappen({ company, financials, assumptions }: Pro
   }
 
   const isMarginApplicable = profile.model === 'pe';
+
+  if (!valuationReliability(company, financials).reliable) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
+        <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so projected fair values, scenarios and target prices do not apply here. See the caution under the verdict above.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">

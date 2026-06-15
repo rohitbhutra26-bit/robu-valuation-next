@@ -5,6 +5,7 @@ import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { DollarSign, Scale, Tag, CheckCircle2, AlertTriangle, XCircle } from '@/lib/icons';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
+import { valuationReliability } from '@/lib/valuationReliability';
 
 interface Props {
   company: Company;
@@ -64,7 +65,10 @@ export default function PlainReasons({ company, financials, assumptions }: Props
     // ── Q3: Am I overpaying right now? ────────────────────────────────────
     let q3: Status = 'warn';
     let q3text = 'Not enough data to judge the price.';
-    try {
+    if (!valuationReliability(company, financials).reliable) {
+      q3 = 'warn';
+      q3text = "Can't judge the price fairly - this company is loss-making or has negative net worth, so P/E, P/B and DCF fair values don't apply. Treat it as a turnaround, not a bargain.";
+    } else try {
       if (latest && company.currentPrice) {
         const profile = getCompanyProfile(company);
         const r = runPrimaryModel(profile.model, financials, company,
