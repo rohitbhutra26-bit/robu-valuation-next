@@ -24,8 +24,7 @@ function DimensionRow({ d, expanded }: { d: DimensionScore; expanded: boolean })
       <div className="h-1.5 bg-border rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${
-            d.score >= 80 ? 'bg-gain' : d.score >= 65 ? 'bg-accent'
-            : d.score >= 50 ? 'bg-gold' : d.score >= 35 ? 'bg-warning' : 'bg-loss'
+            d.score >= 65 ? 'bg-gain' : d.score >= 50 ? 'bg-warning' : 'bg-loss'
           }`}
           style={{ width: `${pct}%` }}
         />
@@ -43,13 +42,11 @@ export default function ROBUScoreCard({
 
   const result: ROBUScoreResult = computeROBUScore(financials, company);
 
-  const gradeColor = result.total >= 75 ? 'text-gain'
-    : result.total >= 55 ? 'text-gold'
-    : result.total >= 35 ? 'text-warning' : 'text-loss';
+  const gradeColor = result.total >= 65 ? 'text-gain'
+    : result.total >= 45 ? 'text-warning' : 'text-loss';
 
-  const ringColor = result.total >= 75 ? 'border-gain/40'
-    : result.total >= 55 ? 'border-gold/40'
-    : result.total >= 35 ? 'border-warning/40' : 'border-loss/40';
+  const ringColor = result.total >= 65 ? 'border-gain/40'
+    : result.total >= 45 ? 'border-warning/40' : 'border-loss/40';
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">
@@ -74,9 +71,8 @@ export default function ROBUScoreCard({
 
       {/* Verdict */}
       <div className={`rounded-lg p-3 border ${
-        result.total >= 75 ? 'bg-gain/5 border-gain/20'
-        : result.total >= 55 ? 'bg-gold/5 border-gold/20'
-        : result.total >= 35 ? 'bg-warning/5 border-warning/20'
+        result.total >= 65 ? 'bg-gain/5 border-gain/20'
+        : result.total >= 45 ? 'bg-warning/5 border-warning/20'
         : 'bg-loss/5 border-loss/20'
       }`}>
         <p className={`text-xs font-semibold ${gradeColor}`}>{result.verdict}</p>

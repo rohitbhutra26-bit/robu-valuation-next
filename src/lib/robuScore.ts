@@ -54,11 +54,11 @@ function label(score: number): string {
   return 'Poor';
 }
 function color(score: number): string {
-  if (score >= 80) return 'text-gain';
-  if (score >= 65) return 'text-accent';
-  if (score >= 50) return 'text-gold';
-  if (score >= 35) return 'text-warning';
-  return 'text-loss';
+  // Clean traffic-light ramp matching the app's good/okay/weak legend.
+  // No brand (burgundy) colours here — those don't read as good/bad.
+  if (score >= 65) return 'text-gain';      // Strong / Exceptional → green
+  if (score >= 50) return 'text-warning';   // Average → amber
+  return 'text-loss';                        // Weak / Poor → red
 }
 
 // ─── Dimension 1: ROIIC ──────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ function color(score: number): string {
 function scoreROIIC(fin: FinancialYear[]): DimensionScore {
   const full = fin.filter(f => f.ebitda > 0 && f.revenue > 0);
   if (full.length < 3) return { name: 'Capital Efficiency', score: 50, label: 'Average',
-    insight: 'Insufficient data', detail: 'Need 3+ years of data', color: 'text-gold' };
+    insight: 'Insufficient data', detail: 'Need 3+ years of data', color: 'text-warning' };
 
   // Incremental EBITDA margins over 3-year windows
   const incMargins: number[] = [];
@@ -118,7 +118,7 @@ function scoreROIIC(fin: FinancialYear[]): DimensionScore {
 function scoreEarningsQuality(fin: FinancialYear[]): DimensionScore {
   const withOCF = fin.filter(f => (f.ocf ?? 0) > 0 && f.pat > 0);
   if (withOCF.length < 2) return { name: 'Earnings Quality', score: 50, label: 'Average',
-    insight: 'Limited cash flow data available', detail: 'OCF data needed for quality scoring', color: 'text-gold' };
+    insight: 'Limited cash flow data available', detail: 'OCF data needed for quality scoring', color: 'text-warning' };
 
   const conversions = withOCF.map(f => f.ocf! / f.pat);
   const avgConversion = avg(conversions);
@@ -164,7 +164,7 @@ function scoreEarningsQuality(fin: FinancialYear[]): DimensionScore {
 function scoreExecution(fin: FinancialYear[]): DimensionScore {
   const full = fin.filter(f => f.revenue > 0 && f.pat > 0 && f.revenueGrowth !== 0);
   if (full.length < 4) return { name: 'Management Execution', score: 50, label: 'Average',
-    insight: 'Insufficient history to score execution', detail: 'Need 4+ years of data', color: 'text-gold' };
+    insight: 'Insufficient history to score execution', detail: 'Need 4+ years of data', color: 'text-warning' };
 
   // Revenue growth consistency (lower stddev = more predictable)
   const revGrowths  = full.map(f => f.revenueGrowth).filter(g => Math.abs(g) < 100);
@@ -206,7 +206,7 @@ function scoreExecution(fin: FinancialYear[]): DimensionScore {
 function scoreMoat(fin: FinancialYear[], company: Company): DimensionScore {
   const full = fin.filter(f => f.ebitdaMargin > 0);
   if (full.length < 4) return { name: 'Moat Durability', score: 50, label: 'Average',
-    insight: 'Insufficient data for moat analysis', detail: 'Need 4+ years', color: 'text-gold' };
+    insight: 'Insufficient data for moat analysis', detail: 'Need 4+ years', color: 'text-warning' };
 
   const margins = full.map(f => f.ebitdaMargin);
   const avgMargin = avg(margins);
@@ -272,7 +272,7 @@ function scorePriceReality(fin: FinancialYear[], company: Company): DimensionSco
   const full = fin.filter(f => f.eps > 0);
   if (full.length < 3 || !company.pe || company.pe <= 0) {
     return { name: 'Price Reality', score: 50, label: 'Average',
-      insight: 'Insufficient data for implied growth analysis', detail: '', color: 'text-gold' };
+      insight: 'Insufficient data for implied growth analysis', detail: '', color: 'text-warning' };
   }
 
   // Implied growth rate = what EPS growth rate justifies current PE
