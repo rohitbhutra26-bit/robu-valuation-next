@@ -43,6 +43,10 @@ export interface Company {
   revenueGrowth?: number;
   earningsGrowth?: number;
   pledgedPct?: number;   // Promoter shares pledged % — red-flag input
+  description?: string;  // Business summary ('what it does') — Yahoo assetProfile
+  ceo?: string;          // Current CEO / MD — Yahoo companyOfficers
+  website?: string;
+  employees?: number;
   financials?: FinancialYear[];
 }
 

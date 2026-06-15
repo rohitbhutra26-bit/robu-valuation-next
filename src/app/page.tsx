@@ -36,11 +36,11 @@ import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import PlainReasons from '@/components/PlainReasons';
+import CompanyBrief from '@/components/CompanyBrief';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, Radar, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
-import DiscoveryView from '@/components/DiscoveryView';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
 
@@ -52,12 +52,11 @@ const _inflight = new Map<string, Promise<void>>();
 
 const QUICK_PICKS = ['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','WIPRO','BAJFINANCE','KAYNES','TMPV','TMCV','SBIN','ADANIENT','BHARTIARTL'];
 
-type ActiveView = 'discovery' | 'valuation' | 'watchlist' | 'portfolio';
+type ActiveView = 'valuation' | 'watchlist' | 'portfolio';
 
 // ─── Nav item definition ───────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NAV_ITEMS: { view: ActiveView; Icon: any; label: string; desc: string; badge?: string; global?: boolean }[] = [
-  { view: 'discovery',  Icon: Radar,      label: 'Discovery',    desc: 'Ideas found for you', badge: 'NEW', global: true },
   { view: 'valuation',  Icon: Calculator, label: 'Report',       desc: 'Full stock analysis'        },
   { view: 'watchlist',  Icon: Bookmark,   label: 'Watchlist',    desc: 'Saved stocks',  global: true },
   { view: 'portfolio',  Icon: Briefcase,  label: 'Portfolio',    desc: 'Your holdings', global: true },
@@ -234,6 +233,21 @@ export default function Home() {
       setCompany(result.company);
       setFinancials(result.financials);
       _applyAssumptions(result.company, result.financials);
+      // Non-blocking: pull business summary + CEO from the Yahoo profile and merge in.
+      fetch(`/api/company/${symbol}`, { cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : null))
+        .then((p: any) => {
+          if (!p) return;
+          const extra: Partial<Company> = {};
+          if (p.description) extra.description = p.description;
+          if (p.ceo) extra.ceo = p.ceo;
+          if (p.website) extra.website = p.website;
+          if (p.employees) extra.employees = p.employees;
+          if (Object.keys(extra).length === 0) return;
+          setCompany(prev => (prev && prev.symbol === result.company.symbol ? { ...prev, ...extra } : prev));
+          const c = _sessionCache.get(symbol); if (c) c.company = { ...c.company, ...extra };
+        })
+        .catch(() => {});
     } catch (err: any) {
       setError(err.message || 'Failed to load company data');
     } finally {
@@ -389,22 +403,6 @@ export default function Home() {
           )}
 
           <div className="flex items-center gap-2">
-            {/* Discovery — prominent primary entry point */}
-            <button
-              onClick={() => { setHomeMode(false); setActiveView('discovery'); }}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                activeView === 'discovery'
-                  ? 'bg-gold text-terminal shadow-sm'
-                  : 'bg-gold/10 border border-gold/40 text-gold hover:bg-gold/20'
-              }`}
-            >
-              <Radar size={13} />
-              Discovery
-              <span className={`text-[8px] font-bold px-1 py-0.5 rounded leading-none ${
-                activeView === 'discovery' ? 'bg-terminal/20 text-terminal' : 'bg-gain/15 text-gain'
-              }`}>NEW</span>
-            </button>
-
             {/* Global nav shortcuts */}
             {([
               { view: 'watchlist' as ActiveView, Icon: Bookmark,  label: 'Watchlist', count: watchlistCount },
@@ -470,28 +468,6 @@ export default function Home() {
             <div className="w-full mt-11 [&_input]:text-base [&_input]:py-4 [&_input]:pl-12 [&_input]:pr-10 [&_input]:rounded-full [&_svg]:w-5 [&_svg]:h-5">
               <CompanySearch onSelect={handleSelect} selectedSymbol={selectedSymbol} />
             </div>
-
-            {/* Discovery — prominent hero entry point */}
-            <button
-              onClick={() => { setHomeMode(false); setActiveView('discovery'); }}
-              className="group w-full mt-6 flex items-center gap-4 text-left bg-gold/10 border border-gold/30 rounded-2xl p-5 hover:bg-gold/15 hover:border-gold/50 transition-all"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center flex-shrink-0">
-                <Radar size={22} className="text-gold" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-primary">Discovery</p>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gain/15 text-gain border border-gain/20 leading-none">NEW</span>
-                </div>
-                <p className="text-xs text-muted leading-snug mt-0.5">
-                  Don&apos;t know what to look for? ROBU scans the market overnight and hands you ideas.
-                </p>
-              </div>
-              <span className="flex items-center gap-1 text-xs font-bold text-gold flex-shrink-0">
-                Explore <span className="text-sm leading-none group-hover:translate-x-0.5 transition-transform">→</span>
-              </span>
-            </button>
 
             {/* Feature cards — left-aligned, editorial style */}
             <div className="w-full mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -670,8 +646,6 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            ) : activeView === 'discovery' ? (
-              <DiscoveryView onSelectSymbol={(sym) => { handleSelect(sym); }} />
             ) : activeView === 'watchlist' ? (
               <div className="p-4">
                 <WatchlistView
@@ -711,6 +685,9 @@ export default function Home() {
                 {/* ── VIEW: VALUATION ── */}
                 {activeView === 'valuation' && financials.length > 0 && (
                   <>
+                    {/* Quick context: what this company is */}
+                    <CompanyBrief company={company} />
+
                     {/* Verdict — the big plain-English answer at the very top */}
                     <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
@@ -973,7 +950,7 @@ export default function Home() {
           </main>
 
           {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
-          {!['watchlist', 'portfolio', 'discovery'].includes(activeView) && (
+          {!['watchlist', 'portfolio'].includes(activeView) && (
             <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-terminal overflow-y-auto flex-col">
               {company ? (
                 <div className="p-3 space-y-3">
