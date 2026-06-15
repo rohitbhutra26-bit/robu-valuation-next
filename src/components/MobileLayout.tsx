@@ -58,10 +58,12 @@ export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="4" width="92" height="92" rx="26" fill="#7A2238" />
-      <text x="50" y="74"
-        fontFamily="'Manrope', system-ui, sans-serif"
-        fontSize="64" fontWeight="800" fill="#FFFFFF"
-        textAnchor="middle" dominantBaseline="auto">r</text>
+      {/* Optically-centred vector 'r' (matches the wordmark; no font dependency,
+          so it renders identically everywhere — favicon, header, app icon). */}
+      <g fill="none" stroke="#FFFFFF" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M42 34 V70" />
+        <path d="M42 47 C42 38 49 34 62 38" />
+      </g>
     </svg>
   );
 }
