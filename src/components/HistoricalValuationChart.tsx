@@ -245,6 +245,10 @@ export default function HistoricalValuationChart({ company }: Props) {
     };
   }, [data]);
 
+  // No 5-year history for this stock (e.g. small/new listings) — hide the whole
+  // card rather than shouting a red error. Nothing to show, so show nothing.
+  if (error) return null;
+
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-4">
 

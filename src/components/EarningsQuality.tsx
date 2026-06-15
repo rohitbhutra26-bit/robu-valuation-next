@@ -11,8 +11,8 @@ interface EarningsQualityProps {
 function GradeChip({ grade }: { grade: 'A' | 'B' | 'C' | 'D' }) {
   const styles = {
     A: 'bg-gain/20 text-gain border-gain/30',
-    B: 'bg-gold/20 text-gold border-gold/30',
-    C: 'bg-loss/10 text-loss/80 border-loss/20',
+    B: 'bg-warning/20 text-warning border-warning/30',
+    C: 'bg-warning/15 text-warning/90 border-warning/25',
     D: 'bg-loss/20 text-loss border-loss/30',
   };
   return (
@@ -100,9 +100,9 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
       {/* CAGR metrics */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {([
-          { label: 'Revenue', sublabel: `${years}Y CAGR`, value: revCAGR, g: revGrade as 'A'|'B'|'C'|'D', color: 'bg-accent', max: 40 },
+          { label: 'Revenue', sublabel: `${years}Y CAGR`, value: revCAGR, g: revGrade as 'A'|'B'|'C'|'D', color: 'bg-gain', max: 40 },
           { label: 'PAT', sublabel: `${years}Y CAGR`, value: patCAGR, g: patGrade as 'A'|'B'|'C'|'D', color: 'bg-gain', max: 50 },
-          { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade as 'A'|'B'|'C'|'D', color: 'bg-gold', max: 40 },
+          { label: 'EPS', sublabel: `${years}Y CAGR`, value: epsCAGR, g: epsGrade as 'A'|'B'|'C'|'D', color: 'bg-gain', max: 40 },
         ] as Array<{ label: string; sublabel: string; value: number; g: 'A'|'B'|'C'|'D'; color: string; max: number }>).map(({ label, sublabel, value, g, color }) => (
           <div key={label} className="bg-border/20 rounded-lg p-3 min-w-0">
             <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -121,16 +121,16 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
       {/* EPS trend sparkline */}
       <div className="mb-4">
         <p className="text-xs text-muted uppercase tracking-wide mb-2 font-medium">EPS Trend (₹ per share)</p>
-        <div className="flex items-end gap-2 h-16">
+        <div className="flex items-end gap-2 h-16 overflow-x-auto no-scrollbar">
           {validFins.map((f, i) => {
             const h = Math.max((Math.abs(f.eps) / maxEPS) * 100, 4);
             const isLatest = i === validFins.length - 1;
             const isPositive = f.eps >= 0;
             return (
-              <div key={f.year} className="flex-1 flex flex-col items-center gap-1">
+              <div key={f.year} className="flex-1 min-w-[30px] flex flex-col items-center gap-1">
                 <span className="text-xs font-mono text-muted">{f.eps > 0 ? f.eps.toFixed(0) : '—'}</span>
                 <motion.div
-                  className={`w-full rounded-t ${isLatest ? 'bg-gold' : isPositive ? 'bg-gain/60' : 'bg-loss/60'}`}
+                  className={`w-full rounded-t ${isLatest ? (isPositive ? 'bg-gain' : 'bg-loss') : isPositive ? 'bg-gain/60' : 'bg-loss/60'}`}
                   initial={{ height: 0 }}
                   animate={{ height: `${h}%` }}
                   transition={{ duration: 0.5, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
