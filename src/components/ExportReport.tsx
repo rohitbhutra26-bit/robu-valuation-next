@@ -91,7 +91,7 @@ const FLAG_COLORS: Record<FlagStatus, { bg: string; fg: string; icon: string }> 
   na:   { bg: PAPER,     fg: FAINT, icon: '—' },
 };
 
-const HORIZONS = [3, 5, 7, 10];
+const HORIZONS = [1, 3, 5, 10];
 
 interface Peer {
   symbol: string; name?: string; currentPrice?: number; pe?: number; pb?: number;
@@ -122,7 +122,7 @@ function Brand({ company, page }: { company: Company; page: string }) {
 
 function SecTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
-    <div style={{ margin: '4px 0 16px' }}>
+    <div className="pr-h" style={{ margin: '4px 0 16px' }}>
       <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: GOLD, marginBottom: '4px' }}>{kicker}</div>
       <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
     </div>
@@ -221,6 +221,12 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
       return { years: h, amount: 100000 * mult, cagr: mult > 0 ? (Math.pow(mult, 1 / h) - 1) * 100 : 0 };
     }),
   }));
+
+  const priceForecast = HORIZONS.map(h => {
+    const r = runPrimaryModel(profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, h);
+    const fv = Math.max(r.fairValue, 0);
+    return { years: h, fv, upside: fv > 0 ? ((fv / company.currentPrice) - 1) * 100 : 0, cagr: fv > 0 ? (Math.pow(fv / company.currentPrice, 1 / h) - 1) * 100 : 0 };
+  });
 
   const flags = redFlags(financials, company, profile.model);
   const mc    = monteCarloFairValue(profile.model, financials, company, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
@@ -335,6 +341,16 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
             ))}
           </div>
 
+          {/* About the company */}
+          <div className="pr-keep" style={{ marginBottom: '4px' }}>
+            <SecTitle kicker="About the company" title={`What ${company.name.split(' ').slice(0, 2).join(' ')} does`} />
+            <p style={{ fontSize: '12px', lineHeight: 1.75, color: INK, margin: '0 0 18px' }}>
+              {company.description
+                ? company.description
+                : `${company.name} is ${/^[aeiou]/i.test(company.industry || profile.sectorLabel) ? 'an' : 'a'} ${company.industry || profile.sectorLabel} company listed on the ${company.exchange || 'NSE'}.`}
+            </p>
+          </div>
+
           {/* ════════ CHAPTER 2 · THE WRITTEN CASE ════════ */}
           <div className="pr-chapter">
             <Brand company={company} page="The written case" />
@@ -447,6 +463,31 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               })}
             </div>
 
+            {reliability.reliable && (
+            <div className="pr-keep" style={{ marginBottom: '16px' }}>
+              <SecTitle kicker="Price forecast" title="What the price could be — 1, 3, 5 & 10 years" />
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead><tr style={{ background: PAPER }}>
+                  <th style={{ ...th, textAlign: 'left' }}>Holding period</th>
+                  <th style={th}>Fair value / share</th>
+                  <th style={th}>vs ₹{Math.round(company.currentPrice).toLocaleString('en-IN')} today</th>
+                  <th style={th}>Implied return</th>
+                </tr></thead>
+                <tbody>
+                  {priceForecast.map(f => (
+                    <tr key={f.years}>
+                      <td style={{ padding: '8px', fontWeight: 700, fontSize: '12px', fontFamily: 'Georgia, serif' }}>{f.years} year{f.years > 1 ? 's' : ''}</td>
+                      <td style={{ ...td, borderBottom: '1px solid #f3f4f6' }}><strong style={{ fontSize: '13px' }}>₹{f.fv.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</strong></td>
+                      <td style={{ ...td, borderBottom: '1px solid #f3f4f6', color: f.upside >= 0 ? GAIN : LOSS, fontWeight: 700 }}>{f.upside >= 0 ? '+' : ''}{f.upside.toFixed(0)}%</td>
+                      <td style={{ ...td, borderBottom: '1px solid #f3f4f6' }}>{f.cagr >= 0 ? '+' : ''}{f.cagr.toFixed(1)}%/yr</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p style={{ fontSize: '9px', color: FAINT, margin: '6px 0 0', lineHeight: 1.5 }}>Base case — your assumptions held, growth fading toward India&apos;s long-run ~6% by the final year. A projection, not a promise; see the bear / base / bull range below for how wrong it could be.</p>
+            </div>
+            )}
+
             <SecTitle kicker="Three futures" title={`Bear, base and bull — ${assumptions.years} year fair value`} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
               {scenarios.map(s => (
@@ -498,6 +539,13 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               ))}
             </div>
           </div>
+
+            <SecTitle kicker="Methodology" title="How these numbers are calculated" />
+            <div className="pr-keep" style={{ fontSize: '11px', lineHeight: 1.75, color: INK, marginBottom: '6px' }}>
+              <p style={{ margin: '0 0 9px' }}><strong style={{ color: TERRA }}>Fair value.</strong> We grow the business forward from its latest financials — revenue compounding at {assumptions.revenueGrowthRate}% a year and fading toward India&apos;s long-run ~6% — apply a {assumptions.netMarginAssumption}% net margin to get future profit, value that profit on a {assumptions.exitMultiple}x exit {profile.exitMultipleLabel}, net off debt and divide by shares. That gives a per-share value {assumptions.years} years out, discounted to today. The headline figure blends {allFVs.length} independent methods so no single model dominates.</p>
+              <p style={{ margin: '0 0 9px' }}><strong style={{ color: TERRA }}>Verdict.</strong> Fair value is compared to today&apos;s price: more than ~12% upside reads as undervalued, within ±12% as fairly priced, and more than ~12% downside as expensive — the same cut-offs on every card so the report never contradicts itself.</p>
+              <p style={{ margin: 0 }}><strong style={{ color: TERRA }}>ROBU score &amp; checks.</strong> The 0–100 grade weighs five things — capital efficiency, earnings quality, management execution, moat durability and price reality. On top, the red-flag gates, a reverse-DCF (what growth the price already assumes) and {(mc?.draws ?? 1000).toLocaleString()} Monte-Carlo runs stress-test the answer. For loss-making or negative-net-worth companies, multiple-based fair values don&apos;t apply and are withheld.</p>
+            </div>
 
           {/* ════════ CHAPTER 4 · HEALTH CHECK ════════ */}
           <div className="pr-chapter">

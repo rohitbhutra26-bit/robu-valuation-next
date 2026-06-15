@@ -435,6 +435,7 @@ input[type='number'] { -moz-appearance: textfield; }
      huge blank bottoms). 'avoid-all' in html2pdf keeps blocks/tables intact. */
   .pr-chapter { margin-top: 18px; }
   .pr-keep, .pr-card { page-break-inside: avoid; break-inside: avoid; }
+  .pr-h { page-break-after: avoid; break-after: avoid; }
   #print-report table, #print-report tr, #print-report thead, #print-report tbody {
     page-break-inside: avoid; break-inside: avoid;
   }
