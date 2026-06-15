@@ -176,7 +176,12 @@ export default function ValuationEngine({ company, financials, assumptions, comp
     { fv: peResult.fairValue,             weight: w.pe },
     { fv: evResult.fairValue,             weight: w.ev },
     { fv: gordonResult?.fairValue ?? 0,   weight: w.gordon },
-  ].filter(p => p.fv > 0 && p.weight > 0);
+  ].filter(p => p.fv > 0 && p.weight > 0
+      // Drop runaway-outlier methods (e.g. the P/E model misfiring on a bank, where
+      // "revenue × margin" isn't comparable) so one broken model can't blow the
+      // composite up to a haywire +X%.
+      && p.fv <= company.currentPrice * 5
+      && p.fv >= company.currentPrice * 0.2);
   const weightSum   = weightedParts.reduce((a, p) => a + p.weight, 0);
   const allFVs      = weightedParts.map(p => p.fv); // kept for method count label
   const compositeFV = weightSum > 0

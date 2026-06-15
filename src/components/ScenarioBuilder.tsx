@@ -124,6 +124,8 @@ export default function ScenarioBuilder({ company, financials }: ScenarioBuilder
       exitPE: basePE + 10, netMargin: baseMargin + 4 },
   ]);
 
+  const [active, setActive] = useState(1); // Base by default
+
   const updateScenario = useCallback((idx: number, key: keyof Scenario, val: number) => {
     setScenarios(prev => prev.map((s, i) => i === idx ? { ...s, [key]: val } : s));
   }, []);
@@ -137,11 +139,26 @@ export default function ScenarioBuilder({ company, financials }: ScenarioBuilder
         <p className="text-[11px] text-muted mt-0.5">Adjust assumptions per scenario — see fair value move in real time</p>
       </div>
 
-      {/* Responsive: stack on mobile, 3 cols on desktop */}
+      {/* Mobile: Bear/Base/Bull tabs (one at a time, no endless scroll) · Desktop: 3 columns */}
+      <div className="flex gap-1.5 sm:hidden">
+        {scenarios.map((s, i) => (
+          <button
+            key={s.name}
+            onClick={() => setActive(i)}
+            className={`flex-1 px-2 py-2 rounded-lg text-sm font-bold transition-all ${
+              active === i ? `${s.color} bg-card border ${s.borderColor} shadow-sm` : 'text-muted border border-transparent'
+            }`}
+          >
+            {s.name}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {scenarios.map((s, i) => (
-          <ScenarioColumn key={s.name} scenario={s} company={company} financials={financials}
-            onChange={(k, v) => updateScenario(i, k, v)} />
+          <div key={s.name} className={i === active ? '' : 'hidden sm:block'}>
+            <ScenarioColumn scenario={s} company={company} financials={financials}
+              onChange={(k, v) => updateScenario(i, k, v)} />
+          </div>
         ))}
       </div>
 
