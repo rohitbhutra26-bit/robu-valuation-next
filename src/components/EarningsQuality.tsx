@@ -57,7 +57,9 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
 
   const revCAGR = cagr(first.revenue, latest.revenue, years);
   const patCAGR = cagr(first.pat, latest.pat, years);
-  const epsCAGR = cagr(Math.abs(first.eps), Math.abs(latest.eps), years);
+  // No Math.abs: EPS −5 → −10 (losses doubling) must NOT read as positive growth.
+  // cagr() returns 0 for non-positive endpoints, which grades as D (correct).
+  const epsCAGR = cagr(first.eps, latest.eps, years);
 
   const revGrade = grade(revCAGR, [18, 12, 6]);
   const patGrade = grade(patCAGR, [20, 12, 5]);
@@ -108,7 +110,7 @@ export default function EarningsQuality({ financials }: EarningsQualityProps) {
               <GradeChip grade={g} />
             </div>
             <span className="text-[11px] text-muted">{sublabel}</span>
-            <p className={`text-base font-bold font-mono mt-1 ${value >= 12 ? 'text-gain' : value >= 5 ? 'text-gold' : 'text-loss'}`}>
+            <p className={`text-base font-bold font-mono mt-1 ${value >= 12 ? 'text-gain' : value >= 5 ? 'text-warning' : 'text-loss'}`}>
               {value >= 0 ? '+' : ''}{value.toFixed(1)}%
             </p>
             <MiniBar value={value} max={40} color={color} />

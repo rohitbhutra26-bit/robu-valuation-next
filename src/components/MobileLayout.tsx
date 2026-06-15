@@ -398,8 +398,8 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
     { label: 'Market Cap',    value: fmt(company.marketCap) },
     { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-gold' : 'text-muted' },
     { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
-    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss' },
-    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss' },
+    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss' },
+    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss' },
     { label: 'Div Yield',    value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
   ];
 

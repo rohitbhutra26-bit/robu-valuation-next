@@ -19,7 +19,7 @@ interface QuarterlyFlashProps {
 function BeatBadge({ beat }: { beat: 'up' | 'down' | 'flat' }) {
   if (beat === 'up')   return <TrendingUp size={11} className="text-gain" />;
   if (beat === 'down') return <TrendingDown size={11} className="text-loss" />;
-  return <Minus size={11} className="text-gold" />;
+  return <Minus size={11} className="text-warning" />;
 }
 
 function pctChange(curr: number, prev: number): number {

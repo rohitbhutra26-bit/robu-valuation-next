@@ -78,7 +78,7 @@ export default function SectorAlternatives({ company, onSelectSymbol }: SectorAl
         </div>
         <div className="text-right">
           <p className="text-[10px] text-muted">Your stock score</p>
-          <p className={`text-sm font-bold font-mono ${selfScore >= 60 ? 'text-gain' : selfScore >= 40 ? 'text-gold' : 'text-loss'}`}>
+          <p className={`text-sm font-bold font-mono ${selfScore >= 60 ? 'text-gain' : selfScore >= 40 ? 'text-warning' : 'text-loss'}`}>
             {selfScore}/100
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function SectorAlternatives({ company, onSelectSymbol }: SectorAl
                   <p className="text-[11px] text-muted truncate">{peer.name}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className={`text-sm font-bold font-mono ${s >= 60 ? 'text-gain' : s >= 40 ? 'text-gold' : 'text-loss'}`}>
+                  <p className={`text-sm font-bold font-mono ${s >= 60 ? 'text-gain' : s >= 40 ? 'text-warning' : 'text-loss'}`}>
                     {s}/100
                   </p>
                   {isBetter && <p className="text-[10px] text-gain font-bold">↑ Better</p>}

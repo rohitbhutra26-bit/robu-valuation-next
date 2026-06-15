@@ -42,7 +42,7 @@ export default function MonteCarloCard({ company, financials, assumptions }: Pro
 
   const price = company.currentPrice;
   const maxCount = Math.max(...mc.histogram.map(h => h.count), 1);
-  const probCls = mc.probUndervalued >= 70 ? 'text-gain' : mc.probUndervalued >= 45 ? 'text-gold' : 'text-loss';
+  const probCls = mc.probUndervalued >= 70 ? 'text-gain' : mc.probUndervalued >= 45 ? 'text-warning' : 'text-loss';
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">

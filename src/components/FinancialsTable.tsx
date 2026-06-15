@@ -8,7 +8,7 @@ interface FinancialsTableProps {
 
 function ColoredGrowth({ value }: { value: number }) {
   if (value === 0) return <span className="text-muted">—</span>;
-  const color = value >= 15 ? 'text-gain' : value >= 0 ? 'text-gold' : 'text-loss';
+  const color = value >= 15 ? 'text-gain' : value >= 0 ? 'text-warning' : 'text-loss';
   return (
     <span className={`${color} font-mono`}>
       {value > 0 ? '+' : ''}{value.toFixed(1)}%
@@ -20,7 +20,7 @@ function ColoredMargin({ value, type }: { value: number; type: 'ebitda' | 'net' 
   const thresholds = type === 'ebitda'
     ? { good: 20, ok: 12 }
     : { good: 15, ok: 8 };
-  const color = value >= thresholds.good ? 'text-gain' : value >= thresholds.ok ? 'text-gold' : 'text-loss';
+  const color = value >= thresholds.good ? 'text-gain' : value >= thresholds.ok ? 'text-warning' : 'text-loss';
   return <span className={`${color} font-mono`}>{value.toFixed(1)}%</span>;
 }
 

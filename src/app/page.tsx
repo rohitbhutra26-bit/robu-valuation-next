@@ -35,6 +35,7 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import CompanyBrief from '@/components/CompanyBrief';
 import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
@@ -259,9 +260,10 @@ export default function Home() {
     // Use cleaned financials (outliers capped); fall back to raw if cleaner is empty
     const cleanFins = dq.cleanedFinancials.length > 0 ? dq.cleanedFinancials : fins;
 
-    // Make the winsorised series the single source of truth for the whole report so
-    // models/scores/scenarios AND tables use the same cleaned data (a one-off outlier
-    // year no longer distorts fair value). Data Quality banner explains any capping.
+    // Make the winsorised series the single source of truth for the whole report,
+    // so models/scores/scenarios AND the displayed tables all use the same cleaned
+    // data (a one-off outlier year no longer distorts fair value). The Data Quality
+    // banner already explains any capping. No outliers → cleanFins === raw.
     setFinancials(cleanFins);
 
     // Single call to suggestAssumptions — uses fade model + India sector CAGR
@@ -674,6 +676,11 @@ export default function Home() {
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
                     </div>
 
+                    {/* About the company — plain-English intro to what this business is */}
+                    <div id="sec-about" className="scroll-mt-24">
+                      <CompanyBrief company={company} />
+                    </div>
+
                     {/* The 3 questions a worried friend would actually check */}
                     <div id="sec-why" className="scroll-mt-24">
                       <SectionHeader
@@ -1003,7 +1010,7 @@ function SkeletonView({ symbol }: { symbol: string }) {
         ))}
       </div>
 
-      <p className="text-center text-xs text-muted/40 pt-1 font-mono">
+      <p className="text-center text-xs text-muted/60 pt-1 font-mono">
         loading {symbol}…
       </p>
     </div>

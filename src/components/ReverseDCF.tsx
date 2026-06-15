@@ -13,7 +13,7 @@ interface Props {
 
 const VERDICT_STYLE = {
   undemanding: { label: 'Undemanding',  cls: 'text-gain bg-gain/10 border-gain/25' },
-  reasonable:  { label: 'Reasonable',   cls: 'text-gold bg-gold/10 border-gold/25' },
+  reasonable:  { label: 'Reasonable',   cls: 'text-gain bg-gain/10 border-gain/25' },
   demanding:   { label: 'Demanding',    cls: 'text-warning bg-warning/10 border-warning/25' },
   heroic:      { label: 'Heroic',       cls: 'text-loss bg-loss/10 border-loss/25' },
 } as const;
