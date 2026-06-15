@@ -82,18 +82,22 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
       <div className="relative">
         <p className="text-xs font-semibold uppercase tracking-[2px] text-muted">Robu's verdict</p>
 
-        <div className="mt-3 flex items-start gap-4">
-          <span className="flex items-center justify-center w-14 h-14 rounded-2xl flex-shrink-0"
+        <div className="mt-3 flex items-start gap-3 sm:gap-4">
+          <span className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex-shrink-0"
                 style={{ background: `${dot}1A`, border: `1.5px solid ${dot}40` }}>
-            <v.Icon size={28} className={toneText} />
+            <v.Icon size={26} className={toneText} />
           </span>
+          {/* Headline takes the full remaining width; the upside lives BELOW it
+              (not in a side column) so it can never squeeze the headline. */}
           <div className="flex-1 min-w-0">
-            <h2 className={`text-3xl sm:text-4xl font-bold tracking-tight leading-none ${toneText}`}>{v.label}</h2>
-            <p className="mt-2 text-base text-muted leading-snug">{v.sub}</p>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className={`text-3xl sm:text-4xl font-bold font-mono leading-none ${toneText}`}>{upsideLabel}</p>
-            <p className="text-xs text-muted mt-1">{!reliability.reliable ? 'see caution below' : `${upside >= 0 ? 'possible upside' : 'possible downside'} \u00b7 over ${horizon}y`}</p>
+            <h2 className={`text-[26px] sm:text-4xl font-bold tracking-tight leading-[1.06] [overflow-wrap:normal] ${toneText}`}>{v.label}</h2>
+            <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+              <span className={`text-2xl sm:text-3xl font-bold font-mono leading-none ${toneText}`}>{upsideLabel}</span>
+              <span className="text-[13px] text-muted">
+                {!reliability.reliable ? 'see caution below' : `${upside >= 0 ? 'possible upside' : 'possible downside'} \u00b7 over ${horizon}y`}
+              </span>
+            </div>
+            <p className="mt-2.5 text-sm sm:text-base text-muted leading-snug">{v.sub}</p>
           </div>
         </div>
 

@@ -362,6 +362,10 @@ input[type='range']:focus { outline: none; }
 .min-w-0 { min-width: 0; }
 p, span, div, td, th, li { overflow-wrap: break-word; word-break: normal; }
 .whitespace-nowrap { word-break: normal; overflow-wrap: normal; }
+/* Cardinal rule: headlines must NEVER break per-letter. overflow-wrap is
+   inherited, so the rule above would otherwise cascade into headings and, in a
+   squeezed flex column, stack a word one-letter-per-line. */
+h1, h2, h3, h4, h5, h6 { overflow-wrap: normal; word-break: normal; text-wrap: balance; }
 
 /* ── Tap targets ──────────────────────────────────────────────────────────── */
 button, a, input, select, textarea, [role="button"] {
