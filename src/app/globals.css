@@ -431,8 +431,13 @@ input[type='number'] { -moz-appearance: textfield; }
      The report carries its own padding instead. */
   @page { margin: 0; size: A4 portrait; }
   #print-report { padding: 13mm 15mm; }
-  .pr-chapter { page-break-before: always; padding-top: 13mm; }
-  .pr-keep { page-break-inside: avoid; }
+  /* Sections flow and fill the page instead of one-chapter-per-page (kills the
+     huge blank bottoms). 'avoid-all' in html2pdf keeps blocks/tables intact. */
+  .pr-chapter { margin-top: 18px; }
+  .pr-keep, .pr-card { page-break-inside: avoid; break-inside: avoid; }
+  #print-report table, #print-report tr, #print-report thead, #print-report tbody {
+    page-break-inside: avoid; break-inside: avoid;
+  }
 }
 .print-only { display: none; }
 

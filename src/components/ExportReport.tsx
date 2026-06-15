@@ -40,7 +40,7 @@ export default function ExportReport({ company }: ExportReportProps) {
         image:       { type: 'jpeg', quality: 0.96 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:   { mode: ['css', 'legacy'], before: '.pr-chapter', avoid: '.pr-keep' },
+        pagebreak:   { mode: ['avoid-all', 'css', 'legacy'], avoid: ['.pr-keep', 'table', 'tr', '.pr-card'] },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
       await html2pdf().set(opts).from(report).save();
@@ -335,7 +335,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 2 · THE WRITTEN CASE ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="The written case" />
             <SecTitle kicker="Research summary" title="Why consider this stock — or not" />
             <p style={{ fontSize: '13px', lineHeight: 1.75, color: INK, margin: '0 0 12px', fontWeight: 600 }}>{insight.summary}</p>
 
@@ -361,11 +360,11 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
               <Card accent="#86efac" style={{ background: '#f0fdf4' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: GAIN, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🚀 The bull case — why it could work</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: GAIN, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>The bull case — why it could work</div>
                 <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#14532d' }}>{insight.bull}</p>
               </Card>
               <Card accent="#fca5a5" style={{ background: '#fef2f2' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: LOSS, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>🐻 The bear case — what could go wrong</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: LOSS, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>The bear case — what could go wrong</div>
                 <p style={{ fontSize: '11.5px', lineHeight: 1.65, margin: 0, color: '#7f1d1d' }}>{insight.bear}</p>
               </Card>
             </div>
@@ -422,7 +421,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 3 · VALUATION ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="Valuation" />
             <SecTitle kicker="Fair value" title="What is this stock actually worth?" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
               {[
@@ -499,7 +497,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 4 · HEALTH CHECK ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="Health check" />
             <SecTitle kicker="Red flags" title={flags.verdict} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '16px' }}>
               {flags.flags.map(f => {
@@ -540,7 +537,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 5 · FINANCIALS ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="Financials" />
             <SecTitle kicker="Track record" title="Revenue & profit, last 8 years" />
             <svg width={RC_W} height={RC_H + 22} viewBox={`0 0 ${RC_W} ${RC_H + 22}`} style={{ display: 'block', marginBottom: '4px' }}>
               {chartYears.map((f, i) => {
@@ -549,7 +545,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                 const x = RC_PAD + i * bw;
                 return (
                   <g key={f.year}>
-                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill="#fcd34d" rx="2" />
+                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill={TERRA} rx="2" />
                     <rect x={x + bw * 0.56} y={RC_H - patH} width={bw * 0.3} height={patH} fill={GAIN} rx="2" />
                     <text x={x + bw / 2} y={RC_H + 13} textAnchor="middle" fontSize="10" fill={MUTED} fontFamily="monospace">{f.year}</text>
                   </g>
@@ -557,7 +553,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               })}
             </svg>
             <p style={{ fontSize: '9px', color: FAINT, margin: '0 0 14px' }}>
-              <span style={{ color: GOLD }}>■</span> Revenue&nbsp;&nbsp;<span style={{ color: GAIN }}>■</span> Net profit&nbsp;&nbsp;
+              <span style={{ color: TERRA }}>■</span> Revenue&nbsp;&nbsp;<span style={{ color: GAIN }}>■</span> Net profit&nbsp;&nbsp;
               Latest: ₹{latest.revenue.toLocaleString('en-IN')} Cr revenue · ₹{latest.pat.toLocaleString('en-IN')} Cr profit · {latest.netMargin.toFixed(1)}% margin
             </p>
 
@@ -610,7 +606,6 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ════════ CHAPTER 6 · PEERS & SECTOR ════════ */}
           <div className="pr-chapter">
-            <Brand company={company} page="Peers & sector" />
             {peers.length > 1 && (
               <>
                 <SecTitle kicker="Competition" title="How it stacks up against peers" />
