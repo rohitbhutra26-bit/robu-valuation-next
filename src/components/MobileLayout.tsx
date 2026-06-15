@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   Search, TrendingUp, Users,
-  AlertTriangle, Pencil, RotateCcw, Bookmark, Briefcase, Filter,
+  AlertTriangle, Pencil, RotateCcw, Bookmark, Briefcase,
   ChevronRight,
 } from '@/lib/icons';
 import ThemeToggle from './ThemeToggle';
@@ -58,11 +58,10 @@ export function RobuLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="4" width="92" height="92" rx="26" fill="#7A2238" />
-      {/* Optically-centred vector 'r' (matches the wordmark; no font dependency,
-          so it renders identically everywhere — favicon, header, app icon). */}
-      <g fill="none" stroke="#FFFFFF" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M42 34 V70" />
-        <path d="M42 47 C42 38 49 34 62 38" />
+      {/* The actual 'r' glyph from the robu wordmark, so the mark and the wordmark
+          are the same letterform everywhere (header, favicon, app icon). */}
+      <g transform="translate(31.7, 12) scale(0.41)">
+        <path fill="#FFFFFF" fillRule="evenodd" d="M1,82.47 C2.4,78.87 4.08,75.84 5.15,72.61 C11.93,52.24 25.31,38.41 45.34,30.63 C57.21,26.02 69.36,24.51 81.96,25.02 C86.26,25.2 87.97,27.02 87.85,31.14 C87.75,34.47 87.89,37.8 87.83,41.13 C87.72,47.02 86.94,47.48 81.16,47.97 C73.27,48.64 65.06,48.62 57.63,50.95 C43.32,55.44 33.63,65.82 29.13,80 C26.85,87.15 26.25,95.04 26.09,102.62 C25.7,121.76 25.97,140.91 25.99,160.53 C17.7,161 9.4,161 1,161 C1,134.98 1,108.96 1,82.47 z" />
       </g>
     </svg>
   );
@@ -289,15 +288,6 @@ function HomeView({
   const chips = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'WIPRO', 'BAJFINANCE', 'TMPV', 'SBIN', 'ADANIENT', 'ANGELONE', 'KAYNES'];
 
   const shortcuts = [
-    {
-      id: 'screener' as MainTab,
-      title: 'Stock Screener',
-      desc: 'Filter all NSE stocks by ROE, P/E, margin & more',
-      Icon: Filter,
-      color: 'text-accent',
-      bg: 'bg-accent/10',
-      border: 'border-accent/20',
-    },
     {
       id: 'watchlist' as MainTab,
       title: 'Watchlist',
