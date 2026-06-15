@@ -3,3 +3,6 @@ node_modules
 .env*
 *.node
 tsconfig.tsbuildinfo
+
+# macOS
+.DS_Store
