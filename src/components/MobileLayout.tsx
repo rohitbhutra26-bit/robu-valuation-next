@@ -671,6 +671,7 @@ export default function MobileLayout({
 }: Props) {
   const [mainTab, setMainTab]   = useState<MainTab>('home');
   const [stockTab, setStockTab] = useState<StockTab>('overview');
+  const [scrolled, setScrolled] = useState(false);
 
   const mountedMain  = useRef<Set<MainTab>>(new Set<MainTab>(['home']));
   const mountedStock = useRef<Set<StockTab>>(new Set<StockTab>(['overview']));
@@ -733,9 +734,13 @@ export default function MobileLayout({
                   </span>
                 </div>
               </div>
+            ) : mainTab === 'home' ? (
+              // Home hero already shows the big wordmark; keep the header brand-free at
+              // the top and fade the matching wordmark in once the user scrolls.
+              <RobuWordmark height={17} className={`text-gold transition-opacity duration-200 ${scrolled ? 'opacity-100' : 'opacity-0'}`} />
             ) : (
               <span className="text-sm font-bold text-primary tracking-tight">
-                {{ home: 'Robu', watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab as string] || 'Robu'}
+                {{ watchlist: 'Watchlist', portfolio: 'Portfolio', stock: 'Analysis' }[mainTab as string] || ''}
               </span>
             )}
           </div>
@@ -782,7 +787,8 @@ export default function MobileLayout({
       </header>
 
       {/* Scrollable content */}
-      <main className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}
+        onScroll={(e) => setScrolled((e.currentTarget as HTMLElement).scrollTop > 40)}>
 
         {/* ── Home ── */}
         <div className={mainTab === 'home' ? '' : 'hidden'}>
