@@ -391,12 +391,13 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
   const low = company.week52Low;
   const high = company.week52High;
   const pct = high > low ? Math.max(2, Math.min(98, ((company.currentPrice - low) / (high - low)) * 100)) : 50;
-  const latest = financials.length > 0 ? financials[financials.length - 1] : null;
+  // Partial-year-aware baseline (a 9-month trailing year would misreport "last reported")
+  const latest = financials.length > 0 ? getBaselineFinancial(financials).baseline : null;
 
   const has52W = low > 0 && high > 0;
   const stats = [
     { label: 'Market Cap',    value: fmt(company.marketCap) },
-    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-gold' : 'text-muted' },
+    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-primary' : 'text-muted' },
     { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
     { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss' },
     { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss' },
@@ -461,8 +462,8 @@ function OverviewView({ company, financials, assumptions, isLoading, error, onRe
             {[
               { label: 'Revenue',         value: fmt(latest.revenue) },
               { label: 'Net Profit (PAT)',value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
-              { label: 'EBITDA Margin',   value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-gold' : 'text-primary' },
-              { label: 'Net Margin',      value: `${latest.netMargin.toFixed(1)}%` },
+              { label: 'EBITDA Margin',   value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-warning' : 'text-primary' },
+              { label: 'Net Margin',      value: `${latest.netMargin.toFixed(1)}%`, color: latest.netMargin >= 10 ? 'text-gain' : 'text-primary' },
               { label: 'EPS',             value: `₹${latest.eps.toFixed(1)}` },
             ].map((r, i) => (
               <div key={i} className="flex items-center justify-between">
