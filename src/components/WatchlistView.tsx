@@ -151,9 +151,9 @@ export default function WatchlistView({ onSelectSymbol, currentSymbol }: Watchli
           <div className="w-14 h-14 rounded-2xl bg-border/60 flex items-center justify-center mx-auto mb-4">
             <Bookmark size={22} className="text-muted/40" />
           </div>
-          <p className="text-sm font-semibold text-primary mb-1">Nothing saved yet</p>
+          <p className="text-sm font-semibold text-primary mb-1">Your watchlist is empty</p>
           <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
-            Search any stock and tap the bookmark icon on its profile to save it here.
+            A watchlist is stocks you&apos;re <span className="text-primary font-medium">keeping an eye on</span> — you don&apos;t own them. Open any stock and tap <span className="text-gold font-semibold">Watch</span> at the top to save it here.
           </p>
         </div>
       )}

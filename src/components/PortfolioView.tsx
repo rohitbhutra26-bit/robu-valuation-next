@@ -817,9 +817,9 @@ export default function PortfolioView({ onSelectSymbol }: PortfolioViewProps) {
           <div className="w-14 h-14 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-4">
             <Briefcase size={22} className="text-gold" />
           </div>
-          <p className="text-sm font-semibold text-primary mb-1">Track your holdings</p>
+          <p className="text-sm font-semibold text-primary mb-1">Your portfolio is empty</p>
           <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed mb-4">
-            Search any stock and click <span className="text-gold font-medium">+ Portfolio</span> to add it, or import your holdings from a CSV or broker export.
+            Your portfolio is stocks you <span className="text-primary font-medium">actually bought</span> — it tracks your real profit &amp; loss. Open any stock and tap <span className="text-accent font-semibold">I own this</span>, or import from a CSV / broker export.
           </p>
           <button
             onClick={() => setShowImport(true)}

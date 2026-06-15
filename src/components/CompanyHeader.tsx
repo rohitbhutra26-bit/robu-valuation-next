@@ -114,33 +114,34 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
           </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <h1 className="text-xl font-bold text-primary leading-tight">{company.name}</h1>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {onWatchlistToggle && (
                 <button
                   onClick={onWatchlistToggle}
                   aria-label={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
-                  title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
-                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                  title={isWatchlisted ? 'Remove from your watchlist' : 'Track this stock — you don’t own it yet'}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                     isWatchlisted
-                      ? 'text-gold bg-gold/15 border border-gold/30'
-                      : 'text-muted/40 hover:text-gold hover:bg-gold/10 border border-transparent hover:border-gold/20'
+                      ? 'text-gold bg-gold/10 border-gold/30'
+                      : 'text-muted hover:text-gold hover:bg-gold/10 border-border hover:border-gold/30'
                   }`}
                 >
-                  <Bookmark size={14} className={isWatchlisted ? 'fill-gold' : ''} />
+                  <Bookmark size={13} className={isWatchlisted ? 'fill-gold' : ''} />
+                  {isWatchlisted ? 'Watching' : 'Watch'}
                 </button>
               )}
               {onPortfolioToggle && (
                 <button
                   onClick={onPortfolioToggle}
-                  title={isInPortfolio ? 'Edit portfolio position' : 'Add to portfolio'}
-                  className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all border ${
+                  title={isInPortfolio ? 'Edit your holding (quantity & buy price)' : 'You own this — add it to track your profit & loss'}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                     isInPortfolio
                       ? 'text-accent bg-accent/10 border-accent/30'
-                      : 'text-muted/50 hover:text-accent hover:bg-accent/10 border-transparent hover:border-accent/20'
+                      : 'text-muted hover:text-accent hover:bg-accent/10 border-border hover:border-accent/30'
                   }`}
                 >
-                  <Briefcase size={11} />
-                  {isInPortfolio ? 'In Portfolio' : '+ Portfolio'}
+                  <Briefcase size={13} />
+                  {isInPortfolio ? 'Owned' : 'I own this'}
                 </button>
               )}
             </div>
