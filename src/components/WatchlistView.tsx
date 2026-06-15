@@ -225,9 +225,8 @@ export default function WatchlistView({ onSelectSymbol, currentSymbol }: Watchli
                       </div>
                       <button
                         onClick={e => { e.stopPropagation(); removeFromWatchlist(entry.symbol); }}
-                        aria-label={`Remove ${entry.symbol} from watchlist`}
-                        className="w-9 h-9 -m-1 rounded-lg flex items-center justify-center text-muted/50 hover:text-loss hover:bg-loss/10 transition-all opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
-                        title="Remove from watchlist"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/30 hover:text-loss hover:bg-loss/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Remove"
                       >
                         <X size={13} />
                       </button>

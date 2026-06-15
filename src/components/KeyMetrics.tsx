@@ -48,16 +48,7 @@ function MetricCard({
 }
 
 function calcCAGR(start: number, end: number, years: number): number {
-  // CAGR is undefined when either endpoint is ≤ 0 (loss years / sign flips) —
-  // Math.pow on a negative base returns NaN and a negative→negative ratio is
-  // meaningless. Return NaN so the UI shows "—" instead of "NaN%"/garbage.
-  if (start <= 0 || end <= 0) return NaN;
   return (Math.pow(end / start, 1 / years) - 1) * 100;
-}
-
-// "12.3% 5Y CAGR" or "— CAGR" when undefined (loss years)
-function cagrLabel(c: number, years: number): string {
-  return Number.isFinite(c) ? `${c.toFixed(1)}% ${years}Y CAGR` : `— CAGR`;
 }
 
 // Adaptive ₹ Crore formatting — small caps were showing "₹0K Cr" before
@@ -88,7 +79,7 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
       <MetricCard
         label={`Revenue (${latest.year})`}
         value={fmtCr(latest.revenue)}
-        subValue={cagrLabel(revCAGR, years)}
+        subValue={`${revCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={revCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
         tip="Total sales for the year — everything customers paid the company. CAGR = average yearly growth, like FD interest."
@@ -96,7 +87,7 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
       <MetricCard
         label={`Profit (${latest.year})`}
         value={fmtCr(latest.pat)}
-        subValue={cagrLabel(patCAGR, years)}
+        subValue={`${patCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={patCAGR > 0 ? 'up' : 'down'}
         color={latest.pat > 0 ? 'text-gain' : 'text-loss'}
         tip="What's left after ALL costs and taxes (PAT). The real take-home of the business."
@@ -111,23 +102,23 @@ export default function KeyMetrics({ company, financials }: KeyMetricsProps) {
       <MetricCard
         label={`EPS (${latest.year})`}
         value={`₹${latest.eps.toFixed(1)}`}
-        subValue={cagrLabel(epsCAGR, years)}
+        subValue={`${epsCAGR.toFixed(1)}% ${years}Y CAGR`}
         trend={epsCAGR > 0 ? 'up' : 'down'}
         color="text-primary"
         tip="Profit cut into per-share slices — your share of the year's earnings for each share you own."
       />
       <MetricCard
         label="ROE"
-        value={company.roe > 0 ? `${company.roe.toFixed(1)}%` : '—'}
-        subValue={company.roe <= 0 ? 'Not available' : company.roe >= 20 ? 'Excellent' : company.roe >= 12 ? 'Good' : 'Below avg'}
-        color={company.roe <= 0 ? 'text-muted' : company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss'}
+        value={`${company.roe.toFixed(1)}%`}
+        subValue={company.roe >= 20 ? 'Excellent' : company.roe >= 12 ? 'Good' : 'Below avg'}
+        color={company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-gold' : 'text-loss'}
         tip="Profit made per ₹100 of shareholders' own money. 20%+ excellent, under 12% weak."
       />
       <MetricCard
         label="Debt / Equity"
-        value={company.debtToEquity > 0 ? `${company.debtToEquity.toFixed(2)}x` : '—'}
-        subValue={company.debtToEquity <= 0 ? 'Not available' : company.debtToEquity < 1 ? 'Low leverage' : company.debtToEquity < 3 ? 'Moderate' : 'High leverage'}
-        color={company.debtToEquity <= 0 ? 'text-muted' : company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}
+        value={`${company.debtToEquity.toFixed(2)}x`}
+        subValue={company.debtToEquity < 1 ? 'Low leverage' : company.debtToEquity < 3 ? 'Moderate' : 'High leverage'}
+        color={company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-gold' : 'text-loss'}
         tip="Loans compared to own money. Like your home loan vs your savings — under 1x is comfortable (banks naturally run higher)."
       />
     </motion.div>

@@ -7,8 +7,6 @@ import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/i
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
 import { generateInsight } from '@/lib/aiInsight';
-import { valuationReliability } from '@/lib/valuationReliability';
-import { verdictKey } from '@/lib/verdict';
 import { scaleIn } from '@/lib/animations';
 
 interface Props {
@@ -42,26 +40,17 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   const current = company.currentPrice;
   const upside = ((fairValue - current) / current) * 100;
 
-  // ── Verdict tiers (shared thresholds — see lib/verdict.ts) ─────────────────
-  const VERDICT_UI = {
-    'very-cheap':     { label: 'Looks very cheap',     sub: 'Trading well below what the business looks worth.', tone: 'gain',    Icon: ChevronsUp   },
-    'cheap':          { label: 'Looks cheap',          sub: 'Trading below what the business looks worth.',      tone: 'gain',    Icon: ChevronUp    },
-    'fair':           { label: 'Fairly priced',        sub: 'Trading close to what the business looks worth.',   tone: 'warning', Icon: Minus        },
-    'expensive':      { label: 'Looks expensive',      sub: 'Trading above what the business looks worth.',      tone: 'loss',    Icon: ChevronDown  },
-    'very-expensive': { label: 'Looks very expensive', sub: 'Trading well above what the business looks worth.',  tone: 'loss',    Icon: ChevronsDown },
-  } as const;
-  // If a fair value can't be trusted (loss-making, negative net worth, one-off
-  // earnings, etc.) we must NOT show a confident cheap/expensive call.
-  const reliability = valuationReliability(company, financials);
-  const v = reliability.reliable
-    ? VERDICT_UI[verdictKey(upside)]
-    : { label: 'Hard to value', sub: reliability.title, tone: 'warning', Icon: Minus } as const;
+  // ── Verdict tiers ─────────────────────────────────────────────────────────
+  const v =
+    upside > 30  ? { label: 'Looks very cheap',     sub: 'Trading well below what the business looks worth.',   tone: 'gain',    Icon: ChevronsUp   } :
+    upside > 10  ? { label: 'Looks cheap',          sub: 'Trading below what the business looks worth.',        tone: 'gain',    Icon: ChevronUp    } :
+    upside >= -10 ? { label: 'Fairly priced',       sub: 'Trading close to what the business looks worth.',     tone: 'warning', Icon: Minus        } :
+    upside >= -30 ? { label: 'Looks expensive',     sub: 'Trading above what the business looks worth.',        tone: 'loss',    Icon: ChevronDown  } :
+                    { label: 'Looks very expensive', sub: 'Trading well above what the business looks worth.',   tone: 'loss',    Icon: ChevronsDown };
 
   const toneText   = `text-${v.tone}`;
   const dot        = `rgb(var(--color-${v.tone}))`;
-  const upsideLabel = !reliability.reliable
-    ? '—'
-    : upside >= 0 ? `+${upside.toFixed(0)}%` : `${upside.toFixed(0)}%`;
+  const upsideLabel = upside >= 0 ? `+${upside.toFixed(0)}%` : `${upside.toFixed(0)}%`;
 
   // Gauge marker: high upside = cheap = far left; negative = expensive = far right
   const clamped = Math.max(-40, Math.min(40, upside));
@@ -95,7 +84,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
           </div>
           <div className="text-right flex-shrink-0">
             <p className={`text-3xl sm:text-4xl font-bold font-mono leading-none ${toneText}`}>{upsideLabel}</p>
-            <p className="text-xs text-muted mt-1">{!reliability.reliable ? 'see caution below' : upside >= 0 ? 'possible upside' : 'possible downside'}</p>
+            <p className="text-xs text-muted mt-1">{upside >= 0 ? 'possible upside' : 'possible downside'}</p>
           </div>
         </div>
 
@@ -145,7 +134,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
           </div>
           {confidence && (
             <span className={`ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-full border ${confCls}`}
-                  title="Based on how many years of financial history we have to work with — more history means a more reliable estimate">
+                  title="How much the different valuation methods agree with each other">
               {confidence} confidence
             </span>
           )}

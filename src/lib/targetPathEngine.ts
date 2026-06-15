@@ -16,7 +16,6 @@
 
 import { Company, FinancialYear, ValuationAssumptions } from './types';
 import { ValuationModel } from './sectorModelMap';
-import { getBaselineFinancial, fadeCompound } from './forecastUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,30 +85,15 @@ function estimateNetDebt(company: Company): number {
 }
 
 // ─── Per-model reverse solvers ────────────────────────────────────────────────
-// IMPORTANT: the forward models fade growth toward terminal (fadeCompound), so
-// the reverse solvers must invert the SAME faded path — not flat (1+g)^n —
-// otherwise "what must happen" contradicts the forecast it's compared against.
-
-// Find the initial growth rate whose faded path compounds to `ratio` over `years`.
-// fadeCompound is monotonic in g, so a bisection converges quickly.
-function solveFadeGrowth(ratio: number, years: number): number {
-  if (ratio <= 0 || years <= 0) return 0;
-  let lo = -50, hi = 300;
-  for (let i = 0; i < 60; i++) {
-    const mid = (lo + hi) / 2;
-    if (fadeCompound(mid, years) < ratio) lo = mid; else hi = mid;
-  }
-  return (lo + hi) / 2;
-}
 
 function solvePE(
   target: number, fixedMargin: number, fixedPE: number,
   revenue: number, shares: number, years: number,
 ): number {
-  // target = (rev × fade(g) × margin/100 / shares) × PE  → solve g (faded path)
+  // target = (rev × (1+g)^n × margin/100 / shares) × PE  → solve g
   const ratio = (target * shares) / (fixedPE * (fixedMargin / 100) * revenue);
   if (ratio <= 0) return 0;
-  return solveFadeGrowth(ratio, years);
+  return (Math.pow(ratio, 1 / years) - 1) * 100;
 }
 
 function solvePEMargin(
@@ -117,7 +101,7 @@ function solvePEMargin(
   revenue: number, shares: number, years: number,
 ): number {
   // margin = target × shares / (rev × (1+g)^n × PE) × 100
-  const futureRev = revenue * fadeCompound(fixedGrowth, years);
+  const futureRev = revenue * Math.pow(1 + fixedGrowth / 100, years);
   if (futureRev <= 0 || fixedPE <= 0) return 0;
   return (target * shares / (futureRev * fixedPE)) * 100;
 }
@@ -127,7 +111,7 @@ function solvePEMultiple(
   revenue: number, shares: number, years: number,
 ): number {
   // PE = target × shares / (rev × (1+g)^n × margin/100)
-  const futureRev = revenue * fadeCompound(fixedGrowth, years);
+  const futureRev = revenue * Math.pow(1 + fixedGrowth / 100, years);
   if (futureRev <= 0 || fixedMargin <= 0) return 0;
   return (target * shares) / (futureRev * (fixedMargin / 100));
 }
@@ -143,7 +127,7 @@ function solveEVEBITDAGrowth(
   if (denominator <= 0) return 0;
   const ratio = numerator / denominator / revenue;
   if (ratio <= 0) return 0;
-  return solveFadeGrowth(ratio, years);
+  return (Math.pow(ratio, 1 / years) - 1) * 100;
 }
 
 function solveEVEBITDAMultiple(
@@ -151,7 +135,7 @@ function solveEVEBITDAMultiple(
   revenue: number, shares: number, netDebt: number, years: number,
 ): number {
   // mult = (target×shares + netDebt) / (futureRev × ebitdaMgn/100)
-  const futureRev = revenue * fadeCompound(fixedGrowth, years);
+  const futureRev = revenue * Math.pow(1 + fixedGrowth / 100, years);
   const denom = futureRev * (ebitdaMargin / 100);
   if (denom <= 0) return 0;
   return (target * shares + netDebt) / denom;
@@ -161,17 +145,17 @@ function solvePBGrowth(
   target: number, fixedPB: number,
   currentBVPS: number, years: number,
 ): number {
-  // target = currentBVPS × fade(g) × PB  → solve g (faded path)
+  // target = currentBVPS × (1+g)^n × PB  → g = (target/PB/BVPS)^(1/n) - 1
   const ratio = target / fixedPB / currentBVPS;
   if (ratio <= 0) return 0;
-  return solveFadeGrowth(ratio, years);
+  return (Math.pow(ratio, 1 / years) - 1) * 100;
 }
 
 function solvePBMultiple(
   target: number, fixedGrowth: number,
   currentBVPS: number, years: number,
 ): number {
-  const futureBVPS = currentBVPS * fadeCompound(fixedGrowth, years);
+  const futureBVPS = currentBVPS * Math.pow(1 + fixedGrowth / 100, years);
   if (futureBVPS <= 0) return 0;
   return target / futureBVPS;
 }
@@ -188,10 +172,7 @@ export function computeTargetPath(
 ): TargetPathResult | null {
   if (!financials.length || targetPrice <= 0) return null;
 
-  // Use the partial-year-aware baseline (same base every forward model uses),
-  // not the raw last row — otherwise a 9-month trailing year understates revenue
-  // and overstates the growth/margin required to hit a target.
-  const { baseline: latest } = getBaselineFinancial(financials);
+  const latest = financials[financials.length - 1];
   const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
   const years  = assumptions.years;
 

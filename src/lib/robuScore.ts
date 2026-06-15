@@ -101,16 +101,13 @@ function scoreROIIC(fin: FinancialYear[]): DimensionScore {
   raw += trend > 3 ? 8 : trend > 0 ? 3 : trend < -3 ? -8 : -3;
   const score = clamp(Math.round(raw * ocfMultiplier));
 
-  const effWord = score >= 65 ? 'an efficient money-maker'
-    : score >= 50 ? 'a fair use of capital'
-    : 'growth isn’t turning into much profit';
-  const trendTail = trend > 2 ? ', and getting better' : trend < -2 ? ', but slipping lately' : '';
+  const trendStr = trend > 2 ? 'improving' : trend < -2 ? 'declining' : 'stable';
   return {
-    name: 'Capital Efficiency',
+    name: 'Capital Efficiency (ROIIC)',
     score,
     label: label(score),
-    insight: `Every new ₹100 of sales adds about ₹${avgIncMargin.toFixed(0)} of operating profit — ${effWord}${trendTail}`,
-    detail: `Each extra rupee of sales converts ${avgIncMargin.toFixed(1)}% to operating profit (measured over ${incMargins.length} multi-year windows). Cash from operations is ${ocfMultiplier > 1 ? 'growing faster than' : 'lagging'} sales.`,
+    insight: `Each new ₹100 of revenue adds ₹${avgIncMargin.toFixed(1)} of EBITDA — ${trendStr} trend`,
+    detail: `Incremental EBITDA margin avg ${avgIncMargin.toFixed(1)}% over ${incMargins.length} windows. OCF growth ${ocfMultiplier > 1 ? 'outpacing' : 'lagging'} revenue growth.`,
     color: color(score),
   };
 }
@@ -123,14 +120,8 @@ function scoreEarningsQuality(fin: FinancialYear[]): DimensionScore {
   if (withOCF.length < 2) return { name: 'Earnings Quality', score: 50, label: 'Average',
     insight: 'Limited cash flow data available', detail: 'OCF data needed for quality scoring', color: 'text-warning' };
 
-  // Aggregate cash conversion (sum of cash / sum of profit) — robust. Averaging
-  // per-year OCF/PAT ratios blows up when any single year has near-zero profit
-  // (which produced nonsense like "456%"). Per-year ratios are clamped only for
-  // the trend calc below.
-  const sumOCF = withOCF.reduce((s, f) => s + f.ocf!, 0);
-  const sumPAT = withOCF.reduce((s, f) => s + f.pat, 0);
-  const avgConversion = sumPAT > 0 ? clamp(sumOCF / sumPAT, 0, 3) : 1;
-  const conversions = withOCF.map(f => clamp(f.ocf! / f.pat, 0, 3));
+  const conversions = withOCF.map(f => f.ocf! / f.pat);
+  const avgConversion = avg(conversions);
 
   // Trend: is cash conversion improving or declining?
   const recent = conversions.slice(-3);
@@ -152,20 +143,17 @@ function scoreEarningsQuality(fin: FinancialYear[]): DimensionScore {
   raw = (raw * 0.7) + (marginStability * 0.3);
   const score = clamp(Math.round(raw));
 
-  const pctCash = Math.round(avgConversion * 100);
-  const insight = avgConversion >= 1.0
-    ? `Brings in even more cash than the profit it reports — very high-quality earnings`
-    : avgConversion >= 0.8
-    ? `About ₹${pctCash} of every ₹100 of profit turns into real cash — solid quality`
-    : `Only ₹${pctCash} of every ₹100 of profit shows up as cash — worth a closer look`;
-  const trendStr = trend > 0.05 ? 'improving' : trend < -0.05 ? 'getting weaker' : 'steady';
+  const qualityStr = avgConversion >= 1.0 ? 'generating more cash than reported profit'
+    : avgConversion >= 0.8 ? 'profits mostly backed by cash'
+    : 'gap between reported profit and actual cash — investigate';
+  const trendStr = trend > 0.05 ? '↑ improving' : trend < -0.05 ? '↓ declining — red flag' : '→ stable';
 
   return {
     name: 'Earnings Quality',
     score,
     label: label(score),
-    insight,
-    detail: `For every ₹100 of reported profit, about ₹${pctCash} arrived as real cash (and the trend is ${trendStr}). Profit margins are ${stdDev(ebitdaMargins) < 3 ? 'very steady' : stdDev(ebitdaMargins) < 6 ? 'fairly steady' : 'choppy'}.`,
+    insight: `Cash conversion ${(avgConversion * 100).toFixed(0)}% — ${qualityStr}`,
+    detail: `OCF/PAT ratio avg: ${avgConversion.toFixed(2)}. Trend: ${trendStr}. EBITDA margin std dev: ${stdDev(ebitdaMargins).toFixed(1)}%.`,
     color: color(score),
   };
 }
@@ -202,16 +190,12 @@ function scoreExecution(fin: FinancialYear[]): DimensionScore {
           + (avgLeverage > 1.2 ? 20 : avgLeverage > 0.8 ? 15 : avgLeverage > 0.5 ? 8 : 3) * 2;
   const score = clamp(Math.round(raw * 0.5));
 
-  const levWord = avgLeverage > 1 ? 'profit grows faster than sales' : 'profit lags sales';
-  const steadyTail = revConsistency >= 70 ? ', and results are steady year to year'
-    : revConsistency >= 45 ? ', though results wobble year to year'
-    : ', but results swing a lot year to year — hard to predict';
   return {
     name: 'Management Execution',
     score,
     label: label(score),
-    insight: `Sales rose in ${growthHitRate.toFixed(0)}% of years and ${levWord}${steadyTail}`,
-    detail: `Sales grew in ${positiveYears} of ${revGrowths.length} years. Year-to-year swing in growth: ${stdDev(revGrowths).toFixed(0)}% (lower is steadier). When sales rise ₹1, profit moves about ₹${avgLeverage.toFixed(1)}.`,
+    insight: `Revenue grew ${growthHitRate.toFixed(0)}% of years. PAT grows ${avgLeverage > 1 ? 'faster' : 'slower'} than revenue`,
+    detail: `Revenue growth std dev: ${stdDev(revGrowths).toFixed(1)}%. Positive growth years: ${positiveYears}/${revGrowths.length}. Operating leverage: ${avgLeverage.toFixed(2)}x`,
     color: color(score),
   };
 }
@@ -265,21 +249,18 @@ function scoreMoat(fin: FinancialYear[], company: Company): DimensionScore {
 
   const score = clamp(Math.round(raw));
 
-  const edgeWord = roicWaccSpread >= 5 ? 'earns well above what its money costs — a real competitive edge'
-    : roicWaccSpread >= 0 ? 'earns just barely above what its money costs — a thin edge'
-    : 'earns a touch less than its money costs — little edge right now';
-  // Reconcile the edge with the margin trend using "and"/"though" so it never
-  // reads as a contradiction (e.g. "no edge" + "margins widening").
-  const marginTail = marginDrift > 1
-    ? (roicWaccSpread >= 0 ? ', and profit margins are widening' : ', though margins are at least widening')
-    : marginDrift < -1 ? ', and margins are shrinking too' : ', with steady margins';
+  const spreadStr = roicWaccSpread >= 5 ? `${roicWaccSpread.toFixed(1)}% above cost of capital — strong moat`
+    : roicWaccSpread >= 0 ? `${roicWaccSpread.toFixed(1)}% above cost of capital — thin moat`
+    : `${Math.abs(roicWaccSpread).toFixed(1)}% BELOW cost of capital — destroying value`;
+
+  const driftStr = marginDrift > 1 ? 'widening' : marginDrift < -1 ? 'eroding' : 'stable';
 
   return {
     name: 'Moat Durability',
     score,
     label: label(score),
-    insight: `It ${edgeWord}${marginTail}`,
-    detail: `Returns on capital ≈ ${roic.toFixed(1)}% vs an estimated ${waccProxy.toFixed(1)}% cost of capital. Profit margin averages ${avgMargin.toFixed(1)}% and has ${marginDrift > 0 ? 'risen' : 'fallen'} ${Math.abs(marginDrift).toFixed(1)} points over time.`,
+    insight: `ROIC-WACC spread: ${spreadStr}. Margins ${driftStr}`,
+    detail: `ROIC proxy: ${roic.toFixed(1)}%. WACC proxy: ${waccProxy.toFixed(1)}%. Avg EBITDA margin: ${avgMargin.toFixed(1)}% (std dev ${marginStdDev.toFixed(1)}%). Margin drift: ${marginDrift.toFixed(1)}pp`,
     color: color(score),
   };
 }
@@ -328,18 +309,16 @@ function scorePriceReality(fin: FinancialYear[], company: Company): DimensionSco
 
   const score = clamp(Math.round(raw));
 
-  const betTag = probability >= 60 ? '— a fair bet'
-    : probability >= 40 ? '— an uncertain bet' : '— a demanding bet';
-  const verdictStr = probability >= 60 ? 'The price looks justified by its track record.'
-    : probability >= 40 ? 'The price assumes better-than-usual execution.'
-    : 'The price assumes growth it has rarely delivered.';
+  const verdictStr = probability >= 60 ? 'Price is justified by historical performance'
+    : probability >= 40 ? 'Price assumes above-average execution'
+    : 'Price assumes exceptional growth rarely seen historically';
 
   return {
     name: 'Price Reality Check',
     score,
     label: label(score),
-    insight: `At today's price you're betting on ${impliedG.toFixed(0)}% profit growth a year — it has delivered that in only ${probability.toFixed(0)}% of past years ${betTag}`,
-    detail: `Today's P/E of ${company.pe.toFixed(1)}x implies ${impliedG.toFixed(1)}% annual profit growth. Its typical past growth was ${medianGrowth.toFixed(1)}%, and it cleared the implied bar in ${achievedCount} of ${epsGrowths.length} years. ${verdictStr}`,
+    insight: `Market prices in ${impliedG.toFixed(1)}% EPS growth. Company achieved this ${probability.toFixed(0)}% of years`,
+    detail: `Implied EPS growth at current PE ${company.pe.toFixed(1)}x: ${impliedG.toFixed(1)}%. Median historical EPS growth: ${medianGrowth.toFixed(1)}%. Hit rate: ${achievedCount}/${epsGrowths.length} years. ${verdictStr}`,
     color: color(score),
   };
 }
@@ -391,18 +370,18 @@ export function computeROBUScore(
   // Novel insight
   const novelInsight =
     d1.score < 40 && d4.score > 65
-      ? 'Still has an edge over rivals, but new growth is creating less profit than before — keep an eye on it.'
+      ? 'Moat intact but capital efficiency declining — reinvestment quality deteriorating'
     : d2.score < 40 && d1.score > 65
-      ? 'Growing efficiently, but the profit isn’t fully turning into cash — check how much it’s owed by customers.'
+      ? 'Growing efficiently but profits not converting to cash — investigate receivables'
     : d5.score < 35 && d4.score > 65
-      ? 'A genuinely good business, but the price already assumes perfection — better to wait for a dip.'
+      ? 'Excellent business but priced for perfection — wait for a pullback'
     : d3.score > 75 && d5.score < 45
-      ? 'Management delivers consistently, yet the market has already paid up for it.'
+      ? 'Management consistently delivers but market has over-rewarded them'
     : d4.score < 40
-      ? 'Its edge over rivals is fading — returns are slipping toward what its money costs. Re-check the case.'
+      ? 'Moat eroding — ROIC falling toward cost of capital. Re-evaluate thesis.'
     : total >= 75
-      ? 'All five checks point the same way — a rare sign of a genuinely high-quality compounder.'
-    : 'Strengths and weaknesses roughly balance out here — no single factor decides it.';
+      ? 'All 5 dimensions aligned — rare signal of a genuine quality compounder'
+    : 'Mixed signals — no single factor dominates the investment thesis';
 
   return { total, grade, verdict, buyZone, dimensions, strengthFlag, riskFlag, novelInsight };
 }

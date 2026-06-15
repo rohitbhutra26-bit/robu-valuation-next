@@ -81,12 +81,10 @@ function LineChart({
   const curY = yOf(currentVal > 0 ? currentVal : validPairs[validPairs.length - 1].v);
   const curX = xOf(n - 1);
 
-  // Percentile of current value. A negative current multiple (loss-making) would
-  // count as "below all history" → false "Cheap". Suppress it instead.
+  // Percentile of current value
   const below  = allV.filter(v => v <= currentVal).length;
   const pctile = Math.round((below / allV.length) * 100);
-  const zone   = currentVal <= 0 ? { label: 'N/A — loss-making', cls: 'text-muted' }
-               : pctile >= 75 ? { label: 'Expensive',    cls: 'text-loss'  }
+  const zone   = pctile >= 75 ? { label: 'Expensive',    cls: 'text-loss'  }
                : pctile >= 50 ? { label: 'Above median', cls: 'text-gold'  }
                : pctile >= 25 ? { label: 'Below median', cls: 'text-gain'  }
                :                { label: 'Cheap',        cls: 'text-gain'  };
@@ -113,7 +111,6 @@ function LineChart({
         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
           zone.cls === 'text-gain' ? 'bg-gain/10 border-gain/30 text-gain'
           : zone.cls === 'text-loss' ? 'bg-loss/10 border-loss/30 text-loss'
-          : zone.cls === 'text-muted' ? 'bg-border/40 border-border text-muted'
           : 'bg-gold/10 border-gold/30 text-gold'
         }`}>{zone.label}</span>
       </div>

@@ -35,7 +35,6 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
-import CompanyBrief from '@/components/CompanyBrief';
 import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
@@ -668,11 +667,6 @@ export default function Home() {
                     {/* Verdict — the big plain-English answer at the very top */}
                     <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
-                    </div>
-
-                    {/* About the company — plain-English intro to what this business is */}
-                    <div id="sec-about" className="scroll-mt-24">
-                      <CompanyBrief company={company} />
                     </div>
 
                     {/* The 3 questions a worried friend would actually check */}

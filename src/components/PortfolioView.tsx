@@ -744,9 +744,7 @@ export default function PortfolioView({ onSelectSymbol }: PortfolioViewProps) {
         const d         = compRes.status  === 'fulfilled' && compRes.value.ok  ? await compRes.value.json()  : null;
         if (!priceJson && !d) throw new Error('failed');
 
-        // Use ?? (not ||) so a real live price of 0 (suspended/halted scrip) is
-        // kept and flagged as an error, rather than falling back to a stale price.
-        const price     = parseFloat(priceJson?.price ?? d?.currentPrice ?? 0);
+        const price     = parseFloat(priceJson?.price || d?.currentPrice || 0);
         const changePct = parseFloat(priceJson?.changePct ?? d?.changePercent ?? 0);
         const pe        = d?.pe ? parseFloat(d.pe) : 0;
         const eps       = pe > 0 ? price / pe : 0;
@@ -767,13 +765,9 @@ export default function PortfolioView({ onSelectSymbol }: PortfolioViewProps) {
     setRefreshing(false);
   }, []);
 
-  // Refetch when the actual set of symbols changes (not just the count) — so
-  // swapping one holding for another (same length) still refreshes prices.
-  const symbolsKey = portfolio.map(e => e.symbol).join(',');
   useEffect(() => {
     if (portfolio.length > 0) fetchLive(portfolio.map(e => e.symbol));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbolsKey, fetchLive]);
+  }, [portfolio.length, fetchLive]);
 
   function handleImport(rows: VerifiedRow[]) {
     let imported = 0;

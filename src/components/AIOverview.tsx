@@ -27,10 +27,9 @@ const VERDICT_CONFIG: Record<string, {
 }> = {
   'Strong Buy': { label: 'Great opportunity',  Icon: TrendingUp,    color: 'text-gain', bg: 'bg-gain/10', border: 'border-gain/25' },
   'Buy':        { label: 'Looks attractive',   Icon: ThumbsUp,      color: 'text-gain', bg: 'bg-gain/10', border: 'border-gain/25' },
-  'Accumulate': { label: 'Worth watching',     Icon: Eye,           color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/25' },
-  'Hold':       { label: 'Hold what you have', Icon: PauseCircle,   color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/25' },
+  'Accumulate': { label: 'Worth watching',     Icon: Eye,           color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/25' },
+  'Hold':       { label: 'Hold what you have', Icon: PauseCircle,   color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/25' },
   'Reduce':     { label: 'Consider trimming',  Icon: AlertTriangle, color: 'text-loss', bg: 'bg-loss/10', border: 'border-loss/25' },
-  'Sell':       { label: 'Time to step back',  Icon: ShieldAlert,   color: 'text-loss', bg: 'bg-loss/10', border: 'border-loss/25' },
   'Avoid':      { label: 'Risky right now',    Icon: ShieldAlert,   color: 'text-loss', bg: 'bg-loss/10', border: 'border-loss/25' },
 };
 

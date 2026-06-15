@@ -135,8 +135,9 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
           {/* Earnings quality badge */}
           <div className="flex items-center gap-1.5 mt-1.5">
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${
-              quality.score >= 65 ? 'text-gain bg-gain/10 border-gain/25' :
-              quality.score >= 45 ? 'text-warning bg-warning/10 border-warning/25' :
+              quality.score >= 80 ? 'text-gain bg-gain/10 border-gain/25' :
+              quality.score >= 60 ? 'text-gold bg-gold/10 border-gold/25' :
+              quality.score >= 40 ? 'text-warning bg-warning/10 border-warning/25' :
                                     'text-loss bg-loss/10 border-loss/25'
             }`}>
               {quality.label} · {quality.score}/100

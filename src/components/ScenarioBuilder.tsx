@@ -111,9 +111,7 @@ export default function ScenarioBuilder({ company, financials }: ScenarioBuilder
   const latest = financials[financials.length - 1];
   const baseGrowth = Math.round(Math.min(Math.max(latest?.revenueGrowth ?? 12, 2), 30));
   const baseMargin = Math.round((latest?.netMargin ?? 12) * 10) / 10;
-  // Guard negative P/E (loss-makers): a negative PE is truthy, so `|| 20`
-  // wouldn't catch it and the Base column would run on a negative multiple.
-  const basePE     = company.pe && company.pe > 0 ? Math.round(company.pe) : 20;
+  const basePE     = Math.round(company.pe || 20);
 
   const [scenarios, setScenarios] = useState<Scenario[]>([
     { name: 'Bear', color: 'text-loss',  bgColor: 'bg-loss/3',  borderColor: 'border-loss/20',
