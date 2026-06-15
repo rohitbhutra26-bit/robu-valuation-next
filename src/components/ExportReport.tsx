@@ -107,7 +107,7 @@ function Brand({ company, page }: { company: Company; page: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '10px', marginBottom: '26px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '14px' }}>R</div>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, system-ui, sans-serif', fontWeight: 800, fontSize: '14px' }}>r</div>
         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TERRA }}>Robu</span>
         <span style={{ fontSize: '10px', color: FAINT }}>· Equity Research</span>
       </div>
@@ -122,7 +122,7 @@ function SecTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
     <div style={{ margin: '4px 0 16px' }}>
       <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: GOLD, marginBottom: '4px' }}>{kicker}</div>
-      <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Georgia, serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
+      <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: 'Manrope, system-ui, sans-serif', color: INK, letterSpacing: '-0.2px' }}>{title}</div>
     </div>
   );
 }
@@ -245,7 +245,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
   return createPortal(
     <div className="print-only" style={{ display: 'none' }}>
       <div id="print-report">
-        <div style={{ fontFamily: 'Georgia, serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
+        <div style={{ fontFamily: 'Manrope, system-ui, sans-serif', maxWidth: '820px', margin: '0 auto', color: INK }}>
 
           {/* ════════ CHAPTER 1 · COVER & VERDICT ════════ */}
           <Brand company={company} page={`Report · ${today}`} />
@@ -275,7 +275,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
           {/* Verdict banner */}
           <div className="pr-keep" style={{ padding: '18px 22px', background: vBg, border: `2px solid ${vColor}`, borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: vColor, fontFamily: 'Georgia, serif' }}>{verdictLabel}</div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: vColor, fontFamily: 'Manrope, system-ui, sans-serif', letterSpacing: '-0.4px' }}>{verdictLabel}</div>
               <div style={{ fontSize: '11px', color: MUTED, marginTop: '3px' }}>
                 {insight.verdict} · {insight.confidence.toLowerCase()} confidence · {flags.failCount} red flag{flags.failCount === 1 ? '' : 's'} · composite of {allFVs.length} methods over {assumptions.years} years
               </div>
@@ -297,10 +297,10 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* ROBU score */}
           <div className="pr-keep" style={{ display: 'flex', gap: '16px', marginBottom: '18px' }}>
-            <Card accent={GOLD} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: CREAM }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD }}>Robu score</div>
-              <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Georgia, serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
-              <div style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, color: GOLD }}>{robu.total}/100</div>
+            <Card accent={TERRA} style={{ width: '180px', flexShrink: 0, textAlign: 'center', background: '#FBF1F3' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TERRA }}>Robu score</div>
+              <div style={{ fontSize: '42px', fontWeight: 700, fontFamily: 'Manrope, system-ui, sans-serif', lineHeight: 1.1, color: INK }}>{robu.grade}</div>
+              <div style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, color: TERRA }}>{robu.total}/100</div>
               <div style={{ fontSize: '10px', color: MUTED, marginTop: '4px', lineHeight: 1.4 }}>{robu.verdict}</div>
             </Card>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '7px', justifyContent: 'center' }}>
@@ -571,7 +571,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               <tbody>
                 {financials.map((f, i) => (
                   <tr key={f.year} style={{ background: i % 2 ? PAPER : '#fff' }}>
-                    <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{f.year}</td>
+                    <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Manrope, system-ui, sans-serif' }}>{f.year}</td>
                     <td style={td}>₹{f.revenue.toLocaleString('en-IN')}</td>
                     <td style={{ ...td, color: f.revenueGrowth >= 0 ? GAIN : LOSS }}>{f.revenueGrowth >= 0 ? '+' : ''}{f.revenueGrowth.toFixed(1)}%</td>
                     <td style={td}>₹{f.pat.toLocaleString('en-IN')}</td>
@@ -595,7 +595,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                   <tbody>
                     {quarters.map((q, i) => (
                       <tr key={q.quarter} style={{ background: i % 2 ? PAPER : '#fff' }}>
-                        <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Georgia, serif' }}>{q.quarter}</td>
+                        <td style={{ ...td, fontWeight: 700, color: GOLD, fontFamily: 'Manrope, system-ui, sans-serif' }}>{q.quarter}</td>
                         <td style={td}>₹{q.revenue.toLocaleString('en-IN')}</td>
                         <td style={{ ...td, color: q.pat >= 0 ? INK : LOSS }}>₹{q.pat.toLocaleString('en-IN')}</td>
                         <td style={td}>{q.opm.toFixed(1)}%</td>
@@ -672,7 +672,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                   ['Red flags', 'Quick health checks: too much debt, weak cash, pledged shares — danger signs before you invest.'],
                 ].map(([t, d]) => (
                   <div key={t} style={{ fontSize: '10px', lineHeight: 1.5 }}>
-                    <strong style={{ fontFamily: 'Georgia, serif' }}>{t}.</strong> <span style={{ color: MUTED }}>{d}</span>
+                    <strong style={{ fontFamily: 'Manrope, system-ui, sans-serif' }}>{t}.</strong> <span style={{ color: MUTED }}>{d}</span>
                   </div>
                 ))}
               </div>
@@ -685,7 +685,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                 Projections are based on stated assumptions and historical data; markets can and will surprise. Always do your own research.
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '11px' }}>R</div>
+                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, system-ui, sans-serif', fontWeight: 700, fontSize: '11px' }}>R</div>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: TERRA, letterSpacing: '1px' }}>ROBU</span>
               </div>
             </div>
