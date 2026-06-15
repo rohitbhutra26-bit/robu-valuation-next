@@ -71,20 +71,22 @@ export default function ExportReport({ company }: ExportReportProps) {
 //  ROBU PRINT REPORT — editorial serif + terracotta, Trendlyne-grade depth
 // ═══════════════════════════════════════════════════════════════════════════
 
-const INK    = '#1a1a1a';
+const INK    = '#191417';        // warm near-black (brand)
 const MUTED  = '#6b7280';
 const FAINT  = '#9ca3af';
-const GOLD   = '#b45309';
-const TERRA  = '#7A2238';   // burgundy brand accent (was terracotta)
-const CREAM  = '#fffbeb';
-const LINE   = '#ececec';
-const GAIN   = '#16a34a';
-const LOSS   = '#dc2626';
-const PAPER  = '#fafafa';
+const TERRA  = '#7A2238';        // burgundy — THE single brand accent
+const GOLD   = '#7A2238';        // alias to brand: every decorative accent is burgundy
+const AMBER  = '#B4641E';        // muted amber — CAUTION only (warnings / "fair")
+const CREAM  = '#F7EEF0';        // soft burgundy tint — brand-tinted surfaces
+const AMBERSOFT = '#FBF4EA';     // soft amber — caution surfaces
+const LINE   = '#ECECEC';
+const GAIN   = '#16A34A';
+const LOSS   = '#DC2626';
+const PAPER  = '#FAFAFA';
 
 const FLAG_COLORS: Record<FlagStatus, { bg: string; fg: string; icon: string }> = {
   pass: { bg: '#f0fdf4', fg: GAIN, icon: '✓' },
-  warn: { bg: CREAM,     fg: GOLD, icon: '⚠' },
+  warn: { bg: AMBERSOFT, fg: AMBER, icon: '⚠' },
   fail: { bg: '#fef2f2', fg: LOSS, icon: '✗' },
   na:   { bg: PAPER,     fg: FAINT, icon: '—' },
 };
@@ -102,14 +104,17 @@ interface HistStats { min: number; max: number; median: number; p25: number; p75
 
 function Brand({ company, page }: { company: Company; page: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${TERRA}`, paddingBottom: '10px', marginBottom: '26px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '14px' }}>R</div>
-        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TERRA }}>Robu</span>
-        <span style={{ fontSize: '10px', color: FAINT }}>· Equity Research</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: `2px solid ${TERRA}`, paddingBottom: '12px', marginBottom: '26px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
+        <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: TERRA, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '20px', boxShadow: '0 2px 6px rgba(122,34,56,0.28)' }}>R</div>
+        <div style={{ lineHeight: 1.12 }}>
+          <div style={{ fontSize: '17px', fontWeight: 700, letterSpacing: '3px', color: TERRA, fontFamily: 'Georgia, serif' }}>ROBU</div>
+          <div style={{ fontSize: '8.5px', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: MUTED }}>Equity Research</div>
+        </div>
       </div>
-      <div style={{ fontSize: '10px', color: MUTED, fontFamily: 'monospace' }}>
-        {company.symbol} · {page}
+      <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
+        <div style={{ fontSize: '11px', fontWeight: 700, color: INK, letterSpacing: '0.5px' }}>{company.symbol}</div>
+        <div style={{ fontSize: '9px', color: FAINT }}>{page}</div>
       </div>
     </div>
   );
@@ -199,8 +204,8 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
     compositeUp > 10 ? 'Looks undervalued' :
     compositeUp >= -10 ? 'Fairly priced' :
     compositeUp >= -30 ? 'Looks overvalued' : 'Looks very expensive';
-  const vColor = compositeUp > 10 ? GAIN : compositeUp >= -10 ? GOLD : LOSS;
-  const vBg    = compositeUp > 10 ? '#f0fdf4' : compositeUp >= -10 ? CREAM : '#fef2f2';
+  const vColor = compositeUp > 10 ? GAIN : compositeUp >= -10 ? AMBER : LOSS;
+  const vBg    = compositeUp > 10 ? '#f0fdf4' : compositeUp >= -10 ? AMBERSOFT : '#fef2f2';
 
   const scenarioConfigs = buildScenarioConfigs(company, financials, assumptions);
   const scenarios = scenarioConfigs.map(cfg => {
@@ -286,8 +291,8 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
 
           {/* Honesty caveat — when our own models shouldn't be trusted */}
           {!reliability.reliable && (
-            <div className="pr-keep" style={{ padding: '12px 16px', background: CREAM, border: `1px solid ${GOLD}`, borderRadius: '10px', marginBottom: '14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: GOLD, marginBottom: '3px' }}>⚠ {reliability.title}</div>
+            <div className="pr-keep" style={{ padding: '12px 16px', background: AMBERSOFT, border: `1px solid ${AMBER}`, borderRadius: '10px', marginBottom: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: AMBER, marginBottom: '3px' }}>⚠ {reliability.title}</div>
               <div style={{ fontSize: '10px', color: MUTED, lineHeight: 1.55 }}>{reliability.note}</div>
             </div>
           )}
@@ -304,8 +309,8 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
               {robu.dimensions.slice(0, 5).map(d => (
                 <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '10px', color: MUTED, width: '110px', flexShrink: 0 }}>{d.name}</span>
-                  <div style={{ flex: 1 }}><Bar value={d.score} color={d.score >= 65 ? GAIN : d.score >= 40 ? GOLD : LOSS} /></div>
-                  <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, width: '60px', textAlign: 'right' }}>{d.score} · {d.label}</span>
+                  <div style={{ flex: 1 }}><Bar value={d.score} color={d.score >= 65 ? GAIN : d.score >= 40 ? AMBER : LOSS} /></div>
+                  <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, width: '92px', textAlign: 'right', whiteSpace: 'nowrap' }}>{d.score} · {d.label}</span>
                 </div>
               ))}
             </div>
@@ -347,10 +352,10 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
             {/* What to watch — the owner's quarterly checklist */}
             {insight.watch.length > 0 && (
               <div className="pr-keep" style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>If you own it, watch these</div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>If you own it, watch these</div>
                 {insight.watch.map((w, i) => (
                   <div key={i} style={{ fontSize: '11px', color: INK, lineHeight: 1.6, display: 'flex', gap: '7px' }}>
-                    <span style={{ color: GOLD }}>▸</span><span>{w}</span>
+                    <span style={{ color: AMBER }}>▸</span><span>{w}</span>
                   </div>
                 ))}
               </div>
@@ -470,7 +475,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                     Current P/E is <strong style={{ fontFamily: 'monospace' }}>{peNow.toFixed(1)}x</strong> —{' '}
                     {peNow < peStats.p25 ? <strong style={{ color: GAIN }}>cheaper than 75% of its own history.</strong> :
                      peNow < peStats.median ? <strong style={{ color: GAIN }}>below its 5-year median — cheaper than usual.</strong> :
-                     peNow < peStats.p75 ? <strong style={{ color: GOLD }}>around its normal range.</strong> :
+                     peNow < peStats.p75 ? <strong style={{ color: AMBER }}>around its normal range.</strong> :
                      <strong style={{ color: LOSS }}>more expensive than 75% of its own history.</strong>}
                   </div>
                 </Card>
@@ -546,7 +551,7 @@ export function PrintableReport({ company, financials, assumptions }: ExportRepo
                 const x = RC_PAD + i * bw;
                 return (
                   <g key={f.year}>
-                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill="#fcd34d" rx="2" />
+                    <rect x={x + bw * 0.12} y={RC_H - revH} width={bw * 0.42} height={revH} fill={TERRA} rx="2" />
                     <rect x={x + bw * 0.56} y={RC_H - patH} width={bw * 0.3} height={patH} fill={GAIN} rx="2" />
                     <text x={x + bw / 2} y={RC_H + 13} textAnchor="middle" fontSize="10" fill={MUTED} fontFamily="monospace">{f.year}</text>
                   </g>
