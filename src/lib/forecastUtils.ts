@@ -357,12 +357,18 @@ export function pbModel(
   const { baseline } = getBaselineFinancial(financials);
   const sharesRaw = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
 
-  // Use balance sheet equity if available (equity ÷ shares = BVPS directly)
-  // Otherwise fall back to market-implied: currentPrice ÷ pb
-  // We cap the fallback so exit P/B changes actually move the needle
-  const currentBVPS = company.pb > 0
-    ? company.currentPrice / company.pb
-    : company.currentPrice * 0.35;
+  // Book value per share: prefer real balance-sheet equity, then market P/B.
+  // Do NOT fabricate a book value (the old `currentPrice × 0.35` invented a
+  // P/B of ~2.86x for any company with missing/negative book — making
+  // negative-net-worth firms like distressed telcos look valuable).
+  const bvFromBS    = baseline.equity && baseline.equity > 0 ? baseline.equity / sharesRaw : 0;
+  const currentBVPS = bvFromBS > 0
+    ? bvFromBS
+    : company.pb > 0 ? company.currentPrice / company.pb : 0;
+
+  if (currentBVPS <= 0) {
+    return { fairValue: 0, model: 'Price / Book', desc: "Negative or unavailable book value — P/B doesn't apply" };
+  }
 
   const futureBVPS = currentBVPS * fadeCompound(bookGrowthRate, years);
 
@@ -486,9 +492,11 @@ export function gordonGrowthPB(
   }
 
   const fairPB = Math.max((roe - g) / (coe - g), 0.3);
-  const currentBVPS = company.pb > 0
-    ? company.currentPrice / company.pb
-    : company.currentPrice * 0.35;
+  // Don't fabricate book value — if P/B is unavailable, the model can't apply.
+  const currentBVPS = company.pb > 0 ? company.currentPrice / company.pb : 0;
+  if (currentBVPS <= 0) {
+    return { fairPB, fairValue: 0, isValid: false, coe, desc: 'Book value unavailable — P/B not applicable' };
+  }
   const fairValue = currentBVPS * fairPB;
 
   return {

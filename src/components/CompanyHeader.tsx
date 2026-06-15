@@ -54,14 +54,14 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
     { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—', tip: 'Price compared to the company\'s own net assets ("book"). P/B 2 = paying double what the assets are worth on paper.' },
     {
       label: 'ROE',
-      value: `${company.roe.toFixed(1)}%`,
-      tone: company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'gold' : 'loss',
+      value: company.roe > 0 ? `${company.roe.toFixed(1)}%` : '—',
+      tone: company.roe <= 0 ? undefined : company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'gold' : 'loss',
       tip: 'Profit made per ₹100 of shareholders\' money. 20%+ is excellent, under 12% is weak.',
     },
     {
       label: 'D/E',
-      value: `${company.debtToEquity.toFixed(2)}x`,
-      tone: company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'gold' : 'loss',
+      value: company.debtToEquity > 0 ? `${company.debtToEquity.toFixed(2)}x` : '—',
+      tone: company.debtToEquity <= 0 ? undefined : company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'gold' : 'loss',
       tip: 'Loans vs own money. D/E 1 = ₹1 of debt per ₹1 of own funds. Under 1 is comfortable (banks are naturally higher).',
     },
     { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—', tip: 'Yearly cash paid to you per ₹100 of share price — like rent from a flat you own.' },

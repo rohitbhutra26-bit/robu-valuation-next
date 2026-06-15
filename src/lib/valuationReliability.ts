@@ -42,6 +42,22 @@ export function valuationReliability(
   const latest = financials[financials.length - 1];
   const prev   = financials.length >= 2 ? financials[financials.length - 2] : null;
 
+  // Pattern 3 — loss-making or negative net worth: earnings/book multiples don't apply.
+  // (e.g. a distressed telco with negative book value but a back-filled positive P/E.)
+  const negBook    = (latest.equity ?? 0) < 0 || (company.pb ?? 0) < 0;
+  const lossYear   = latest.pat <= 0;
+  const negReturns = (company.roe ?? 0) < 0;
+  if (negBook || lossYear) {
+    const why = negBook
+      ? 'has negative net worth (it owes more than it owns)'
+      : 'is making losses';
+    return {
+      reliable: false,
+      title: "Loss-making / negative net worth — a fair value doesn't apply",
+      note: `${company.name.split(' ').slice(0, 2).join(' ')} ${why}${negReturns ? ' and earns negative returns on equity' : ''}. P/E, P/B and discounted fair-value models all assume a profitable business with positive book value — so any "fair value" or cheap/expensive verdict here is meaningless. Treat this as a turnaround/special situation: look at debt, cash burn and whether losses are narrowing, not at a multiple.`,
+    };
+  }
+
   // Pattern 2 — exceptional-gain earnings: PAT jumps, operating cash doesn't follow
   if (prev && prev.pat > 0 && latest.pat > 0) {
     const patJump  = latest.pat / prev.pat;

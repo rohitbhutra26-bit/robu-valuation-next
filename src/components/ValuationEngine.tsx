@@ -16,6 +16,7 @@ import {
   gordonGrowthPB,
   RISK_FREE_RATE,
 } from '@/lib/forecastUtils';
+import { verdictKey } from '@/lib/verdict';
 import { Clock } from '@/lib/icons';
 import Tooltip from '@/components/Tooltip';
 
@@ -55,8 +56,9 @@ function MethodCard({
   const upside    = fairValue > 0 ? (fairValue / currentPrice - 1) * 100 : 0;
   const isUp      = upside >= 0;
   const buyPrice  = fairValue > 0 ? fairValue * (1 - marginOfSafety / 100) : 0;
-  const verdict   = upside >= 20 ? { label: 'Looks cheap',  cls: 'text-gain bg-gain/10 border-gain/20' }
-                  : upside <= -15 ? { label: 'Looks pricey', cls: 'text-loss bg-loss/10 border-loss/20' }
+  const vk        = verdictKey(upside);  // shared thresholds — see lib/verdict.ts
+  const verdict   = (vk === 'cheap' || vk === 'very-cheap') ? { label: 'Looks cheap',  cls: 'text-gain bg-gain/10 border-gain/20' }
+                  : (vk === 'expensive' || vk === 'very-expensive') ? { label: 'Looks pricey', cls: 'text-loss bg-loss/10 border-loss/20' }
                   :                 { label: 'About right',  cls: 'text-gold bg-gold/10 border-gold/20' };
 
   return (
@@ -187,10 +189,11 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   // Current PEG
   const currentPEG = pegResult.currentPEG;
 
-  // Verdict
+  // Verdict (shared thresholds — see lib/verdict.ts)
+  const compositeVK = verdictKey(compositeUp);
   const verdict =
-    compositeUp >= 30  ? { text: 'Potentially Undervalued', cls: 'text-gain bg-gain/10 border-gain/20' } :
-    compositeUp <= -20 ? { text: 'Potentially Overvalued',  cls: 'text-loss bg-loss/10 border-loss/20' } :
+    (compositeVK === 'cheap' || compositeVK === 'very-cheap')        ? { text: 'Potentially Undervalued', cls: 'text-gain bg-gain/10 border-gain/20' } :
+    (compositeVK === 'expensive' || compositeVK === 'very-expensive') ? { text: 'Potentially Overvalued',  cls: 'text-loss bg-loss/10 border-loss/20' } :
                          { text: 'Fairly Valued Range',     cls: 'text-gold bg-gold/10 border-gold/20' };
 
   // ── Model badge label ─────────────────────────────────────────────────────

@@ -35,10 +35,13 @@ export function buildScenarioConfigs(
       exitMultiple:     Math.max(qualAdjMultiple + deltas.bearMultipleDelta, profile.exitMultipleMin),
     },
     {
+      // Base must share the SAME quality-adjusted multiple anchor as Bear/Bull,
+      // otherwise (quality.multiplier ≠ 1) Bull could land below Base or Bear
+      // above it — i.e. the scenarios would contradict their own labels.
       name: 'Base', emoji: '📊', probability: 50, color: '#3b82f6',
       growthRate:       assumptions.revenueGrowthRate,
       marginAssumption: assumptions.netMarginAssumption,
-      exitMultiple:     assumptions.exitMultiple,
+      exitMultiple:     qualAdjMultiple,
     },
     {
       name: 'Bull', emoji: '🚀', probability: 25, color: '#10B981',
