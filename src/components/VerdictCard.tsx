@@ -93,7 +93,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
           </div>
           <div className="text-right flex-shrink-0">
             <p className={`text-3xl sm:text-4xl font-bold font-mono leading-none ${toneText}`}>{upsideLabel}</p>
-            <p className="text-xs text-muted mt-1">{!reliability.reliable ? 'see caution below' : upside >= 0 ? 'possible upside' : 'possible downside'}</p>
+            <p className="text-xs text-muted mt-1">{!reliability.reliable ? 'see caution below' : `${upside >= 0 ? 'possible upside' : 'possible downside'} \u00b7 over ${horizon}y`}</p>
           </div>
         </div>
 
@@ -144,10 +144,21 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
             <p className="text-xl font-bold font-mono text-primary">₹{current.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
           </div>
           {confidence && (
-            <span className={`ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-full border ${confCls}`}
-                  title="How much the different valuation methods agree with each other">
-              {confidence} confidence
-            </span>
+            <div className="ml-auto flex flex-col items-end gap-1.5"
+                 title="How sure we are: based on how much financial history we have and how widely the 1,000 simulated outcomes spread.">
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${confCls}`}>
+                {confidence} confidence
+              </span>
+              <div className="w-24 h-1.5 rounded-full bg-border/50 overflow-hidden">
+                <div className="h-full rounded-full transition-all"
+                     style={{
+                       width: confidence === 'High' ? '90%' : confidence === 'Medium' ? '60%' : '32%',
+                       background: confidence === 'High' ? 'rgb(var(--color-gain))'
+                                 : confidence === 'Medium' ? 'rgb(var(--color-warning))'
+                                 : 'rgb(var(--color-loss))',
+                     }} />
+              </div>
+            </div>
           )}
         </div>
       </div>

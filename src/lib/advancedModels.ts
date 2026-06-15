@@ -18,13 +18,24 @@ import {
   getBaselineFinancial,
 } from './forecastUtils';
 
-// ─── Gaussian sampler (Box–Muller) ───────────────────────────────────────────
-function gaussian(mean: number, stdDev: number): number {
+// ─── Student-t sampler (fat tails) ────────────────────────────────────────────
+// Standard normal (Box–Muller).
+function stdNormal(): number {
   let u = 0, v = 0;
   while (u === 0) u = Math.random();
   while (v === 0) v = Math.random();
-  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-  return mean + z * stdDev;
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+// Draw from a Student-t (df degrees of freedom), rescaled to (mean, stdDev).
+// Fat tails (df≈4) make extreme booms AND crashes show up far more often than a
+// normal allows — real markets have fat tails (Mandelbrot), so a normal Monte
+// Carlo quietly understates crash risk. var(t)=df/(df-2); divide by its sqrt so
+// the drawn spread still matches the intended stdDev.
+function studentT(mean: number, stdDev: number, df = 4): number {
+  let chi2 = 0;
+  for (let k = 0; k < df; k++) { const z = stdNormal(); chi2 += z * z; }
+  const t = stdNormal() / Math.sqrt(chi2 / df);
+  return mean + (t / Math.sqrt(df / (df - 2))) * stdDev;
 }
 
 // ─── 1. Monte Carlo fair value ───────────────────────────────────────────────
@@ -68,9 +79,9 @@ export function monteCarloFairValue(
 
   const fvs: number[] = [];
   for (let i = 0; i < draws; i++) {
-    const g = Math.max(gaussian(growthRate, sigmaG), -20);
-    const m = Math.max(gaussian(netMargin, sigmaM), 0.5);
-    const x = Math.max(gaussian(exitMultiple, sigmaX), exitMultiple * 0.3);
+    const g = Math.max(studentT(growthRate, sigmaG), -20);
+    const m = Math.max(studentT(netMargin, sigmaM), 0.5);
+    const x = Math.max(studentT(exitMultiple, sigmaX), exitMultiple * 0.3);
     try {
       const r = runPrimaryModel(model, financials, company, g, m, x, years);
       if (r.fairValue > 0 && isFinite(r.fairValue)) fvs.push(r.fairValue);
