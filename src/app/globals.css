@@ -78,13 +78,13 @@
   --color-terminal: 10 10 11;      /* #0A0A0B — near-black neutral page bg */
   --color-card:     23 23 24;      /* #171718 — neutral dark surface */
   --color-border:   42 42 45;      /* #2A2A2D — neutral grey */
-  --color-gold:     201 94 118;    /* #C95E76 — lightened burgundy, readable on dark */
+  --color-gold:     214 122 142;   /* #D67A8E — lifted burgundy brand accent, readable on dark */
   --color-tan:      203 168 119;   /* #CBA877 — warm tan secondary */
   --color-gain:     52 211 153;    /* #34D399 — green (gains only) */
   --color-loss:     248 113 113;   /* #F87171 — red (losses only) */
-  --color-primary:  245 244 242;   /* #F5F4F2 — warm near-white text */
-  --color-muted:    166 162 166;   /* #A6A2A6 — warm grey */
-  --color-accent:   201 94 118;    /* #C95E76 */
+  --color-primary:  246 245 244;   /* #F6F5F4 — near-white body/heading text */
+  --color-muted:    197 194 197;   /* #C5C2C5 — brighter grey: readable secondary text (≈10:1 on bg) */
+  --color-accent:   214 122 142;   /* #D67A8E — lifted burgundy, clearer on black */
   --color-warning:  251 191 36;    /* #FBBF24 — amber */
 
   --border-subtle:  rgba(255, 255, 255, 0.09);
@@ -436,12 +436,11 @@ input[type='number'] { -moz-appearance: textfield; }
 }
 .print-only { display: none; }
 
-/* ── Simple / Analyst view mode ───────────────────────────────────────────────
-   Toggled via data-mode on <html> (see ModeToggle.tsx).
-   Simple  → hide formulas, σ, score breakdowns (.analyst-only)
-   Analyst → hide hand-holding hints meant for beginners (.simple-only)        */
-[data-mode='simple'] .analyst-only { display: none !important; }
-[data-mode='analyst'] .simple-only { display: none !important; }
+/* ── View mode removed ────────────────────────────────────────────────────────
+   There is no Analyst mode anymore — the whole report is written for normal
+   people, so everything is always shown. The .analyst-only / .simple-only
+   classes are kept as harmless no-ops (no display rules) so existing markup
+   still works without edits.                                                    */
 
 /* ── Accessibility: respect reduced-motion preference ─────────────────────────
    Users with vestibular disorders (or who just dislike motion) get a calm UI:
