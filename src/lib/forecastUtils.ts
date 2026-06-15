@@ -373,7 +373,14 @@ export function pbModel(
     return { fairValue: 0, model: 'Price / Book', desc: "Negative or unavailable book value - P/B doesn't apply" };
   }
 
-  const futureBVPS = currentBVPS * fadeCompound(bookGrowthRate, years);
+  // Book value compounds at the bank's SUSTAINABLE rate (ROE × retention), NOT the
+  // revenue-growth slider. Feeding revenue growth (e.g. 19% for a big bank) in here
+  // over-stated fair P/B value and produced haywire upside (+200%+). Payout ≈ divYield × P/E.
+  const pbPayout    = company.dividendYield > 0 && company.pe > 0
+    ? Math.min((company.dividendYield / 100) * company.pe, 0.9) : 0.3;
+  const pbSustain   = (company.roe > 0 ? company.roe : 12) * (1 - pbPayout);
+  const bookG       = Math.min(bookGrowthRate, pbSustain);
+  const futureBVPS  = currentBVPS * fadeCompound(bookG, years);
 
   // exitPB is the RE-RATING multiple — the premium the market will pay at exit.
   // This is INDEPENDENT of current pb, so changing the slider has full effect.
