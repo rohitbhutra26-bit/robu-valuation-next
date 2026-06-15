@@ -29,6 +29,8 @@ export interface Company {
   pb: number;
   roe: number;
   roa?: number;
+  roce?: number;
+  bookValue?: number;   // book value per share (₹); negative ⇒ negative net worth
   debtToEquity: number;
   currentRatio?: number;
   dividendYield: number;

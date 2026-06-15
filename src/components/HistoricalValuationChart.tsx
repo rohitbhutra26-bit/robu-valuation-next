@@ -84,7 +84,8 @@ function LineChart({
   // Percentile of current value
   const below  = allV.filter(v => v <= currentVal).length;
   const pctile = Math.round((below / allV.length) * 100);
-  const zone   = pctile >= 75 ? { label: 'Expensive',    cls: 'text-loss'  }
+  const zone   = currentVal <= 0 ? { label: 'N/A - loss-making', cls: 'text-muted' }
+               : pctile >= 75 ? { label: 'Expensive',    cls: 'text-loss'  }
                : pctile >= 50 ? { label: 'Above median', cls: 'text-gold'  }
                : pctile >= 25 ? { label: 'Below median', cls: 'text-gain'  }
                :                { label: 'Cheap',        cls: 'text-gain'  };

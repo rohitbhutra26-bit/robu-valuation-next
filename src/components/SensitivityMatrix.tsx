@@ -3,6 +3,7 @@
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
+import { VERDICT_CUTOFFS } from '@/lib/verdict';
 
 interface SensitivityMatrixProps {
   financials: FinancialYear[];
@@ -13,10 +14,10 @@ interface SensitivityMatrixProps {
 
 function getCellColor(fairValue: number, currentPrice: number): string {
   const upside = (fairValue / currentPrice - 1) * 100;
-  if (upside >= 30)  return 'bg-gain/20 text-gain border-gain/20';
-  if (upside >= 10)  return 'bg-gain/10 text-gain/80 border-gain/10';
-  if (upside >= -10) return 'bg-gold/10 text-gold border-gold/10';
-  if (upside >= -25) return 'bg-loss/10 text-loss/80 border-loss/10';
+  if (upside >= VERDICT_CUTOFFS.veryCheap)     return 'bg-gain/20 text-gain border-gain/20';
+  if (upside >= VERDICT_CUTOFFS.cheap)         return 'bg-gain/10 text-gain/80 border-gain/10';
+  if (upside >  VERDICT_CUTOFFS.expensive)     return 'bg-gold/10 text-gold border-gold/10';
+  if (upside >  VERDICT_CUTOFFS.veryExpensive) return 'bg-loss/10 text-loss/80 border-loss/10';
   return 'bg-loss/20 text-loss border-loss/20';
 }
 

@@ -33,13 +33,14 @@ interface ColDef {
   shortLabel: string;
   fmt: (v: number) => string;
   higherBetter: boolean;
+  excludeNonPositive?: boolean;
   suffix?: string;
 }
 
 const COLS: ColDef[] = [
-  { key: 'pe',           label: 'P/E',            shortLabel: 'P/E',     fmt: v => v.toFixed(1),  higherBetter: false },
-  { key: 'pb',           label: 'P/B',            shortLabel: 'P/B',     fmt: v => v.toFixed(1),  higherBetter: false },
-  { key: 'evEbitda',     label: 'EV/EBITDA',      shortLabel: 'EV/EB',   fmt: v => v.toFixed(1),  higherBetter: false },
+  { key: 'pe',           label: 'P/E',            shortLabel: 'P/E',     fmt: v => v.toFixed(1),  higherBetter: false, excludeNonPositive: true },
+  { key: 'pb',           label: 'P/B',            shortLabel: 'P/B',     fmt: v => v.toFixed(1),  higherBetter: false, excludeNonPositive: true },
+  { key: 'evEbitda',     label: 'EV/EBITDA',      shortLabel: 'EV/EB',   fmt: v => v.toFixed(1),  higherBetter: false, excludeNonPositive: true },
   { key: 'revenueGrowth',label: 'Rev Growth',     shortLabel: 'Rev Gr',  fmt: v => `${v > 0 ? '+' : ''}${v.toFixed(1)}%`, higherBetter: true },
   { key: 'netMargin',    label: 'Net Margin',     shortLabel: 'Margin',  fmt: v => `${v.toFixed(1)}%`,  higherBetter: true },
   { key: 'roe',          label: 'ROE',            shortLabel: 'ROE',     fmt: v => `${v.toFixed(1)}%`,  higherBetter: true },
@@ -47,9 +48,10 @@ const COLS: ColDef[] = [
 ];
 
 // ─── Ranking color per column ─────────────────────────────────────────────────
-function getRankColor(value: number | null, allValues: (number | null)[], higherBetter: boolean): string {
-  const valid = allValues.filter((v): v is number => v !== null);
-  if (valid.length < 2 || value === null) return 'text-muted';
+function getRankColor(value: number | null, allValues: (number | null)[], higherBetter: boolean, excludeNonPositive = false): string {
+  let valid = allValues.filter((v): v is number => v !== null);
+  if (excludeNonPositive) valid = valid.filter(v => v > 0);
+  if (valid.length < 2 || value === null || (excludeNonPositive && value <= 0)) return 'text-muted';
   const sorted = [...valid].sort((a, b) => higherBetter ? b - a : a - b);
   const rank = sorted.indexOf(value);
   const pct = rank / (sorted.length - 1);
@@ -197,7 +199,7 @@ export default function PeerCompare({ company }: { company: Company }) {
                   {COLS.map(col => {
                     const val = peer[col.key] as number | null;
                     const allVals = peers.map(p => p[col.key] as number | null);
-                    const cls = getRankColor(val, allVals, col.higherBetter);
+                    const cls = getRankColor(val, allVals, col.higherBetter, col.excludeNonPositive);
                     return (
                       <td key={col.key as string} className={`py-2.5 px-2 text-right font-mono whitespace-nowrap ${cls}`}>
                         {val !== null ? col.fmt(val) : <span className="text-muted/40">—</span>}
