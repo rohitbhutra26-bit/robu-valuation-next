@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import { runPrimaryModel } from '@/lib/forecastUtils';
+import { valuationReliability } from '@/lib/valuationReliability';
 
 interface Props {
   company: Company;
@@ -28,6 +29,8 @@ export default function StickyTicker({ company, financials, assumptions }: Props
 
   const verdict = useMemo(() => {
     if (!financials.length || !company.currentPrice) return null;
+    // No verdict pill for loss-making / negative-net-worth stocks (fair value doesn't apply).
+    if (!valuationReliability(company, financials).reliable) return null;
     try {
       const profile = getCompanyProfile(company);
       const r = runPrimaryModel(
