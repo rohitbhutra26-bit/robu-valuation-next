@@ -16,7 +16,7 @@ interface Props {
 // ─── Feasibility config ───────────────────────────────────────────────────────
 const FEASIBILITY: Record<Feasibility, { label: string; color: string; bg: string; border: string; dot: string }> = {
   achievable:  { label: 'Achievable',  color: 'text-gain', bg: 'bg-gain/10',  border: 'border-gain/30',  dot: '#10B981' },
-  ambitious:   { label: 'Ambitious',   color: 'text-gold', bg: 'bg-gold/10',  border: 'border-gold/30',  dot: '#F59E0B' },
+  ambitious:   { label: 'Ambitious',   color: 'text-warning', bg: 'bg-warning/10',  border: 'border-warning/30',  dot: '#F59E0B' },
   difficult:   { label: 'Difficult',   color: 'text-loss', bg: 'bg-loss/10',  border: 'border-loss/30',  dot: '#EF4444' },
   unrealistic: { label: 'Unrealistic', color: 'text-loss', bg: 'bg-loss/20',  border: 'border-loss/40',  dot: '#EF4444' },
 };

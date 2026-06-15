@@ -16,6 +16,7 @@
 
 import { Company, FinancialYear, ValuationAssumptions } from './types';
 import { ValuationModel } from './sectorModelMap';
+import { getBaselineFinancial } from './forecastUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,10 @@ export function computeTargetPath(
 ): TargetPathResult | null {
   if (!financials.length || targetPrice <= 0) return null;
 
-  const latest = financials[financials.length - 1];
+  // Use the partial-year-aware baseline (same base every forward model uses),
+  // not the raw last row — otherwise a 9-month trailing year understates revenue
+  // and overstates the growth/margin required to hit a target.
+  const { baseline: latest } = getBaselineFinancial(financials);
   const shares = Math.max(latest.shares ?? company.shares ?? 1, 0.001);
   const years  = assumptions.years;
 

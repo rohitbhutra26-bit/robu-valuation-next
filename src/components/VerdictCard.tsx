@@ -145,7 +145,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
           </div>
           {confidence && (
             <span className={`ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-full border ${confCls}`}
-                  title="How much the different valuation methods agree with each other">
+                  title="Based on how many years of financial history we have to work with — more history means a more reliable estimate">
               {confidence} confidence
             </span>
           )}

@@ -14,8 +14,8 @@ export default function DataQualityBanner({ quality }: Props) {
   if (quality.level === 'High' && quality.issues.length === 0) return null;
 
   const borderColor =
-    quality.level === 'High'   ? '#3b82f6' :
-    quality.level === 'Medium' ? '#fde047' : '#f87171';
+    quality.level === 'High'   ? '#11A56B' :
+    quality.level === 'Medium' ? '#E0A11A' : '#F87171';
 
   const textColor =
     quality.level === 'High'   ? 'text-gain' :
