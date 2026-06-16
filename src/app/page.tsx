@@ -34,6 +34,7 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
+import MetricTrends from '@/components/MetricTrends';
 import DividendCard from '@/components/DividendCard';
 import ShareholdingCard from '@/components/ShareholdingCard';
 import AnalystCard from '@/components/AnalystCard';
@@ -654,7 +655,7 @@ export default function Home() {
               </div>
 
             ) : company ? (
-              <div className="px-5 sm:px-8 lg:px-10 py-7 space-y-5 max-w-4xl mx-auto">
+              <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 max-w-4xl mx-auto">
                 {/* Sticky mini-ticker — appears once you scroll past the header */}
                 <StickyTicker company={company} financials={financials} assumptions={assumptions} />
 
@@ -804,6 +805,7 @@ export default function Home() {
                 {/* ── TAB: FINANCIALS — ratios, statements, quarterly, charts ── */}
                 {companyTab === 'financials' && company && (
                   <div className="space-y-4">
+                    <MetricTrends financials={financials} />
                     <SectionHeader
                       id="sec-numbers"
                       Icon={Table2}

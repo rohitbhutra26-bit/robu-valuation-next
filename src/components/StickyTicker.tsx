@@ -54,8 +54,8 @@ export default function StickyTicker({ company, financials, assumptions }: Props
   return (
     <div
       aria-hidden="true"
-      className={`sticky top-0 z-30 -mx-4 -mt-4 px-4 transition-all duration-200 ${
-        show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+      className={`sticky top-0 z-30 -mx-4 -mt-4 px-4 overflow-hidden transition-all duration-200 ${
+        show ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'
       }`}
     >
       <div className="bg-terminal/95 backdrop-blur-md border-b border-border py-2 flex items-center gap-3 px-1">

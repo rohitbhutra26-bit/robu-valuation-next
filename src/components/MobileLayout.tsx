@@ -24,6 +24,7 @@ import ForecastChart from './ForecastChart';
 import IndustryBenchmarks from './IndustryBenchmarks';
 import PeerCompare from './PeerCompare';
 import VerdictCard from './VerdictCard';
+import MetricTrends from './MetricTrends';
 import ValuationCaveatBanner from './ValuationCaveatBanner';
 import WealthProjection from './WealthProjection';
 import WatchlistView from './WatchlistView';
@@ -604,6 +605,8 @@ function FinancialsView({ company, financials, isLoading, error, onRetry }: {
             </div>
           </div>
         )}
+
+        <MetricTrends financials={financials} />
       </div>
 
       <div className="px-4 mb-3 mt-4">

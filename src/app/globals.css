@@ -78,13 +78,13 @@
   --color-terminal: 10 10 11;      /* #0A0A0B — near-black neutral page bg */
   --color-card:     23 23 24;      /* #171718 — neutral dark surface */
   --color-border:   42 42 45;      /* #2A2A2D — neutral grey */
-  --color-gold:     214 122 142;   /* #D67A8E — lifted burgundy brand accent, readable on dark */
+  --color-gold:     255 92 134;    /* #FF5C86 — vivid rose-burgundy brand accent, pops on near-black */
   --color-tan:      203 168 119;   /* #CBA877 — warm tan secondary */
   --color-gain:     52 211 153;    /* #34D399 — green (gains only) */
   --color-loss:     248 113 113;   /* #F87171 — red (losses only) */
   --color-primary:  246 245 244;   /* #F6F5F4 — near-white body/heading text */
-  --color-muted:    197 194 197;   /* #C5C2C5 — brighter grey: readable secondary text (≈10:1 on bg) */
-  --color-accent:   214 122 142;   /* #D67A8E — lifted burgundy, clearer on black */
+  --color-muted:    218 215 220;   /* #DAD7DC — brighter, faintly warm secondary text */
+  --color-accent:   255 92 134;    /* #FF5C86 — vivid rose-burgundy, pops on black */
   --color-warning:  251 191 36;    /* #FBBF24 — amber */
 
   --border-subtle:  rgba(255, 255, 255, 0.09);

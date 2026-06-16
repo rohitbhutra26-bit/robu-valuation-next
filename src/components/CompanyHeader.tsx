@@ -48,20 +48,35 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
   }
 
   // Metric chip with semantic color + plain kid-level meaning (tap the ⓘ)
-  const chips: { label: string; value: string; tone?: 'gain' | 'warning' | 'loss'; tip: string }[] = [
+  const clampPos = (n: number) => Math.max(6, Math.min(94, n));
+  const chips: { label: string; value: string; tone?: 'gain' | 'warning' | 'loss'; tip: string; gauge?: number }[] = [
     { label: 'Mkt Cap', value: formatCr(company.marketCap), tip: 'Total price tag to buy the whole company — all its shares together.' },
-    { label: 'P/E', value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)', tip: 'What you pay for ₹1 of yearly profit. P/E 20 = ₹20 paid per ₹1 earned. Lower is usually cheaper.' },
-    { label: 'P/B', value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—', tip: 'Price compared to the company\'s own net assets ("book"). P/B 2 = paying double what the assets are worth on paper.' },
+    {
+      label: 'P/E',
+      value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '— (loss-making)',
+      tone: company.pe <= 0 ? undefined : company.pe < 18 ? 'gain' : company.pe < 30 ? 'warning' : 'loss',
+      gauge: company.pe > 0 ? clampPos((company.pe / 50) * 100) : undefined,
+      tip: 'What you pay for ₹1 of yearly profit. P/E 20 = ₹20 paid per ₹1 earned. Lower is usually cheaper.',
+    },
+    {
+      label: 'P/B',
+      value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—',
+      tone: company.pb <= 0 ? undefined : company.pb < 1.5 ? 'gain' : company.pb < 4 ? 'warning' : 'loss',
+      gauge: company.pb > 0 ? clampPos((company.pb / 8) * 100) : undefined,
+      tip: 'Price compared to the company\'s own net assets ("book"). P/B 2 = paying double what the assets are worth on paper.',
+    },
     {
       label: 'ROE',
       value: company.roe > 0 ? `${company.roe.toFixed(1)}%` : '—',
       tone: company.roe <= 0 ? undefined : company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'warning' : 'loss',
+      gauge: company.roe > 0 ? clampPos((company.roe / 40) * 100) : undefined,
       tip: 'Profit made per ₹100 of shareholders\' money. 20%+ is excellent, under 12% is weak.',
     },
     {
       label: 'D/E',
       value: company.debtToEquity > 0 ? `${company.debtToEquity.toFixed(2)}x` : '—',
       tone: company.debtToEquity <= 0 ? undefined : company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'warning' : 'loss',
+      gauge: company.debtToEquity > 0 ? clampPos((company.debtToEquity / 5) * 100) : undefined,
       tip: 'Loans vs own money. D/E 1 = ₹1 of debt per ₹1 of own funds. Under 1 is comfortable (banks are naturally higher).',
     },
     { label: 'Div Yield', value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—', tip: 'Yearly cash paid to you per ₹100 of share price — like rent from a flat you own.' },
@@ -76,7 +91,7 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="bg-card border border-border rounded-xl p-4"
+      className="bg-card border border-border rounded-3xl p-5 sm:p-6"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -170,24 +185,34 @@ export default function CompanyHeader({ company, financials, isWatchlisted, onWa
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 items-center">
-        {chips.map(c => (
-          <div key={c.label} className="flex items-center gap-1.5 px-3 py-1.5 bg-border/40 rounded-lg border border-border">
-            <span className="text-[11px] text-muted font-medium inline-flex items-center gap-0.5">
-              {c.label}
-              <Tooltip text={c.tip} />
-            </span>
-            <span className={`text-xs font-semibold font-mono ${c.tone ? toneClass[c.tone] : 'text-primary'}`}>
-              {c.value}
-            </span>
-          </div>
-        ))}
-        {/* Color legend — one glance teaches the whole app's color language */}
-        <span className="text-[10px] text-muted/70 ml-auto hidden sm:flex items-center gap-2 flex-shrink-0">
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gain inline-block" />good</span>
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />okay</span>
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-loss inline-block" />weak</span>
-        </span>
+      <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        {chips.map(c => {
+          const dotColor = c.tone ? `rgb(var(--color-${c.tone}))` : 'rgb(var(--color-muted))';
+          return (
+            <div key={c.label} className="bg-terminal/40 border border-border rounded-2xl px-3 py-2.5">
+              <span className="text-[11px] text-muted font-medium inline-flex items-center gap-0.5">
+                {c.label}
+                <Tooltip text={c.tip} />
+              </span>
+              <div className={`text-sm font-bold font-mono mt-0.5 ${c.tone ? toneClass[c.tone] : 'text-primary'}`}>
+                {c.value}
+              </div>
+              {typeof c.gauge === 'number' && (
+                <div className="mt-2 h-1 rounded-full bg-border/70 relative" aria-hidden="true">
+                  <span className="absolute top-1/2 w-2 h-2 rounded-full"
+                        style={{ left: `${c.gauge}%`, transform: 'translate(-50%, -50%)', background: dotColor }} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Color legend — teaches the app's good/okay/weak colour language */}
+      <div className="mt-3 flex items-center gap-3 text-[10.5px] text-muted">
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gain inline-block" />good</span>
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-warning inline-block" />okay</span>
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-loss inline-block" />weak</span>
+        <span className="text-muted/70 ml-1">· dot shows where this stock sits</span>
       </div>
     </motion.div>
   );
