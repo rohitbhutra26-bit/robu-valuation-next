@@ -30,14 +30,12 @@ import WatchlistView from './WatchlistView';
 import PortfolioView from './PortfolioView';
 import ROBUScoreCard from './ROBUScoreCard';
 import ScenarioBuilder from './ScenarioBuilder';
-import AnnouncementsFeed from './AnnouncementsFeed';
 import SectorAlternatives from './SectorAlternatives';
-import PriceChart from './PriceChart';
 import { getBaselineFinancial } from '@/lib/forecastUtils';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
-type StockTab = 'overview' | 'valuation' | 'ai' | 'peers' | 'financials';
+type StockTab = 'valuation' | 'financials' | 'profile';
 
 interface Props {
   company: Company | null;
@@ -154,11 +152,9 @@ function StockSubNav({
   active, onChange,
 }: { active: StockTab; onChange: (t: StockTab) => void }) {
   const tabs: { id: StockTab; label: string }[] = [
-    { id: 'overview',   label: 'Overview' },
     { id: 'valuation',  label: 'Valuation' },
-    { id: 'ai',         label: 'AI' },
-    { id: 'peers',      label: 'Peers' },
-    { id: 'financials', label: 'Data' },
+    { id: 'financials', label: 'Financials' },
+    { id: 'profile',    label: 'Profile' },
   ];
   return (
     <div className="flex gap-1.5 overflow-x-auto md:flex-wrap px-4 py-2 border-b border-border bg-card/95 backdrop-blur-xl no-scrollbar">
@@ -370,110 +366,6 @@ function HomeView({
   );
 }
 
-// ─── Overview View ────────────────────────────────────────────────────────────
-function OverviewView({ company, financials, assumptions, isLoading, error, onRetry }: {
-  company: Company | null; financials: FinancialYear[]; assumptions: ValuationAssumptions;
-  isLoading: boolean; error: string | null; onRetry: () => void;
-}) {
-  if (isLoading) return <MobileLoader symbol="…" />;
-  if (error) return <MobileError message={error} onRetry={onRetry} />;
-  if (!company) return null;
-
-  const isPos = company.changePercent >= 0;
-  const low = company.week52Low;
-  const high = company.week52High;
-  const pct = high > low ? Math.max(2, Math.min(98, ((company.currentPrice - low) / (high - low)) * 100)) : 50;
-  // Partial-year-aware baseline (a 9-month trailing year would misreport "last reported")
-  const latest = financials.length > 0 ? getBaselineFinancial(financials).baseline : null;
-
-  const has52W = low > 0 && high > 0;
-  const stats = [
-    { label: 'Market Cap',    value: fmt(company.marketCap) },
-    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-primary' : 'text-muted' },
-    { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
-    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss' },
-    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss' },
-    { label: 'Div Yield',    value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
-  ];
-
-  return (
-    <div className="px-4 pt-4 pb-32 space-y-3 max-w-2xl md:max-w-3xl mx-auto w-full">
-      <VerdictCard company={company} financials={financials} assumptions={assumptions} />
-
-      <ValuationCaveatBanner company={company} financials={financials} />
-
-      {/* ── Company card (brief: eyebrow → name → big mono price → change) ── */}
-      <div className="bg-card border border-border rounded-[20px] p-[18px]">
-        <p className="text-[12px] font-medium text-muted">
-          <span className="font-mono font-semibold text-gold">{company.symbol}</span>
-          {company.sector ? <span> · {company.sector}</span> : null}
-        </p>
-        {/* min-w-0 + break-words = never collapses to one-letter-per-line */}
-        <h2 className="mt-1 text-[17px] font-bold text-primary leading-snug break-words [text-wrap:balance] min-w-0">
-          {company.name}
-        </h2>
-        <div className="mt-2.5 flex items-baseline gap-2.5 flex-wrap">
-          <span className="text-[26px] font-bold font-mono text-primary leading-none">
-            ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-          </span>
-          <span className={`text-sm font-semibold font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
-            {isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)} ({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)
-            <span className="text-muted font-normal"> today</span>
-          </span>
-        </div>
-        {has52W && (
-          <div className="mt-4">
-            <div className="flex justify-between text-[10.5px] font-mono text-muted/80 mb-1.5 gap-2">
-              <span className="truncate">52W ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-              <span className="flex-shrink-0">₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-            </div>
-            <div className="relative h-2 bg-border/60 rounded-full overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-loss via-warning to-gain opacity-30 rounded-full" />
-              <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
-                style={{ left: `calc(${pct}% - 7px)` }} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Key ratios (brief: 2-col stat tiles, mono values) ── */}
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Key ratios</p>
-        <div className="grid grid-cols-2 gap-2.5">
-          {stats.map((s, i) => (
-            <div key={i} className="bg-card border border-border rounded-[15px] px-3.5 py-3">
-              <p className="text-[11.5px] text-muted mb-1.5">{s.label}</p>
-              <p className={`text-[18px] font-semibold font-mono leading-none ${s.color || 'text-primary'}`}>{s.value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Last reported (brief: row list, hair dividers, mono right) ── */}
-      {latest && (
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Last reported · {latest.year}</p>
-          <div className="bg-card border border-border rounded-[20px] px-[18px]">
-            {[
-              { label: 'Revenue',          value: fmt(latest.revenue) },
-              { label: 'Net profit (PAT)', value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
-              { label: 'EBITDA margin',    value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-warning' : 'text-primary' },
-              { label: 'Net margin',       value: `${latest.netMargin.toFixed(1)}%`, color: latest.netMargin >= 10 ? 'text-gain' : 'text-primary' },
-              { label: 'EPS',              value: `₹${latest.eps.toFixed(1)}` },
-            ].map((r, i, a) => (
-              <div key={i} className={`flex items-center justify-between py-[13px] ${i < a.length - 1 ? 'border-b border-border/60' : ''}`}>
-                <span className="text-sm text-muted">{r.label}</span>
-                <span className={`text-[15px] font-semibold font-mono ${r.color || 'text-primary'}`}>{r.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      <AnnouncementsFeed company={company} />
-    </div>
-  );
-}
-
 // ─── Valuation View ───────────────────────────────────────────────────────────
 function MobileSlider({
   label, value, min, max, inputMax, step, suffix, color, onChange, hint,
@@ -583,7 +475,6 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
         {/* Global horizon removed — verdict & what-must-happen own their own time view. */}
       </div>
 
-      <PriceChart company={company} financials={financials} />
       <ForecastChart financials={financials} assumptions={assumptions} />
       {/* Wealth projection — right below the assumptions that drive it */}
       <WealthProjection company={company} financials={financials} assumptions={assumptions} />
@@ -601,8 +492,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   );
 }
 
-// ─── AI View ──────────────────────────────────────────────────────────────────
-function AIView({ company, financials, isLoading, error, onRetry }: {
+// ─── Profile View ─────────────────────────────────────────────────────────────
+function ProfileView({ company, financials, isLoading, error, onRetry }: {
   company: Company | null; financials: FinancialYear[]; isLoading: boolean; error: string | null; onRetry: () => void;
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
@@ -610,6 +501,7 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   if (!company) return null;
   return (
     <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
+      {/* M4: Dividend · Shareholding · Analyst cards land here */}
       <AIOverview company={company} financials={financials} />
       <HistoricalValuationChart company={company} />
       <IndustryBenchmarks company={company} financials={financials} />
@@ -617,40 +509,104 @@ function AIView({ company, financials, isLoading, error, onRetry }: {
   );
 }
 
-// ─── Peers View ───────────────────────────────────────────────────────────────
-function PeersView({ company, isLoading, error, onRetry }: {
-  company: Company | null; isLoading: boolean; error: string | null; onRetry: () => void;
+// ─── Financials View ──────────────────────────────────────────────────────────
+function FinancialsView({ company, financials, isLoading, error, onRetry }: {
+  company: Company | null; financials: FinancialYear[]; isLoading: boolean; error: string | null; onRetry: () => void;
 }) {
   if (isLoading) return <MobileLoader symbol="…" />;
   if (error) return <MobileError message={error} onRetry={onRetry} />;
   if (!company) return null;
-  return (
-    <div className="pt-4 pb-32">
-      <div className="px-4 mb-3">
-        <h3 className="text-sm font-semibold text-primary">Peer Comparison</h3>
-        <p className="text-xs text-muted mt-0.5">How {company.symbol} stacks up — scroll right →</p>
-      </div>
-      <div className="overflow-x-auto px-4">
-        <PeerCompare company={company} />
-      </div>
-    </div>
-  );
-}
 
-// ─── Financials View ──────────────────────────────────────────────────────────
-function FinancialsView({ financials, isLoading, error, onRetry }: {
-  financials: FinancialYear[]; isLoading: boolean; error: string | null; onRetry: () => void;
-}) {
-  if (isLoading) return <MobileLoader symbol="…" />;
-  if (error) return <MobileError message={error} onRetry={onRetry} />;
-  if (financials.length === 0) return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-sm text-muted px-6 text-center">No financial history available</p>
-    </div>
-  );
+  const isPos = company.changePercent >= 0;
+  const low = company.week52Low;
+  const high = company.week52High;
+  const pct = high > low ? Math.max(2, Math.min(98, ((company.currentPrice - low) / (high - low)) * 100)) : 50;
+  // Partial-year-aware baseline (a 9-month trailing year would misreport "last reported")
+  const latest = financials.length > 0 ? getBaselineFinancial(financials).baseline : null;
+
+  const has52W = low > 0 && high > 0;
+  const stats = [
+    { label: 'Market Cap',    value: fmt(company.marketCap) },
+    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-primary' : 'text-muted' },
+    { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
+    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss' },
+    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss' },
+    { label: 'Div Yield',    value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
+  ];
+
   return (
     <div className="pt-4 pb-32">
-      <div className="px-4 mb-3">
+      <div className="px-4 space-y-3 max-w-2xl md:max-w-3xl mx-auto w-full">
+        {/* ── Company card (brief: eyebrow → name → big mono price → change) ── */}
+        <div className="bg-card border border-border rounded-[20px] p-[18px]">
+          <p className="text-[12px] font-medium text-muted">
+            <span className="font-mono font-semibold text-gold">{company.symbol}</span>
+            {company.sector ? <span> · {company.sector}</span> : null}
+          </p>
+          {/* min-w-0 + break-words = never collapses to one-letter-per-line */}
+          <h2 className="mt-1 text-[17px] font-bold text-primary leading-snug break-words [text-wrap:balance] min-w-0">
+            {company.name}
+          </h2>
+          <div className="mt-2.5 flex items-baseline gap-2.5 flex-wrap">
+            <span className="text-[26px] font-bold font-mono text-primary leading-none">
+              ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            </span>
+            <span className={`text-sm font-semibold font-mono ${isPos ? 'text-gain' : 'text-loss'}`}>
+              {isPos ? '+' : ''}₹{Math.abs(company.change).toFixed(2)} ({isPos ? '+' : ''}{company.changePercent.toFixed(2)}%)
+              <span className="text-muted font-normal"> today</span>
+            </span>
+          </div>
+          {has52W && (
+            <div className="mt-4">
+              <div className="flex justify-between text-[10.5px] font-mono text-muted/80 mb-1.5 gap-2">
+                <span className="truncate">52W ₹{low.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                <span className="flex-shrink-0">₹{high.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="relative h-2 bg-border/60 rounded-full overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-loss via-warning to-gain opacity-30 rounded-full" />
+                <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-gold bg-terminal"
+                  style={{ left: `calc(${pct}% - 7px)` }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Key ratios (brief: 2-col stat tiles, mono values) ── */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Key ratios</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {stats.map((stat, i) => (
+              <div key={i} className="bg-card border border-border rounded-[15px] px-3.5 py-3">
+                <p className="text-[11.5px] text-muted mb-1.5">{stat.label}</p>
+                <p className={`text-[18px] font-semibold font-mono leading-none ${stat.color || 'text-primary'}`}>{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Last reported (brief: row list, hair dividers, mono right) ── */}
+        {latest && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted/70 mb-2.5 px-0.5">Last reported · {latest.year}</p>
+            <div className="bg-card border border-border rounded-[20px] px-[18px]">
+              {[
+                { label: 'Revenue',          value: fmt(latest.revenue) },
+                { label: 'Net profit (PAT)', value: fmt(latest.pat), color: latest.pat > 0 ? 'text-gain' : 'text-loss' },
+                { label: 'EBITDA margin',    value: `${latest.ebitdaMargin.toFixed(1)}%`, color: latest.ebitdaMargin >= 20 ? 'text-gain' : latest.ebitdaMargin >= 12 ? 'text-warning' : 'text-primary' },
+                { label: 'Net margin',       value: `${latest.netMargin.toFixed(1)}%`, color: latest.netMargin >= 10 ? 'text-gain' : 'text-primary' },
+                { label: 'EPS',              value: `₹${latest.eps.toFixed(1)}` },
+              ].map((r, i, a) => (
+                <div key={i} className={`flex items-center justify-between py-[13px] ${i < a.length - 1 ? 'border-b border-border/60' : ''}`}>
+                  <span className="text-sm text-muted">{r.label}</span>
+                  <span className={`text-[15px] font-semibold font-mono ${r.color || 'text-primary'}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 mb-3 mt-4">
         <h3 className="text-sm font-semibold text-primary">Financial History</h3>
         <p className="text-xs text-muted mt-0.5">Scroll right to see all years →</p>
       </div>
@@ -659,6 +615,15 @@ function FinancialsView({ financials, isLoading, error, onRetry }: {
       </div>
       <div className="px-4 mt-4">
         <EarningsQuality financials={financials} />
+      </div>
+
+      {/* ── Peer comparison (moved from old Peers tab) ── */}
+      <div className="px-4 mb-3 mt-6">
+        <h3 className="text-sm font-semibold text-primary">Peer Comparison</h3>
+        <p className="text-xs text-muted mt-0.5">How {company.symbol} stacks up — scroll right →</p>
+      </div>
+      <div className="overflow-x-auto px-4">
+        <PeerCompare company={company} />
       </div>
     </div>
   );
@@ -670,11 +635,11 @@ export default function MobileLayout({
   assumptions, setAssumptions, onSelect, onRetry, onReset, hasChanges,
 }: Props) {
   const [mainTab, setMainTab]   = useState<MainTab>('home');
-  const [stockTab, setStockTab] = useState<StockTab>('overview');
+  const [stockTab, setStockTab] = useState<StockTab>('valuation');
   const [scrolled, setScrolled] = useState(false);
 
   const mountedMain  = useRef<Set<MainTab>>(new Set<MainTab>(['home']));
-  const mountedStock = useRef<Set<StockTab>>(new Set<StockTab>(['overview']));
+  const mountedStock = useRef<Set<StockTab>>(new Set<StockTab>(['valuation']));
 
   // Shared links (?symbol=X) must open the stock directly, like on desktop
   useEffect(() => {
@@ -688,9 +653,9 @@ export default function MobileLayout({
   function handleSelect(symbol: string) {
     onSelect(symbol);
     setMainTab('stock');
-    setStockTab('overview');
+    setStockTab('valuation');
     mountedMain.current.add('stock');
-    mountedStock.current.add('overview');
+    mountedStock.current.add('valuation');
   }
 
   function handleMainTab(tab: MainTab) {
@@ -764,11 +729,9 @@ export default function MobileLayout({
         {showStockContent && company && (
           <div className="flex gap-1.5 overflow-x-auto md:flex-wrap px-4 pb-2.5 no-scrollbar">
             {([
-              { id: 'overview' as StockTab,   label: 'Overview' },
               { id: 'valuation' as StockTab,  label: 'Valuation' },
-              { id: 'ai' as StockTab,         label: 'AI' },
-              { id: 'peers' as StockTab,      label: 'Peers' },
-              { id: 'financials' as StockTab, label: 'Data' },
+              { id: 'financials' as StockTab, label: 'Financials' },
+              { id: 'profile' as StockTab,    label: 'Profile' },
             ]).map(({ id, label }) => (
               <button
                 key={id}
@@ -812,16 +775,7 @@ export default function MobileLayout({
         {/* ── Stock analysis ── */}
         {mountedMain.current.has('stock') && (
           <div className={mainTab === 'stock' ? '' : 'hidden'}>
-            {/* Overview */}
-            {mountedStock.current.has('overview') && (
-              <div className={stockTab === 'overview' ? '' : 'hidden'}>
-                <OverviewView
-                  company={company} financials={financials} assumptions={assumptions}
-                  isLoading={isLoading} error={error} onRetry={onRetry}
-                />
-              </div>
-            )}
-            {/* Valuation */}
+            {/* Valuation (hero / default) */}
             {mountedStock.current.has('valuation') && (
               <div className={stockTab === 'valuation' ? '' : 'hidden'}>
                 <ValuationView
@@ -832,22 +786,16 @@ export default function MobileLayout({
                 />
               </div>
             )}
-            {/* AI */}
-            {mountedStock.current.has('ai') && (
-              <div className={stockTab === 'ai' ? '' : 'hidden'}>
-                <AIView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
-              </div>
-            )}
-            {/* Peers */}
-            {mountedStock.current.has('peers') && (
-              <div className={stockTab === 'peers' ? '' : 'hidden'}>
-                <PeersView company={company} isLoading={isLoading} error={error} onRetry={onRetry} />
-              </div>
-            )}
             {/* Financials */}
             {mountedStock.current.has('financials') && (
               <div className={stockTab === 'financials' ? '' : 'hidden'}>
-                <FinancialsView financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+                <FinancialsView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
+              </div>
+            )}
+            {/* Profile */}
+            {mountedStock.current.has('profile') && (
+              <div className={stockTab === 'profile' ? '' : 'hidden'}>
+                <ProfileView company={company} financials={financials} isLoading={isLoading} error={error} onRetry={onRetry} />
               </div>
             )}
 

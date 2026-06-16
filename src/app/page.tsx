@@ -25,14 +25,12 @@ import ReverseDCF from '@/components/ReverseDCF';
 import MonteCarloCard from '@/components/MonteCarloCard';
 import RedFlagsCard from '@/components/RedFlagsCard';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
-import PriceChart from '@/components/PriceChart';
 import ForecastChart from '@/components/ForecastChart';
 import SectorAlternatives from '@/components/SectorAlternatives';
 import ScenarioBuilder from '@/components/ScenarioBuilder';
 import SectionHeader from '@/components/SectionHeader';
 import StickyTicker from '@/components/StickyTicker';
 import ROBUScoreCard from '@/components/ROBUScoreCard';
-import AnnouncementsFeed from '@/components/AnnouncementsFeed';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
@@ -72,6 +70,7 @@ export default function Home() {
   const [error, setError]           = useState<string | null>(null);
   const [homeMode, setHomeMode]     = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('valuation');
+  const [companyTab, setCompanyTab] = useState<'valuation' | 'financials' | 'profile'>('valuation');
   const [autoFillLabel, setAutoFillLabel] = useState<string | null>(null);
   const [dataQuality, setDataQuality]     = useState<DataQualityResult | null>(null);
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>({
@@ -203,6 +202,7 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setActiveView('valuation');
+    setCompanyTab('valuation');
 
     // Cache hit → instant render, no spinner
     if (_sessionCache.has(symbol)) {
@@ -569,7 +569,7 @@ export default function Home() {
 
               {/* On this page — jump links into the open report.
                   Analyst-only sections auto-hide in Simple mode via CSS. */}
-              {activeView === 'valuation' && company && (
+              {companyTab === 'valuation' && activeView === 'valuation' && company && (
                 <div className="mt-3 pt-3 border-t border-border/60">
                   <p className="text-[10px] text-muted/80 uppercase tracking-[1.2px] font-semibold px-2 mb-1.5">On this page</p>
                   {([
@@ -669,21 +669,36 @@ export default function Home() {
                 {/* Sentinel: when this scrolls out of view, the mini-ticker fades in */}
                 <div id="ticker-sentinel" className="h-px -mt-4" />
 
-                {/* ── VIEW: VALUATION ── */}
-                {activeView === 'valuation' && financials.length > 0 && (
+                {/* ── In-page tabs: Valuation (hero) · Financials · Profile ── */}
+                {company && (
+                  <div className="flex gap-1 border-b border-border mb-1 -mt-1 sticky top-0 bg-terminal z-10">
+                    {([
+                      { id: 'valuation',  label: 'Valuation',  Icon: Sparkles },
+                      { id: 'financials', label: 'Financials', Icon: Table2 },
+                      { id: 'profile',    label: 'Profile',    Icon: BadgeCheck },
+                    ] as { id: typeof companyTab; label: string; Icon: typeof Sparkles }[]).map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => setCompanyTab(t.id)}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                          companyTab === t.id
+                            ? 'border-gold text-primary'
+                            : 'border-transparent text-muted hover:text-primary'
+                        }`}
+                      >
+                        <t.Icon size={14} />{t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── TAB: VALUATION (hero) ── */}
+                {companyTab === 'valuation' && activeView === 'valuation' && financials.length > 0 && (
                   <>
                     {/* Verdict — the big plain-English answer at the very top */}
                     <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
                     </div>
-
-                    {/* About the company — plain-English intro to what this business is */}
-                    <div id="sec-about" className="scroll-mt-24">
-                      <CompanyBrief company={company} />
-                    </div>
-
-                    {/* Corporate actions & announcements — company events, not valuation output */}
-                    <AnnouncementsFeed company={company} />
 
                     {/* The 3 questions a worried friend would actually check */}
                     <div id="sec-why" className="scroll-mt-24">
@@ -746,9 +761,8 @@ export default function Home() {
                       id="sec-evidence"
                       Icon={LineChart}
                       title="The Evidence"
-                      desc="Price history with cheap/fair/pricey bands, the forecast your assumptions imply, and three futures — bear (things go wrong), base (your inputs), bull (things go right)."
+                      desc="The forecast your assumptions imply, plus three futures — bear (things go wrong), base (your inputs), bull (things go right)."
                     />
-                    <PriceChart company={company} financials={financials} />
                     <ForecastChart financials={financials} assumptions={assumptions} />
                     <ScenarioCards financials={financials} assumptions={assumptions} currentPrice={company.currentPrice} company={company} />
 
@@ -785,28 +799,41 @@ export default function Home() {
                   <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
                 )}
 
-                {/* ── SECTION: FINANCIALS — advanced, hidden in Simple mode ── */}
-                {activeView === 'valuation' && (
-                  <div className="analyst-only space-y-4">
+                {/* ── TAB: FINANCIALS — ratios, statements, quarterly, charts ── */}
+                {companyTab === 'financials' && company && (
+                  <div className="space-y-4">
                     <SectionHeader
                       id="sec-numbers"
                       Icon={Table2}
-                      title="The Raw Numbers"
-                      desc="Ten years of revenue, profit and margins — the actual track record everything above is built on. Example: steady margins = a business in control of its prices."
+                      title="The Numbers"
+                      desc="Ten years of revenue, profit and margins — the actual track record. Example: steady margins = a business in control of its prices."
                     />
-                    <QuarterlyFlash company={company} />
                     <KeyMetrics company={company} financials={financials} />
+                    <QuarterlyFlash company={company} />
                     {financials.length > 0 && (
                       <>
                         <FinancialsTable financials={financials} />
                         <EarningsQuality financials={financials} />
                       </>
                     )}
+                    <HistoricalValuationChart company={company} />
+                    <IndustryBenchmarks company={company} financials={financials} />
+                  </div>
+                )}
+
+                {/* ── TAB: PROFILE — about, dividends, shareholders, analyst view ── */}
+                {companyTab === 'profile' && company && (
+                  <div className="space-y-4">
+                    <div id="sec-about" className="scroll-mt-24">
+                      <CompanyBrief company={company} />
+                    </div>
+                    {/* M4: Dividend · Shareholding · Analyst cards land here */}
+                    <AIOverview company={company} financials={financials} />
                   </div>
                 )}
 
                 {/* ── Quality score — friendly grade, shown in both modes ── */}
-                {activeView === 'valuation' && company && financials.length >= 3 && (
+                {companyTab === 'valuation' && activeView === 'valuation' && company && financials.length >= 3 && (
                   <>
                     <SectionHeader
                       id="sec-quality"
@@ -817,18 +844,10 @@ export default function Home() {
                     <ROBUScoreCard company={company} financials={financials} />
                   </>
                 )}
-                {activeView === 'valuation' && company && (
+                {companyTab === 'valuation' && activeView === 'valuation' && company && (
                   <SectorAlternatives company={company} onSelectSymbol={handleSelect} />
                 )}
 
-                {/* ── At lg (1024–1279px): inline AI panel below main content since right panel is hidden ── */}
-                {company && (
-                  <div className="xl:hidden space-y-4 pt-2">
-                    <AIOverview company={company} financials={financials} />
-                    <HistoricalValuationChart company={company} />
-                    <IndustryBenchmarks company={company} financials={financials} />
-                  </div>
-                )}
               </div>
             ) : (
               /* No company loaded — show prompt based on active view */
@@ -851,21 +870,6 @@ export default function Home() {
             )}
           </main>
 
-          {/* ── RIGHT PANEL — only on stock views, never on screener/watchlist/portfolio ── */}
-          {!['watchlist', 'portfolio'].includes(activeView) && (
-            <aside className="hidden xl:flex w-[280px] flex-shrink-0 border-l border-border bg-terminal overflow-y-auto flex-col">
-              {company ? (
-                <div className="p-3 space-y-3">
-                  <AIOverview company={company} financials={financials} />
-                  <IndustryBenchmarks company={company} financials={financials} />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-sm text-muted px-4 text-center">Select a company to view analysis</p>
-                </div>
-              )}
-            </aside>
-          )}
 
         </div>
       )}
