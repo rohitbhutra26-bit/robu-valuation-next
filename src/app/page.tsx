@@ -580,7 +580,6 @@ export default function Home() {
                     { id: 'sec-assumptions',  label: 'Assumptions',   Icon: SlidersHorizontal, analyst: true },
                     { id: 'sec-evidence',     label: 'The Evidence',  Icon: LineChart,         analyst: true },
                     { id: 'sec-stress',       label: 'Stress Tests',  Icon: Activity,          analyst: true },
-                    { id: 'sec-numbers',      label: 'Raw Numbers',   Icon: Table2,            analyst: true },
                     { id: 'sec-quality',      label: 'Quality Score', Icon: BadgeCheck },
                   ] as { id: string; label: string; Icon: typeof Sparkles; analyst?: boolean }[]).map(s => (
                     <button
@@ -795,7 +794,7 @@ export default function Home() {
                   </>
                 )}
 
-                {activeView === 'valuation' && financials.length === 0 && (
+                {companyTab === 'valuation' && activeView === 'valuation' && financials.length === 0 && (
                   <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
                 )}
 
