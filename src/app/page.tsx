@@ -34,6 +34,9 @@ import ROBUScoreCard from '@/components/ROBUScoreCard';
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
+import DividendCard from '@/components/DividendCard';
+import ShareholdingCard from '@/components/ShareholdingCard';
+import AnalystCard from '@/components/AnalystCard';
 import AssumptionsLab from '@/components/AssumptionsLab';
 import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
@@ -826,7 +829,9 @@ export default function Home() {
                     <div id="sec-about" className="scroll-mt-24">
                       <CompanyBrief company={company} />
                     </div>
-                    {/* M4: Dividend · Shareholding · Analyst cards land here */}
+                    <DividendCard company={company} />
+                    <ShareholdingCard company={company} />
+                    <AnalystCard company={company} />
                     <AIOverview company={company} financials={financials} />
                   </div>
                 )}
