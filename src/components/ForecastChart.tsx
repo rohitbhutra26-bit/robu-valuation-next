@@ -89,7 +89,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
   const PAT = '#4ade80';   // green for profit (universal finance convention)
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center">

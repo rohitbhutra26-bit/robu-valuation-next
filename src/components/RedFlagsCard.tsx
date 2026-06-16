@@ -43,7 +43,7 @@ export default function RedFlagsCard({ company, financials }: Props) {
     : 'All Clear';
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>

@@ -102,7 +102,7 @@ export default function AssumptionsLab({
     ? `${base.yearLabel} actual: ${base.baseline.netMargin.toFixed(1)}%` : undefined;
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden">
+    <div className="bg-card border border-border rounded-3xl overflow-hidden">
 
       {/* ── Live result — the payoff of moving the sliders ── */}
       <div className="px-5 sm:px-6 py-5 bg-gold/[0.06] border-b border-border">

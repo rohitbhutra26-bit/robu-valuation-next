@@ -250,7 +250,7 @@ export default function HistoricalValuationChart({ company }: Props) {
   if (error) return null;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2">

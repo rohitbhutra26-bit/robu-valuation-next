@@ -28,7 +28,7 @@ export default function SensitivityMatrix({
   if (!financials.length) return null;
   if (!valuationReliability(company, financials).reliable) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
         <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so a fair value / multiple-based estimate does not apply here. See the caution under the verdict above.</p>
       </div>
@@ -58,7 +58,7 @@ export default function SensitivityMatrix({
   const multDecimals = profile.model === 'pb' ? 1 : 0;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-primary">Sensitivity Matrix</h3>
         <span className="text-xs text-muted font-mono">

@@ -56,7 +56,7 @@ export default function SectorAlternatives({ company, onSelectSymbol }: SectorAl
   }, [company.symbol]);
 
   if (loading) return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
       <p className="text-xs text-muted animate-pulse">Finding better stocks in sector...</p>
     </div>
   );
@@ -70,7 +70,7 @@ export default function SectorAlternatives({ company, onSelectSymbol }: SectorAl
     marketCap: company.marketCap, pe: company.pe, pb: company.pb, roe: company.roe, isSelf: true });
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-primary">Better in Sector</h3>

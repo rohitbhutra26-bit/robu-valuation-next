@@ -30,7 +30,7 @@ export default function DataQualityBanner({ quality }: Props) {
     quality.level === 'Medium' ? AlertTriangle : XCircle;
 
   return (
-    <div className={`rounded-xl border p-3 ${bgColor}`} style={{ borderColor }}>
+    <div className={`rounded-3xl border p-3 ${bgColor}`} style={{ borderColor }}>
 
       {/* Summary row */}
       <div className="flex items-center justify-between gap-2">

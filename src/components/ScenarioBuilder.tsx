@@ -133,7 +133,7 @@ export default function ScenarioBuilder({ company, financials }: ScenarioBuilder
   if (!financials.length) return null;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-primary">Scenario Builder</h3>
         <p className="text-[11px] text-muted mt-0.5">Adjust assumptions per scenario — see fair value move in real time</p>

@@ -34,7 +34,7 @@ export default function CompanyBrief({ company }: Props) {
   const fallback = `${company.name} is ${/^[aeiou]/i.test(industry) ? 'an' : 'a'} ${industry || 'listed'} company${company.exchange ? ` on the ${company.exchange}` : ''}.`;
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
       <div className="flex items-start gap-3">
         <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 text-gold flex-shrink-0">
           <Building2 size={20} strokeWidth={2} />

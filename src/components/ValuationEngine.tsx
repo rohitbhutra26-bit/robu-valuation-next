@@ -115,7 +115,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   if (!financials.length) return null;
   if (!valuationReliability(company, financials).reliable) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
         <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so a fair value / multiple-based estimate does not apply here. See the caution under the verdict above.</p>
       </div>
@@ -220,7 +220,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   // ── Compact mode (mobile) ─────────────────────────────────────────────────
   if (compact) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-3">
         {/* Title + verdict */}
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-primary">Valuation Engine</h3>
@@ -319,7 +319,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
 
       {/* ── Header ── */}
       <div className="space-y-2">

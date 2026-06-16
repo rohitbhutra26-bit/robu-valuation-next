@@ -96,7 +96,7 @@ export default function AIOverview({ company, financials = [] }: AIOverviewProps
   const cfg     = VERDICT_CONFIG[insight.verdict] ?? VERDICT_CONFIG['Hold'];
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 flex flex-col gap-3">
 
       {/* Header */}
       <div className="flex items-center gap-2">

@@ -20,7 +20,7 @@ export default function ValuationCaveatBanner({ company, financials }: Props) {
   if (result.reliable) return null;
 
   return (
-    <div className="bg-gold/5 border border-gold/30 rounded-xl p-4 flex gap-3">
+    <div className="bg-gold/5 border border-gold/30 rounded-3xl p-5 sm:p-6 flex gap-3">
       <span className="text-gold text-base leading-none flex-shrink-0 mt-0.5">⚠</span>
       <div className="min-w-0">
         <p className="text-sm font-semibold text-gold leading-tight">{result.title}</p>

@@ -57,7 +57,7 @@ export default function QuarterlyFlash({ company }: QuarterlyFlashProps) {
 
   if (loading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-3">
           <Zap size={14} className="text-gold" />
           <h3 className="text-sm font-semibold text-primary">Quarterly Results</h3>
@@ -82,7 +82,7 @@ export default function QuarterlyFlash({ company }: QuarterlyFlashProps) {
   const qoqRev = prevQuarter ? pctChange(latest.revenue, prevQuarter.revenue) : null;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

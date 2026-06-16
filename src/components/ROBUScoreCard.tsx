@@ -50,7 +50,7 @@ export default function ROBUScoreCard({
     : result.total >= 45 ? 'border-warning/40' : 'border-loss/40';
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">

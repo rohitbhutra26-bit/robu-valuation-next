@@ -143,7 +143,7 @@ export default function IndustryBenchmarks({ company, financials }: IndustryBenc
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="bg-card border border-border rounded-xl p-4"
+      className="bg-card border border-border rounded-3xl p-5 sm:p-6"
     >
       <div className="flex items-center justify-between mb-1 gap-2">
         <div className="flex items-start gap-2">

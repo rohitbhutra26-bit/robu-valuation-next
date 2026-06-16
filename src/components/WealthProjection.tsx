@@ -69,7 +69,7 @@ export default function WealthProjection({ company, financials, assumptions }: P
   if (!rows) return null;
   if (!valuationReliability(company, financials).reliable) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
         <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so projected fair values, scenarios and target prices do not apply here. See the caution under the verdict above.</p>
       </div>
@@ -85,7 +85,7 @@ export default function WealthProjection({ company, financials, assumptions }: P
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 space-y-4">
 
       {/* ── Header ── */}
       <div>

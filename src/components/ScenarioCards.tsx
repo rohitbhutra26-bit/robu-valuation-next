@@ -37,7 +37,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
   if (!financials.length) return null;
   if (!valuationReliability(company, financials).reliable) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <p className="text-sm font-semibold text-warning mb-1">Not meaningful for this stock</p>
         <p className="text-xs text-muted leading-relaxed">This company is loss-making or has negative net worth, so projected fair values, scenarios and target prices do not apply here. See the caution under the verdict above.</p>
       </div>
@@ -85,7 +85,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
   // ── Compact mode: mobile horizontal chips ────────────────────────────────
   if (compact) {
     return (
-      <div className="bg-card border border-border rounded-xl p-4">
+      <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-primary">3 Scenarios</h3>
           <span className="text-[10px] text-muted font-mono">
@@ -128,7 +128,7 @@ export default function ScenarioCards({ financials, assumptions, currentPrice, c
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-4 gap-2">
