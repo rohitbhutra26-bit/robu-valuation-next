@@ -147,7 +147,7 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   // (a +40%%+ re-rating baked in before any growth → phantom "doubles in a year").
   // Banks/NBFCs must use P/B: book value compounds at ROE×retention.
   'Private Sector Bank':                  pbProfile('Private Bank',    2.4, 6),
-  'Public Sector Bank':                   pbProfile('PSU Bank',        1.1, 3),
+  'Public Sector Bank':                   pbProfile('PSU Bank',        1.2, 3),
   'Non Banking Financial Company (NBFC)': pbProfile('NBFC',            3.5, 10),
   'Housing Finance Company':              pbProfile('Housing Finance', 1.8, 6),
   'Holding Company':                      peProfile('Holding Co',      16),
@@ -342,7 +342,7 @@ const INDUSTRY_PROFILES: Record<string, SectorProfile> = {
   'Banks—Diversified':              pbProfile('Banking', 2.2, 8),
   'Banks—Regional':                 pbProfile('Banking', 1.8, 6),
   'Private Sector Bank':            pbProfile('Private Bank', 2.4, 6),
-  'Public Sector Bank':             pbProfile('PSU Bank', 1.1, 3),
+  'Public Sector Bank':             pbProfile('PSU Bank', 1.2, 3),
   'Non Banking Financial Company (NBFC)': pbProfile('NBFC', 3.5, 10),
   'Housing Finance Company':        pbProfile('Housing Finance', 1.8, 6),
   'Life Insurance':                 INSURANCE_PROFILE,
@@ -472,18 +472,22 @@ export function getCompanyProfile(company: {
     return BROKER_PROFILE;
   }
 
-  // Banks — the correct lens is P/B (ROE drives the premium over book value).
-  // Safety net for any bank whose Screener label isn't mapped explicitly above.
+  // 3. Sector-based lookup — specific labels ('Private/Public Sector Bank', 'NBFC',
+  //    'Housing Finance Company', etc.) resolve here. Must run BEFORE the generic
+  //    name-based bank fallback so a PSU bank gets its 1.2x P/B, not the generic 1.5x.
+  const sectorProfile = getSectorProfile(company.sector);
+  if (sectorProfile !== DEFAULT_SECTOR_PROFILE) return sectorProfile;
+
+  // 4. Last resort: any unmapped 'bank' name → P/B (not the 25x Broad-Market P/E default)
   if (
     name.includes('bank') &&
     !name.includes('investment bank') &&
     !name.includes('merchant bank')
   ) {
-    return pbProfile('Bank', 1.8, 6);
+    return pbProfile('Bank', 1.5, 6);
   }
 
-  // 3. Sector-based fallback (original logic)
-  return getSectorProfile(company.sector);
+  return sectorProfile;
 }
 
 // ─── Plain-English "how we judge this business" (Gospel Part 11, user-facing) ──

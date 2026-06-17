@@ -755,18 +755,11 @@ export function suggestAssumptions(
   // Exit multiple: for banks/NBFCs derive a Gordon-growth fair P/B = (ROE−g)/(CoE−g),
   // so a high-ROE bank justifies a higher multiple and a low-ROE one a lower multiple —
   // instead of a flat sector number. Falls back to the sector default for everything else.
-  let exitMultiple = profile.defaultExitMultiple;
-  if (profile.model === 'pb') {
-    const gg = gordonGrowthPB(company, revenueGrowthRate);
-    if (gg.isValid && gg.fairPB > 0) {
-      // Gordon (ROE−g)/(CoE−g) is used CONSERVATIVELY: it can only mark a bank DOWN from
-      // the sector norm (weak ROE → lower fair P/B), never inflate it — because spot ROE
-      // mean-reverts (Nissim–Penman) and book already compounds at ROE, so an un-haircut
-      // Gordon would double-count and over-value high-ROE banks. Floored at 55% of default.
-      const capped = Math.min(profile.defaultExitMultiple, gg.fairPB);
-      exitMultiple = Math.round(Math.max(capped, profile.defaultExitMultiple * 0.55) * 10) / 10;
-    }
-  }
+  // Exit multiple = the sector-correct default (banks→P/B, cyclicals→EV/EBITDA, etc.).
+  // NOTE: per-bank Gordon-growth P/B ((ROE−g)/(CoE−g)) is the rigorous next step but needs
+  // an ROE mean-reversion haircut + multi-bank calibration to avoid double-counting ROE
+  // (book already compounds at ROE) — deferred to a validated Phase A.2 pass.
+  const exitMultiple = profile.defaultExitMultiple;
 
   return {
     revenueGrowthRate:       Math.round(revenueGrowthRate * 10) / 10,
