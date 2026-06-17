@@ -12,7 +12,7 @@
  */
 
 import { Company, FinancialYear } from './types';
-import { ValuationModel } from './sectorModelMap';
+import { ValuationModel, SectorProfile } from './sectorModelMap';
 
 // ─── Data Quality Validator ───────────────────────────────────────────────────
 // Runs before any model. Catches bad data from Yahoo Finance so the model
@@ -332,9 +332,13 @@ export function evEbitdaModel(
   exitEVEBITDA: number,
   years: number,
 ): ModelOutput {
-  const { baseline } = getBaselineFinancial(financials);
+  const { baseline, completeYears } = getBaselineFinancial(financials);
   const shares     = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
-  const ebitdaMgn  = baseline.ebitdaMargin > 0 ? baseline.ebitdaMargin : 15; // fallback 15%
+  // Mid-cycle margin: MEDIAN EBITDA margin across recent complete years — so a peak (or
+  // trough) year never over/under-states a cyclical business (metals, oil, autos).
+  const _mgns = completeYears.map(f => f.ebitdaMargin).filter(m => m > 0 && m < 90).slice(-5).sort((a, b) => a - b);
+  const ebitdaMgn  = _mgns.length > 0 ? _mgns[Math.floor((_mgns.length - 1) / 2)]
+                   : (baseline.ebitdaMargin > 0 ? baseline.ebitdaMargin : 15);
 
   const futureRevenue = baseline.revenue * fadeCompound(growthRate, years);
   const futureEBITDA  = futureRevenue * (ebitdaMgn / 100);
@@ -682,7 +686,7 @@ export function suggestAssumptions(
   company: Company,
   financials: FinancialYear[],
   industryCagr: number,
-  sectorDefaultMultiple: number,
+  profile: SectorProfile,
   years: number = 5,
 ): SuggestedAssumptions {
   // ── Detect partial year + get complete history ─────────────────────────────
@@ -717,12 +721,17 @@ export function suggestAssumptions(
       .filter((g): g is number => g !== null && g > -50 && g < 100);
 
     if (revenueGrowths.length >= 2) {
-      // Use recent 3-year avg rather than full history (recency matters more)
-      const recent = revenueGrowths.slice(-3);
+      // Drop one-off M&A / restatement spikes: if the company shows a MIX of normal and
+      // very-high (>40%) years, the spike is almost certainly inorganic (e.g. HDFC Bank's
+      // +57% merger year) → exclude it. If growth is UNIFORMLY high, it's real → keep it.
+      const organic = revenueGrowths.filter(g => g <= 40);
+      const dropped = revenueGrowths.length - organic.length;
+      const usable  = organic.length >= 1 ? organic : revenueGrowths;
+      const recent  = usable.slice(-3);
       rawCompanyGrowth = recent.reduce((a, b) => a + b, 0) / recent.length;
       source = 'historical_cagr';
       confidence = rawCompanyGrowth > 5 ? 'Medium' : 'Low';
-      rationale = `3yr avg revenue growth ${rawCompanyGrowth.toFixed(1)}% — model fades it to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
+      rationale = `${dropped > 0 ? 'organic' : '3yr avg'} revenue growth ${rawCompanyGrowth.toFixed(1)}%${dropped > 0 ? ' (one-off M&A year excluded)' : ''} — fades to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
     } else {
       // Fallback: use industry rate directly
       rawCompanyGrowth = industryCagr;
@@ -743,12 +752,28 @@ export function suggestAssumptions(
     ? recentMargins.reduce((a, b) => a + b, 0) / recentMargins.length
     : 10; // fallback 10%
 
+  // Exit multiple: for banks/NBFCs derive a Gordon-growth fair P/B = (ROE−g)/(CoE−g),
+  // so a high-ROE bank justifies a higher multiple and a low-ROE one a lower multiple —
+  // instead of a flat sector number. Falls back to the sector default for everything else.
+  let exitMultiple = profile.defaultExitMultiple;
+  if (profile.model === 'pb') {
+    const gg = gordonGrowthPB(company, revenueGrowthRate);
+    if (gg.isValid && gg.fairPB > 0) {
+      // Gordon (ROE−g)/(CoE−g) is used CONSERVATIVELY: it can only mark a bank DOWN from
+      // the sector norm (weak ROE → lower fair P/B), never inflate it — because spot ROE
+      // mean-reverts (Nissim–Penman) and book already compounds at ROE, so an un-haircut
+      // Gordon would double-count and over-value high-ROE banks. Floored at 55% of default.
+      const capped = Math.min(profile.defaultExitMultiple, gg.fairPB);
+      exitMultiple = Math.round(Math.max(capped, profile.defaultExitMultiple * 0.55) * 10) / 10;
+    }
+  }
+
   return {
     revenueGrowthRate:       Math.round(revenueGrowthRate * 10) / 10,
     rawCompanyGrowth:        Math.round(rawCompanyGrowth * 10) / 10,
     industryCagr,
     netMarginAssumption:     Math.round(netMarginAssumption * 10) / 10,
-    exitMultiple:            sectorDefaultMultiple,
+    exitMultiple,
     source,
     confidence,
     rationale,

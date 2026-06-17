@@ -486,6 +486,28 @@ export function getCompanyProfile(company: {
   return getSectorProfile(company.sector);
 }
 
+// ─── Plain-English "how we judge this business" (Gospel Part 11, user-facing) ──
+// Surfaced under the verdict so a beginner understands WHY this lens is used.
+export function valuationCaveat(profile: SectorProfile): string {
+  const s = profile.sectorLabel.toLowerCase();
+  if (s.includes('insurance'))
+    return "Insurers aren't judged on ordinary profit — their real worth is the value of all the policies already sold.";
+  if (s.includes('fmcg') || s.includes('consumer') || s.includes('premium consumer'))
+    return "Strong brands earn huge returns on very little machinery, so a 'high' price tag is often deserved — we just check it's still growing.";
+  if (s.includes('holding'))
+    return "A holding company is worth the sum of its stakes (minus a discount), not its own reported profit.";
+  switch (profile.model) {
+    case 'pb':
+      return "Banks & lenders run on borrowed money — that's their business, not a red flag. We judge them on return on equity (ROE) and bad loans, valued against book value — not the usual profit multiple.";
+    case 'ev_ebitda':
+      return "An asset-heavy / cyclical business — valued on operating profit using a normal-year margin, so one lucky (or unlucky) year doesn't fool the number.";
+    case 'ev_sales':
+      return "Priced on sales rather than profit — usual for fast-growing companies still investing to scale.";
+    default:
+      return "Valued on earnings — what you pay for each ₹1 of yearly profit, with growth easing as the business matures.";
+  }
+}
+
 // ─── India sector long-run CAGR table ────────────────────────────────────────
 // Source: NASSCOM (IT), CRISIL (FMCG/Pharma/Cement/Metals), IBEF (sector reports),
 //         RBI credit growth data (Banking), PLI scheme projections (Electronics).

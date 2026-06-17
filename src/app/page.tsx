@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getSectorProfile, getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { getSectorProfile, getCompanyProfile, getIndustryCagr, valuationCaveat } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
 import DataQualityBanner from '@/components/DataQualityBanner';
 import CompanySearch from '@/components/CompanySearch';
@@ -276,7 +276,7 @@ export default function Home() {
       companyData,
       cleanFins,
       industryCagr,
-      sectorProfile.defaultExitMultiple,
+      sectorProfile,
       5,
     );
 
@@ -702,6 +702,12 @@ export default function Home() {
                     <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
                     </div>
+
+                    {/* Plain-English "how we judge this" — the right lens, explained (Gospel Part 11) */}
+                    <p className="text-[13px] text-muted leading-relaxed px-1">
+                      <span className="font-semibold text-primary/85">How we judge {company.symbol}: </span>
+                      {valuationCaveat(getCompanyProfile(company))}
+                    </p>
 
                     {/* The 3 questions a worried friend would actually check */}
                     <div id="sec-why" className="scroll-mt-24">
