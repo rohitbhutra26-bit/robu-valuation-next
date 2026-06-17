@@ -526,12 +526,25 @@ function FinancialsView({ company, financials, isLoading, error, onRetry }: {
   const latest = financials.length > 0 ? getBaselineFinancial(financials).baseline : null;
 
   const has52W = low > 0 && high > 0;
-  const stats = [
+  const gPos = (n: number) => Math.max(6, Math.min(94, n));
+  const stats: { label: string; value: string; color?: string; gauge?: number; dot?: 'gain' | 'warning' | 'loss' }[] = [
     { label: 'Market Cap',    value: fmt(company.marketCap) },
-    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',  color: company.pe > 0 ? 'text-primary' : 'text-muted' },
-    { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—' },
-    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,            color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss' },
-    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,   color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss' },
+    { label: 'P/E Ratio',    value: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—',
+      color: company.pe <= 0 ? 'text-muted' : company.pe < 18 ? 'text-gain' : company.pe < 30 ? 'text-warning' : 'text-loss',
+      gauge: company.pe > 0 ? gPos((company.pe / 50) * 100) : undefined,
+      dot: company.pe <= 0 ? undefined : company.pe < 18 ? 'gain' : company.pe < 30 ? 'warning' : 'loss' },
+    { label: 'P/B Ratio',    value: company.pb > 0 ? `${company.pb.toFixed(1)}x` : '—',
+      color: company.pb <= 0 ? 'text-muted' : company.pb < 1.5 ? 'text-gain' : company.pb < 4 ? 'text-warning' : 'text-loss',
+      gauge: company.pb > 0 ? gPos((company.pb / 8) * 100) : undefined,
+      dot: company.pb <= 0 ? undefined : company.pb < 1.5 ? 'gain' : company.pb < 4 ? 'warning' : 'loss' },
+    { label: 'ROE',          value: `${company.roe.toFixed(1)}%`,
+      color: company.roe >= 20 ? 'text-gain' : company.roe >= 12 ? 'text-warning' : 'text-loss',
+      gauge: company.roe > 0 ? gPos((company.roe / 40) * 100) : undefined,
+      dot: company.roe <= 0 ? undefined : company.roe >= 20 ? 'gain' : company.roe >= 12 ? 'warning' : 'loss' },
+    { label: 'Debt/Equity',  value: `${company.debtToEquity.toFixed(2)}x`,
+      color: company.debtToEquity < 1 ? 'text-gain' : company.debtToEquity < 3 ? 'text-warning' : 'text-loss',
+      gauge: company.debtToEquity > 0 ? gPos((company.debtToEquity / 5) * 100) : undefined,
+      dot: company.debtToEquity <= 0 ? undefined : company.debtToEquity < 1 ? 'gain' : company.debtToEquity < 3 ? 'warning' : 'loss' },
     { label: 'Div Yield',    value: company.dividendYield > 0 ? `${company.dividendYield.toFixed(2)}%` : '—' },
   ];
 
@@ -580,6 +593,12 @@ function FinancialsView({ company, financials, isLoading, error, onRetry }: {
               <div key={i} className="bg-card border border-border rounded-[15px] px-3.5 py-3">
                 <p className="text-[11.5px] text-muted mb-1.5">{stat.label}</p>
                 <p className={`text-[18px] font-semibold font-mono leading-none ${stat.color || 'text-primary'}`}>{stat.value}</p>
+                {typeof stat.gauge === 'number' && (
+                  <div className="mt-2.5 h-1 rounded-full bg-border/70 relative" aria-hidden="true">
+                    <span className="absolute top-1/2 w-2 h-2 rounded-full"
+                          style={{ left: `${stat.gauge}%`, transform: 'translate(-50%, -50%)', background: `rgb(var(--color-${stat.dot || 'muted'}))` }} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
