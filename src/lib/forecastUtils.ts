@@ -770,12 +770,24 @@ export function suggestAssumptions(
   // Exit multiple: for banks/NBFCs derive a Gordon-growth fair P/B = (ROE−g)/(CoE−g),
   // so a high-ROE bank justifies a higher multiple and a low-ROE one a lower multiple —
   // instead of a flat sector number. Falls back to the sector default for everything else.
-  // Exit multiple: financials use the backtested warranted-P/B engine (ROE vs cost of
-  // capital, sector-calibrated, ROE mean-reverted); everything else uses the sector
-  // default (cyclicals→EV/EBITDA, consumer→P/E, etc.).
-  const exitMultiple = profile.model === 'pb'
-    ? warrantedPB(company, profile)
-    : profile.defaultExitMultiple;
+  // Exit multiple. Financials → backtested warranted-P/B (ROE vs cost of capital).
+  // Everything else → sector default, SIZE-DISCOUNTED: small/micro caps trade below
+  // large-cap multiples (liquidity, governance, thin coverage, higher risk) and rarely
+  // re-rate all the way to the sector multiple — so we discount it by market cap, and cap
+  // how far a tiny-cap is assumed to re-rate above where it trades today.
+  let exitMultiple: number;
+  if (profile.model === 'pb') {
+    exitMultiple = warrantedPB(company, profile);
+  } else {
+    const mc = company.marketCap || 0;   // ₹ Crore
+    const sizeAdj = mc >= 50000 ? 1.0 : mc >= 20000 ? 0.95 : mc >= 7000 ? 0.86 : mc >= 2000 ? 0.74 : 0.60;
+    let m = profile.defaultExitMultiple * sizeAdj;
+    // a small/micro cap shouldn't be assumed to re-rate far beyond its current multiple
+    if (mc < 7000 && profile.model === 'pe' && company.pe > 3) {
+      m = Math.min(m, company.pe * 1.6);
+    }
+    exitMultiple = Math.round(m * 10) / 10;
+  }
 
   return {
     revenueGrowthRate:       Math.round(revenueGrowthRate * 10) / 10,
