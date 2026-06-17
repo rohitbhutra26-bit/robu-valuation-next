@@ -62,6 +62,11 @@ const MARGIN_BOUNDS: Record<string, [number, number]> = {
   'Automobiles':       [1,  20],
   'Electronics':       [1,  20],
   'Telecom':           [-5,  20],
+  'Private Sector Bank':     [-5,  45],
+  'Public Sector Bank':      [-10, 45],
+  'Non Banking Financial Company (NBFC)': [-5, 50],
+  'Housing Finance Company': [-5,  45],
+  'Life Insurance':          [-5,  25],
 };
 
 export function validateFinancials(

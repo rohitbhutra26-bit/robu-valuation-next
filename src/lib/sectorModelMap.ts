@@ -142,6 +142,16 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   'NBFC':               pbProfile('NBFC',                4.5, 12),
   'Insurance':          pbProfile('Insurance',           8,   20),
 
+  // Screener.in's ACTUAL financial-sector labels. These were unmapped → falling
+  // through to the 25x Broad-Market P/E default, which massively over-valued banks
+  // (a +40%%+ re-rating baked in before any growth → phantom "doubles in a year").
+  // Banks/NBFCs must use P/B: book value compounds at ROE×retention.
+  'Private Sector Bank':                  pbProfile('Private Bank',    2.4, 6),
+  'Public Sector Bank':                   pbProfile('PSU Bank',        1.1, 3),
+  'Non Banking Financial Company (NBFC)': pbProfile('NBFC',            3.5, 10),
+  'Housing Finance Company':              pbProfile('Housing Finance', 1.8, 6),
+  'Holding Company':                      peProfile('Holding Co',      16),
+
   // ══ EV/Sales-based (high-growth / early-stage) ═════════════════════════════
   'Electronics': {
     model: 'ev_sales',
@@ -331,6 +341,12 @@ const INDUSTRY_PROFILES: Record<string, SectorProfile> = {
   // ── Banking ──
   'Banks—Diversified':              pbProfile('Banking', 2.2, 8),
   'Banks—Regional':                 pbProfile('Banking', 1.8, 6),
+  'Private Sector Bank':            pbProfile('Private Bank', 2.4, 6),
+  'Public Sector Bank':             pbProfile('PSU Bank', 1.1, 3),
+  'Non Banking Financial Company (NBFC)': pbProfile('NBFC', 3.5, 10),
+  'Housing Finance Company':        pbProfile('Housing Finance', 1.8, 6),
+  'Life Insurance':                 INSURANCE_PROFILE,
+  'Holding Company':                peProfile('Holding Co', 16),
 
   // ── IT / Software ──
   'Software—Application':           peProfile('IT / Software', 28),
@@ -456,6 +472,16 @@ export function getCompanyProfile(company: {
     return BROKER_PROFILE;
   }
 
+  // Banks — the correct lens is P/B (ROE drives the premium over book value).
+  // Safety net for any bank whose Screener label isn't mapped explicitly above.
+  if (
+    name.includes('bank') &&
+    !name.includes('investment bank') &&
+    !name.includes('merchant bank')
+  ) {
+    return pbProfile('Bank', 1.8, 6);
+  }
+
   // 3. Sector-based fallback (original logic)
   return getSectorProfile(company.sector);
 }
@@ -502,6 +528,16 @@ export const INDIA_SECTOR_CAGR: Record<string, number> = {
   'Financial Services':      16,   // financialisation of savings; MF + insurance penetration
   'NBFC':                    16,
   'Insurance':               18,   // massive underpenetration; IRDAI projections
+  'Private Sector Bank':     13,
+  'Public Sector Bank':      11,
+  'Non Banking Financial Company (NBFC)': 16,
+  'Housing Finance Company': 13,
+  'Life Insurance':          18,
+  'Holding Company':         10,
+  'Private Bank':            13,
+  'PSU Bank':                11,
+  'Housing Finance':         13,
+  'Holding Co':              10,
 
   // ── Other ──
   'Telecom':                  8,   // ARPU growth + 5G; subscriber base mature
