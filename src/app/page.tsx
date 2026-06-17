@@ -35,6 +35,7 @@ import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout'
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
+import ThreeLensCard from '@/components/ThreeLensCard';
 import DividendCard from '@/components/DividendCard';
 import ShareholdingCard from '@/components/ShareholdingCard';
 import AnalystCard from '@/components/AnalystCard';
@@ -717,6 +718,11 @@ export default function Home() {
                         desc="Before any charts, the three checks a sensible friend makes: does it earn money, is it loaded with debt, and is the price fair?"
                       />
                       <PlainReasons company={company} financials={financials} assumptions={assumptions} />
+                    </div>
+
+                    {/* Three lenses — cross-check the price three independent ways */}
+                    <div id="sec-lenses" className="scroll-mt-24">
+                      <ThreeLensCard company={company} financials={financials} assumptions={assumptions} />
                     </div>
 
                     {/* Honesty banner — when our own models shouldn't be trusted */}

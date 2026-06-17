@@ -812,6 +812,26 @@ export function warrantedPB(company: Company, profile: SectorProfile): number {
   return Math.round(Math.min(Math.max(pb, 0.5), cap) * 100) / 100;
 }
 
+// ─── Earnings Power Value — the no-growth intrinsic floor (Greenwald; RIM family) ──
+// What today's normalized profit is worth as a perpetuity, crediting ZERO growth:
+//   EPV = normalized EPS / cost of equity.
+// price − EPV = the "growth premium" baked into the price. Below EPV → cheap on current
+// earnings alone; far above → you're paying mostly for future growth. A clean decomposition
+// that never contradicts the headline (it explains WHY the price is what it is).
+export function earningsPowerValue(company: Company, financials: FinancialYear[]): {
+  fairValue: number; growthPremiumPct: number; coe: number;
+} {
+  const beta = company.beta && company.beta > 0 ? company.beta : 1.0;
+  const coe  = (RISK_FREE_RATE + EQUITY_RISK_PREMIUM * Math.max(beta, 0.6)) / 100;
+  const eps  = financials.map(f => f.eps).filter(e => e > 0).slice(-5).sort((a, b) => a - b);
+  const normEPS = eps.length ? eps[Math.floor((eps.length - 1) / 2)] : (company.eps ?? 0);
+  if (normEPS <= 0 || coe <= 0) return { fairValue: 0, growthPremiumPct: 0, coe: coe * 100 };
+  const fairValue = normEPS / coe;
+  const growthPremiumPct = company.currentPrice > 0
+    ? ((company.currentPrice - fairValue) / company.currentPrice) * 100 : 0;
+  return { fairValue, growthPremiumPct, coe: coe * 100 };
+}
+
 // ─── Generic dispatcher ───────────────────────────────────────────────────────
 export function runPrimaryModel(
   modelType: ValuationModel,
