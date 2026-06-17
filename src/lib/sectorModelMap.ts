@@ -161,14 +161,14 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
 
   // ══ Sector-label COVERAGE (real Screener labels that were unmapped → 25x default) ══
   // ── Power & utilities — regulated, stable earnings → P/E (EBITDA often unreliable here)
-  'Power Generation':              peProfile('Power Generation', 15),
-  'Power - Transmission':          peProfile('Power Transmission', 16),
-  'Power Transmission':            peProfile('Power Transmission', 16),
-  'Integrated Power Utilities':    peProfile('Power Utilities', 16),
-  'Power Trading':                 peProfile('Power Utilities', 15),
-  'Power - Distribution':          peProfile('Power Distribution', 14),
-  'Gas Transmission/Marketing':    peProfile('Gas Utilities', 14),
-  'LPG/CNG/PNG/LNG Supplier':      peProfile('City Gas Distribution', 16),
+  'Power Generation':              peProfile('Power Generation', 12),
+  'Power - Transmission':          peProfile('Power Transmission', 14),
+  'Power Transmission':            peProfile('Power Transmission', 14),
+  'Integrated Power Utilities':    peProfile('Power Utilities', 14),
+  'Power Trading':                 peProfile('Power Utilities', 13),
+  'Power - Distribution':          peProfile('Power Distribution', 12),
+  'Gas Transmission/Marketing':    peProfile('Gas Utilities', 13),
+  'LPG/CNG/PNG/LNG Supplier':      peProfile('City Gas Distribution', 15),
   // ── Financial institutions — PSU lenders (PFC/REC/IRFC): value on book, not P/E
   'Financial Institution':         pbProfile('Financial Institution', 1.3, 2.2, 14.5, 9, 17),
   // ── Oil & gas refining
@@ -554,6 +554,10 @@ export function valuationCaveat(profile: SectorProfile): string {
     return "Strong brands earn huge returns on very little machinery, so a 'high' price tag is often deserved — we just check it's still growing.";
   if (s.includes('holding'))
     return "A holding company is worth the sum of its stakes (minus a discount), not its own reported profit.";
+  if (s.includes('power') || s.includes('utilit') || s.includes('gas') || s.includes('city gas'))
+    return "A regulated utility — returns are largely set by the regulator on the assets it owns, so it's steady and slow. We value it close to its earning power, not on big growth.";
+  if (s.includes('financial institution'))
+    return "A government-backed lender (like a bank) — judged on return on equity and book value, with policy/asset-quality risk to watch, not the usual profit multiple.";
   switch (profile.model) {
     case 'pb':
       return "Banks & lenders run on borrowed money — that's their business, not a red flag. We judge them on return on equity (ROE) and bad loans, valued against book value — not the usual profit multiple.";
