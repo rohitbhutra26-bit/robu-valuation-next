@@ -657,7 +657,7 @@ export default function Home() {
               </div>
 
             ) : company ? (
-              <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 max-w-4xl mx-auto">
+              <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 max-w-6xl mx-auto">
                 {/* Sticky mini-ticker — appears once you scroll past the header */}
                 <StickyTicker company={company} financials={financials} assumptions={assumptions} />
 
