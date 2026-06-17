@@ -832,6 +832,56 @@ export function earningsPowerValue(company: Company, financials: FinancialYear[]
   return { fairValue, growthPremiumPct, coe: coe * 100 };
 }
 
+export interface RoughRead { headline: string; basis: string; fairValue?: number; upsidePct?: number; }
+
+// ─── Rough fallback read — when the full model can't run, still say something sensible ──
+// Never returns empty for a priced stock: REITs → yield, loss-makers → price-to-sales,
+// demerger/one-off distortions → book value, sparse-but-profitable → current earnings/book
+// vs the sector-typical multiple. Always a ROUGH estimate, clearly flagged.
+export function simpleValuation(company: Company, financials: FinancialYear[], profile: SectorProfile): RoughRead | null {
+  const price = company.currentPrice;
+  if (price <= 0) return null;
+  const sector = `${company.sector || ''} ${profile.sectorLabel}`.toLowerCase();
+  const latestRev = financials.length ? financials[financials.length - 1].revenue : 0;
+  const ps = latestRev > 0 && company.marketCap > 0 ? company.marketCap / latestRev : 0;
+  const dy = company.dividendYield ?? 0;
+  const pb = company.pb ?? 0;
+  const book = company.bookValue ?? 0;
+
+  if (sector.includes('reit') || sector.includes('investment trust') || sector.includes('invit')) {
+    return { basis: 'Distribution yield (REIT)', headline: dy > 0
+      ? `REITs pay out most of their rent as dividends, so they're judged on yield — not ordinary profit. It currently yields about ${dy.toFixed(1)}%. Broadly: above ~6.5% is attractive, below ~5% is on the richer side.`
+      : `This is a REIT — valued on the rent it distributes, which Robu doesn't fully model yet. Judge it on its distribution yield and occupancy.` };
+  }
+  if ((company.eps ?? 0) <= 0 || (company.roe ?? 0) < 0) {
+    return { basis: ps > 0 ? 'Price-to-sales (loss-making)' : 'Insufficient data', headline: ps > 0
+      ? `It's still loss-making, so there's no normal "fair value" yet — businesses like this are judged on sales and how fast losses are shrinking. It's priced at about ${ps.toFixed(1)}\u00d7 its yearly sales.`
+      : `It's loss-making with limited data — we can't put a fair value on it yet. Watch for losses narrowing and a clear path to profit.` };
+  }
+  if (company.pe > 0 && company.pe < 4) {
+    return { basis: 'Price-to-book (earnings distorted)',
+      headline: `Its reported earnings look distorted — often after a demerger or a one-off item — so a normal earnings verdict would mislead. On book value it trades at about ${pb.toFixed(1)}\u00d7, a steadier yardstick here until clean full-year numbers arrive.` };
+  }
+  if ((company.eps ?? 0) > 0 && profile.model !== 'pb' && company.pe > 0 && company.pe < 150) {
+    const fair = (company.eps as number) * profile.defaultExitMultiple;
+    const up = (fair - price) / price * 100;
+    const word = up > 15 ? 'cheap' : up < -15 ? 'expensive' : 'fairly priced';
+    return { basis: `${profile.defaultExitMultiple}\u00d7 earnings (sector-typical, no growth)`, fairValue: fair, upsidePct: up,
+      headline: `Too little history for a full forecast, so here's a rough read: on today's earnings at a normal ${profile.defaultExitMultiple}\u00d7 for its sector, it looks ${word}.` };
+  }
+  if (profile.model === 'pb' && book > 0) {
+    const fair = book * profile.defaultExitMultiple;
+    const up = (fair - price) / price * 100;
+    const word = up > 15 ? 'cheap' : up < -15 ? 'expensive' : 'fairly priced';
+    return { basis: `${profile.defaultExitMultiple}\u00d7 book value (sector-typical)`, fairValue: fair, upsidePct: up,
+      headline: `Too little history for a full model. On its book value at a normal ${profile.defaultExitMultiple}\u00d7 for its sector, a rough read says it looks ${word}.` };
+  }
+  if (book > 0) {
+    return { basis: 'Price-to-book', headline: `Limited data for a full valuation. It trades at about ${pb.toFixed(1)}\u00d7 its book value — compare that to similar companies in its sector.` };
+  }
+  return null;
+}
+
 // ─── Generic dispatcher ───────────────────────────────────────────────────────
 export function runPrimaryModel(
   modelType: ValuationModel,

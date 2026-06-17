@@ -69,6 +69,16 @@ export function valuationReliability(
     }
   }
 
+  // Pattern — distorted earnings (demerger / one-off): an absurdly low P/E (<4) almost
+  // always means reported EPS is not real forward earnings (e.g. a fresh demerger).
+  if (company.pe > 0 && company.pe < 4) {
+    return {
+      reliable: false,
+      title: 'Reported earnings look distorted — verdict withheld',
+      note: `${company.name.split(" ").slice(0,2).join(" ")} shows a price-to-earnings of just ${company.pe.toFixed(1)}, implausibly low for a normal company — it usually means the reported profit includes a one-off item or follows a recent demerger. We hold back a confident verdict and show a book-value-based rough read instead.`,
+    };
+  }
+
   // Pattern 1 — incubator/conglomerate priced far beyond current earnings
   const peExtreme  = company.pe <= 0 || company.pe > 35;
   const thinMargin = latest.netMargin > 0 && latest.netMargin < 5;

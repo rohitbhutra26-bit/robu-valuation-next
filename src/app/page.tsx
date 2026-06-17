@@ -36,6 +36,7 @@ import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
 import ThreeLensCard from '@/components/ThreeLensCard';
+import RoughEstimateCard from '@/components/RoughEstimateCard';
 import DividendCard from '@/components/DividendCard';
 import ShareholdingCard from '@/components/ShareholdingCard';
 import AnalystCard from '@/components/AnalystCard';
@@ -704,6 +705,9 @@ export default function Home() {
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
                     </div>
 
+                    {/* Fallback rough read — only appears when the full model can't value it */}
+                    <RoughEstimateCard company={company} financials={financials} />
+
                     {/* Plain-English "how we judge this" — the right lens, explained (Gospel Part 11) */}
                     <p className="text-[13px] text-muted leading-relaxed px-1">
                       <span className="font-semibold text-primary/85">How we judge {company.symbol}: </span>
@@ -810,8 +814,8 @@ export default function Home() {
                   </>
                 )}
 
-                {companyTab === 'valuation' && activeView === 'valuation' && financials.length === 0 && (
-                  <p className="text-sm text-muted text-center py-8">No financial data available for {company.symbol}</p>
+                {companyTab === 'valuation' && activeView === 'valuation' && financials.length === 0 && company && (
+                  <RoughEstimateCard company={company} financials={financials} />
                 )}
 
                 {/* ── TAB: FINANCIALS — ratios, statements, quarterly, charts ── */}
