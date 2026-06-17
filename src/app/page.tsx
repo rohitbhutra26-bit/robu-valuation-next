@@ -37,6 +37,7 @@ import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
 import ThreeLensCard from '@/components/ThreeLensCard';
 import RoughEstimateCard from '@/components/RoughEstimateCard';
+import SummaryRail from '@/components/SummaryRail';
 import DividendCard from '@/components/DividendCard';
 import ShareholdingCard from '@/components/ShareholdingCard';
 import AnalystCard from '@/components/AnalystCard';
@@ -657,7 +658,8 @@ export default function Home() {
               </div>
 
             ) : company ? (
-              <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 max-w-6xl mx-auto">
+              <div className="mx-auto max-w-6xl 2xl:max-w-[1560px] 2xl:flex 2xl:gap-6">
+                <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 flex-1 min-w-0">
                 {/* Sticky mini-ticker — appears once you scroll past the header */}
                 <StickyTicker company={company} financials={financials} assumptions={assumptions} />
 
@@ -870,6 +872,15 @@ export default function Home() {
                   <SectorAlternatives company={company} onSelectSymbol={handleSelect} />
                 )}
 
+                </div>
+                {/* Sticky 'at a glance' rail — ultra-wide desktop only (2xl+) */}
+                <aside className="hidden 2xl:block w-[330px] flex-shrink-0 pt-3 pb-8">
+                  <div className="sticky top-4">
+                    {company && financials.length > 0 && (
+                      <SummaryRail company={company} financials={financials} assumptions={assumptions} />
+                    )}
+                  </div>
+                </aside>
               </div>
             ) : (
               /* No company loaded — show prompt based on active view */
