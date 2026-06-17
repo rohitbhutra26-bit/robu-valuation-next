@@ -23,6 +23,12 @@ export interface SectorProfile {
   exitMultipleStep: number;
   multipleRationale: string;     // one-line "why this model"
 
+  // Warranted-P/B params (financials only): cost of equity, durable growth, sector
+  // reference ROE for mean-reversion. Calibrated on a 15-bank basket (A2).
+  coe?: number;
+  durableG?: number;
+  refROE?: number;
+
   // Scenario deltas from base assumptions
   bearGrowthDelta: number;
   bearMarginDelta: number;
@@ -64,7 +70,8 @@ function evEbitdaProfile(label: string, defaultMult: number, min: number, max: n
   };
 }
 
-function pbProfile(label: string, defaultPB: number, max: number): SectorProfile {
+function pbProfile(label: string, defaultPB: number, max: number,
+                   coe = 12.5, durableG = 9, refROE = 14): SectorProfile {
   return {
     model: 'pb',
     sectorLabel: label,
@@ -137,19 +144,19 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   'Oil & Gas':        evEbitdaProfile('Oil & Gas',          5,  2, 12),
 
   // ══ P/B-based ══════════════════════════════════════════════════════════════
-  'Banking':            pbProfile('Banking',            2.2,  8),
-  'Financial Services': pbProfile('Financial Services',  4.5, 12),
-  'NBFC':               pbProfile('NBFC',                4.5, 12),
-  'Insurance':          pbProfile('Insurance',           8,   20),
+  'Banking':            pbProfile('Banking',            2.2,  4, 11.5, 10, 13),
+  'Financial Services': pbProfile('Financial Services',  4.0, 6, 12, 9, 16),
+  'NBFC':               pbProfile('NBFC',                3.5, 6, 12, 9, 19),
+  'Insurance':          pbProfile('Insurance',           8,   20, 13, 9, 14),
 
   // Screener.in's ACTUAL financial-sector labels. These were unmapped → falling
   // through to the 25x Broad-Market P/E default, which massively over-valued banks
   // (a +40%%+ re-rating baked in before any growth → phantom "doubles in a year").
   // Banks/NBFCs must use P/B: book value compounds at ROE×retention.
-  'Private Sector Bank':                  pbProfile('Private Bank',    2.4, 6),
-  'Public Sector Bank':                   pbProfile('PSU Bank',        1.2, 3),
-  'Non Banking Financial Company (NBFC)': pbProfile('NBFC',            3.5, 10),
-  'Housing Finance Company':              pbProfile('Housing Finance', 1.8, 6),
+  'Private Sector Bank':                  pbProfile('Private Bank',    2.4, 4, 11.5, 10, 13),
+  'Public Sector Bank':                   pbProfile('PSU Bank',        1.2, 2, 14.5, 9, 15),
+  'Non Banking Financial Company (NBFC)': pbProfile('NBFC',            3.5, 6, 12, 9, 19),
+  'Housing Finance Company':              pbProfile('Housing Finance', 1.8, 1.8, 16, 9, 14),
   'Holding Company':                      peProfile('Holding Co',      16),
 
   // ══ EV/Sales-based (high-growth / early-stage) ═════════════════════════════
@@ -339,12 +346,12 @@ const INDUSTRY_PROFILES: Record<string, SectorProfile> = {
   'Insurance':                      INSURANCE_PROFILE,
 
   // ── Banking ──
-  'Banks—Diversified':              pbProfile('Banking', 2.2, 8),
-  'Banks—Regional':                 pbProfile('Banking', 1.8, 6),
-  'Private Sector Bank':            pbProfile('Private Bank', 2.4, 6),
-  'Public Sector Bank':             pbProfile('PSU Bank', 1.2, 3),
-  'Non Banking Financial Company (NBFC)': pbProfile('NBFC', 3.5, 10),
-  'Housing Finance Company':        pbProfile('Housing Finance', 1.8, 6),
+  'Banks—Diversified':              pbProfile('Banking', 2.2, 4, 11.5, 10, 13),
+  'Banks—Regional':                 pbProfile('Banking', 1.8, 3.5, 12, 9.5, 13),
+  'Private Sector Bank':            pbProfile('Private Bank', 2.4, 4, 11.5, 10, 13),
+  'Public Sector Bank':             pbProfile('PSU Bank', 1.2, 2, 14.5, 9, 15),
+  'Non Banking Financial Company (NBFC)': pbProfile('NBFC', 3.5, 6, 12, 9, 19),
+  'Housing Finance Company':        pbProfile('Housing Finance', 1.8, 1.8, 16, 9, 14),
   'Life Insurance':                 INSURANCE_PROFILE,
   'Holding Company':                peProfile('Holding Co', 16),
 
@@ -484,7 +491,7 @@ export function getCompanyProfile(company: {
     !name.includes('investment bank') &&
     !name.includes('merchant bank')
   ) {
-    return pbProfile('Bank', 1.5, 6);
+    return pbProfile('Bank', 1.5, 3, 12.5, 9, 14);
   }
 
   return sectorProfile;

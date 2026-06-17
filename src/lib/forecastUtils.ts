@@ -388,7 +388,9 @@ export function pbModel(
   const pbPayout    = company.dividendYield > 0 && company.pe > 0
     ? Math.min((company.dividendYield / 100) * company.pe, 0.9) : 0.3;
   const pbSustain   = (company.roe > 0 ? company.roe : 12) * (1 - pbPayout);
-  const bookG       = Math.min(bookGrowthRate, pbSustain);
+  // Cap durable book growth at 12% — even top banks rarely compound book faster after
+  // dilution/payout, and an uncapped rate double-counts ROE (already in the warranted P/B).
+  const bookG       = Math.min(bookGrowthRate, pbSustain, 12);
   const futureBVPS  = currentBVPS * fadeCompound(bookG, years);
 
   // exitPB is the RE-RATING multiple — the premium the market will pay at exit.
@@ -755,11 +757,12 @@ export function suggestAssumptions(
   // Exit multiple: for banks/NBFCs derive a Gordon-growth fair P/B = (ROE−g)/(CoE−g),
   // so a high-ROE bank justifies a higher multiple and a low-ROE one a lower multiple —
   // instead of a flat sector number. Falls back to the sector default for everything else.
-  // Exit multiple = the sector-correct default (banks→P/B, cyclicals→EV/EBITDA, etc.).
-  // NOTE: per-bank Gordon-growth P/B ((ROE−g)/(CoE−g)) is the rigorous next step but needs
-  // an ROE mean-reversion haircut + multi-bank calibration to avoid double-counting ROE
-  // (book already compounds at ROE) — deferred to a validated Phase A.2 pass.
-  const exitMultiple = profile.defaultExitMultiple;
+  // Exit multiple: financials use the backtested warranted-P/B engine (ROE vs cost of
+  // capital, sector-calibrated, ROE mean-reverted); everything else uses the sector
+  // default (cyclicals→EV/EBITDA, consumer→P/E, etc.).
+  const exitMultiple = profile.model === 'pb'
+    ? warrantedPB(company, profile)
+    : profile.defaultExitMultiple;
 
   return {
     revenueGrowthRate:       Math.round(revenueGrowthRate * 10) / 10,
@@ -775,6 +778,25 @@ export function suggestAssumptions(
     avg3yrRevenue,
     isPartialYearDetected:   isPartialDetected,
   };
+}
+
+// ─── Warranted P/B (financials) — backtested ROE→P/B engine ─────────────────────
+// Fair P/B = (ROE_eff − g) / (CoE − g), the Gordon-growth relationship, but with:
+//   • ROE mean-reversion (Nissim–Penman): spot ROE pulled 35% toward the sector
+//     reference ROE, then capped to [6, 22]% (ultra-high ROE rarely persists,
+//     a depressed year shouldn't crater value).
+//   • sector-specific CoE & durable growth (private banks vs PSU vs NBFC differ in
+//     cost of capital and growth) — calibrated on a 15-bank basket so sector-average
+//     fair P/B ≈ market.
+//   • clamp to [0.5, sector cap].
+export function warrantedPB(company: Company, profile: SectorProfile): number {
+  const coe = profile.coe ?? 12.5;
+  const g   = profile.durableG ?? 9;
+  const ref = profile.refROE ?? 14;
+  const cap = profile.exitMultipleMax;
+  const roeEff = Math.min(Math.max((company.roe || 0) - 0.35 * ((company.roe || 0) - ref), 6), 22);
+  const pb = coe > g ? Math.max((roeEff - g) / (coe - g), 0.3) : cap;
+  return Math.round(Math.min(Math.max(pb, 0.5), cap) * 100) / 100;
 }
 
 // ─── Generic dispatcher ───────────────────────────────────────────────────────
