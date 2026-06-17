@@ -50,7 +50,10 @@ export default function ThreeLensCard({ company, financials, assumptions }: {
     // Lens 3 — the market's own bet (growth priced in vs delivered)
     let impSig: Sig = 'fair'; let impText = '';
     try {
-      const implied = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, company.pe > 0 ? company.pe : 25, assumptions.years);
+      // Use the sector-NORMAL exit multiple, not the stock's own (rich) one, so we ask
+      // 'what growth justifies today's price at a normal multiple' — not a circular question.
+      const exitPE = profile.model === 'pe' ? assumptions.exitMultiple : (company.pe > 0 ? company.pe : 22);
+      const implied = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, exitPE, assumptions.years);
       const delivered = pegModel(financials, company).epsCAGR;
       impSig = implied > delivered + 5 ? 'rich' : implied < delivered - 3 ? 'cheap' : 'fair';
       impText = `The price assumes about ${implied.toFixed(0)}%/yr growth; it has actually delivered ${delivered > 0 ? delivered.toFixed(0) + '%' : 'less'}.`;
