@@ -723,17 +723,17 @@ export function suggestAssumptions(
       .filter((g): g is number => g !== null && g > -50 && g < 100);
 
     if (revenueGrowths.length >= 2) {
-      // Drop one-off M&A / restatement spikes: if the company shows a MIX of normal and
-      // very-high (>40%) years, the spike is almost certainly inorganic (e.g. HDFC Bank's
-      // +57% merger year) → exclude it. If growth is UNIFORMLY high, it's real → keep it.
-      const organic = revenueGrowths.filter(g => g <= 40);
-      const dropped = revenueGrowths.length - organic.length;
-      const usable  = organic.length >= 1 ? organic : revenueGrowths;
-      const recent  = usable.slice(-3);
-      rawCompanyGrowth = recent.reduce((a, b) => a + b, 0) / recent.length;
+      // MEDIAN of recent annual growth — robust to a single one-off year in EITHER
+      // direction (an acquisition spike, a covid rebound, a one-off dip) while keeping
+      // genuinely sustained growth. The old >40% filter was too eager: it wrongly capped
+      // real fast-growers (e.g. RateGain's +69%/+69% → 12%). Median quietly ignores a lone
+      // outlier and trusts a repeated trend.
+      const recent = revenueGrowths.slice(-3);
+      const sorted = [...recent].sort((a, b) => a - b);
+      rawCompanyGrowth = sorted[Math.floor((sorted.length - 1) / 2)];
       source = 'historical_cagr';
-      confidence = rawCompanyGrowth > 5 ? 'Medium' : 'Low';
-      rationale = `${dropped > 0 ? 'organic' : '3yr avg'} revenue growth ${rawCompanyGrowth.toFixed(1)}%${dropped > 0 ? ' (one-off M&A year excluded)' : ''} — fades to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
+      confidence = recent.length >= 3 && rawCompanyGrowth > 5 ? 'Medium' : 'Low';
+      rationale = `median recent revenue growth ${rawCompanyGrowth.toFixed(1)}% — fades to ${TERMINAL_GROWTH}% by year N · Base: ${yearLabel}`;
     } else {
       // Fallback: use industry rate directly
       rawCompanyGrowth = industryCagr;
