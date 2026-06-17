@@ -59,16 +59,16 @@
   --color-terminal: 244 245 248;   /* #F4F5F8 — soft cool-white page bg */
   --color-card:     255 255 255;   /* #FFFFFF — clean white card */
   --color-border:   209 213 223;   /* #D1D5DF — soft neutral */
-  --color-gold:     122 34 56;     /* #7A2238 — burgundy brand accent */
+  --color-gold:     200 28 84;     /* #C81C54 — vivid wine-rose brand accent, pops on white */
   --color-tan:      176 124 67;    /* #B07C43 — warm tan secondary (AA on white) */
   --color-gain:     17 165 107;    /* #11A56B — green (gains only) */
   --color-loss:     214 69 69;     /* #D64545 — red (losses only) */
   --color-primary:  25 20 23;      /* #191417 — warm near-black */
-  --color-muted:    122 115 120;   /* #7A7378 — calm warm grey */
-  --color-accent:   122 34 56;     /* #7A2238 — burgundy */
+  --color-muted:    94 90 98;      /* #5E5A62 — clearer warm grey (was washed out) */
+  --color-accent:   200 28 84;     /* #C81C54 — vivid wine-rose */
   --color-warning:  180 100 30;    /* #B4641E — amber/tan caution */
 
-  --border-subtle:  rgba(24, 27, 39, 0.09);
+  --border-subtle:  rgba(24, 27, 39, 0.14);
   --border-strong:  rgba(24, 27, 39, 0.16);
   --shadow-color:   rgba(24, 27, 60, 0.06);
 }
@@ -172,6 +172,11 @@ button:active, [role="button"]:active {
 /* Override Tailwind's border-border to use alpha in both themes */
 [data-theme="light"] [class*="border-border"] {
   border-color: var(--border-subtle) !important;
+}
+/* Light mode: lift white cards off the page with a soft shadow + crisp hairline so the
+   layout has definition instead of blending into the background. */
+[data-theme="light"] .bg-card {
+  box-shadow: 0 1px 2px rgba(20, 22, 45, 0.04), 0 8px 20px -8px rgba(20, 22, 45, 0.08);
 }
 [data-theme="dark"] [class*="border-border"] {
   border-color: var(--border-subtle) !important;

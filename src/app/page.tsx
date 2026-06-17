@@ -391,7 +391,7 @@ export default function Home() {
       <header className="border-b border-border/60 bg-terminal/80 backdrop-blur-md sticky top-0 z-40 flex-shrink-0">
         <div className="flex items-center justify-between gap-6 px-7 py-4 max-w-[1400px] mx-auto w-full">
           <button onClick={goHome} className="flex items-center group flex-shrink-0" aria-label="robu — home">
-            <RobuWordmark height={22} className="text-primary group-hover:text-gold transition-colors" />
+            <RobuWordmark height={24} className="text-gold transition-opacity hover:opacity-80" />
           </button>
 
           {!homeMode && (
