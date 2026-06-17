@@ -132,48 +132,27 @@ export default function WealthProjection({ company, financials, assumptions }: P
         </div>
       </div>
 
-      {/* ── Projection table ── */}
-      <div className="overflow-x-auto -mx-1 px-1">
-        <table className="w-full text-right">
-          <thead>
-            <tr className="border-b border-border/50">
-              <th className="text-left text-[10px] text-muted font-medium uppercase tracking-wider py-2">Scenario</th>
-              {HORIZONS.map(h => (
-                <th key={h} className="text-[10px] text-muted font-medium uppercase tracking-wider py-2 pl-3">
-                  {h} yrs
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(row => (
-              <tr key={row.name} className="border-b border-border/30 last:border-0">
-                <td className="text-left py-2.5">
-                  <span className="text-xs font-semibold" style={{ color: row.color }}>
-                    {row.emoji} {row.name}
-                  </span>
-                </td>
-                {HORIZONS.map(h => {
-                  const w = row.wealth[h];
-                  const gained = w.amount >= amount;
-                  return (
-                    <td key={h} className="py-2.5 pl-3">
-                      <span className={`block text-sm font-bold font-mono ${
-                        row.name === 'Base' ? 'text-primary' : gained ? 'text-primary/80' : 'text-loss'
-                      }`}>
-                        {fmtINR(w.amount)}
-                      </span>
-                      <span className="block text-[10px] font-mono text-muted">
-                        {w.cagr >= 0 ? '+' : ''}{w.cagr.toFixed(1)}%/yr
-                      </span>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* ── Future value by horizon — the NUMBER, front and centre (no %% clutter) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {HORIZONS.map(h => {
+          const base = rows[1].wealth[h].amount;
+          const bear = rows[0].wealth[h].amount;
+          const bull = rows[2].wealth[h].amount;
+          const grew = base >= amount;
+          return (
+            <div key={h} className="bg-terminal/40 border border-border rounded-2xl px-3 py-3.5 text-center">
+              <p className="text-[11px] text-muted mb-1.5">In {h} year{h > 1 ? 's' : ''}</p>
+              <p className={`text-[22px] sm:text-2xl font-bold font-mono leading-none ${grew ? 'text-gain' : 'text-loss'}`}>
+                {fmtINR(base)}
+              </p>
+              <p className="text-[10.5px] text-muted/70 mt-2 font-mono">{fmtINR(bear)} – {fmtINR(bull)}</p>
+            </div>
+          );
+        })}
       </div>
+      <p className="text-[10.5px] text-muted/60 text-center -mt-1">
+        Big number = expected outcome · small range = worst to best case
+      </p>
 
       {/* ── Human takeaway ── */}
       <div className="bg-border/20 rounded-xl px-4 py-3">

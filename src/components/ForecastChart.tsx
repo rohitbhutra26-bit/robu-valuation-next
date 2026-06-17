@@ -79,6 +79,14 @@ export default function ForecastChart({ financials, assumptions }: Props) {
   const firstP = points.findIndex(p => p.isProjected);
   const maxVal = Math.max(...points.map(p => p.revenue)) * 1.15;
 
+  // Plain-English "today → future" framing
+  const lastHist  = firstP > 0 ? points[firstP - 1] : points[points.length - 1];
+  const finalPt   = points[points.length - 1];
+  const projYears = points.filter(p => p.isProjected).length;
+  const revMult   = lastHist.revenue > 0 ? finalPt.revenue / lastHist.revenue : 0;
+  const patMult   = lastHist.pat > 0 ? finalPt.pat / lastHist.pat : 0;
+  const finalLbl  = finalPt.year.replace('P', '');
+
   function sy(v: number) { return (v / maxVal) * innerH; }
   function baseY()       { return PAD.t + innerH; }
   function revX(i: number) { return PAD.l + i * colW + (colW - barW * 2 - gap) / 2; }
@@ -95,7 +103,7 @@ export default function ForecastChart({ financials, assumptions }: Props) {
           <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center">
             <BarChart3 size={13} className="text-gain" />
           </div>
-          <h3 className="text-sm font-semibold text-primary">Revenue & Profit Forecast</h3>
+          <h3 className="text-sm font-semibold text-primary">Where the business is heading</h3>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
@@ -107,6 +115,28 @@ export default function ForecastChart({ financials, assumptions }: Props) {
             PAT
           </span>
           <span className="text-[10px] font-mono bg-border/50 px-1.5 py-0.5 rounded">P = Projected</span>
+        </div>
+      </div>
+
+      {/* ── Plain-English headline: what it is today → what it could be ── */}
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div className="bg-terminal/40 border border-border rounded-2xl px-3.5 py-3">
+          <p className="text-[11px] text-muted mb-1">Sales by {finalLbl}</p>
+          <p className="text-[15px] font-bold font-mono leading-tight">
+            <span className="text-muted">₹{fmtY(lastHist.revenue)}</span>
+            <span className="text-muted/50"> → </span>
+            <span style={{ color: REV }}>₹{fmtY(finalPt.revenue)} Cr</span>
+          </p>
+          {revMult > 0 && <p className="text-[10.5px] text-muted/70 mt-1">about {revMult.toFixed(1)}× in {projYears} yrs</p>}
+        </div>
+        <div className="bg-terminal/40 border border-border rounded-2xl px-3.5 py-3">
+          <p className="text-[11px] text-muted mb-1">Profit by {finalLbl}</p>
+          <p className="text-[15px] font-bold font-mono leading-tight">
+            <span className="text-muted">₹{fmtY(lastHist.pat)}</span>
+            <span className="text-muted/50"> → </span>
+            <span style={{ color: PAT }}>₹{fmtY(finalPt.pat)} Cr</span>
+          </p>
+          {patMult > 0 && <p className="text-[10.5px] text-muted/70 mt-1">about {patMult.toFixed(1)}× in {projYears} yrs</p>}
         </div>
       </div>
 
@@ -165,15 +195,6 @@ export default function ForecastChart({ financials, assumptions }: Props) {
               <rect x={px} y={baseY() - patH} width={barW} height={patH}
                 fill={PAT} fillOpacity={isP ? 0.38 : 0.9} rx="2" />
 
-              {/* Growth % above revenue bar */}
-              {pt.revenueGrowth !== 0 && revH > 4 && (
-                <text x={rx + barW / 2} y={baseY() - revH - 3}
-                  textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono, monospace"
-                  fill={isP ? 'rgb(var(--color-gold))' : 'rgb(var(--color-muted))'} fillOpacity={isP ? 0.9 : 0.85}>
-                  {pt.revenueGrowth > 0 ? '+' : ''}{pt.revenueGrowth.toFixed(0)}%
-                </text>
-              )}
-
               {/* X label */}
               <text x={cx} y={baseY() + 13} textAnchor="middle" fontSize="9"
                 fontFamily="JetBrains Mono, monospace"
@@ -185,12 +206,10 @@ export default function ForecastChart({ financials, assumptions }: Props) {
         })}
       </svg>
 
-      <p className="text-[11px] text-muted text-center mt-1">
-        Projected at{' '}
-        <span className="text-accent font-mono font-semibold">{assumptions.revenueGrowthRate}%</span>
-        {' '}revenue growth ·{' '}
-        <span className="text-gain font-mono font-semibold">{assumptions.netMarginAssumption}%</span>
-        {' '}net margin — adjusts live with sliders above
+      <p className="text-[11px] text-muted text-center mt-2 leading-relaxed">
+        Bars after the dotted line are estimates — they assume sales keep growing about{' '}
+        <span className="text-primary font-semibold">{assumptions.revenueGrowthRate}%</span> a year and the profit margin stays near{' '}
+        <span className="text-primary font-semibold">{assumptions.netMarginAssumption}%</span>. Drag the sliders to test your own view.
       </p>
     </div>
   );
