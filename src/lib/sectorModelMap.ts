@@ -159,6 +159,53 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   'Housing Finance Company':              pbProfile('Housing Finance', 1.8, 1.8, 16, 9, 14),
   'Holding Company':                      peProfile('Holding Co',      16),
 
+  // ══ Sector-label COVERAGE (real Screener labels that were unmapped → 25x default) ══
+  // ── Power & utilities — regulated, stable earnings → P/E (EBITDA often unreliable here)
+  'Power Generation':              peProfile('Power Generation', 15),
+  'Power - Transmission':          peProfile('Power Transmission', 16),
+  'Power Transmission':            peProfile('Power Transmission', 16),
+  'Integrated Power Utilities':    peProfile('Power Utilities', 16),
+  'Power Trading':                 peProfile('Power Utilities', 15),
+  'Power - Distribution':          peProfile('Power Distribution', 14),
+  'Gas Transmission/Marketing':    peProfile('Gas Utilities', 14),
+  'LPG/CNG/PNG/LNG Supplier':      peProfile('City Gas Distribution', 16),
+  // ── Financial institutions — PSU lenders (PFC/REC/IRFC): value on book, not P/E
+  'Financial Institution':         pbProfile('Financial Institution', 1.3, 2.2, 14.5, 9, 17),
+  // ── Oil & gas refining
+  'Refineries & Marketing':        evEbitdaProfile('Oil & Gas / Refining', 6, 2, 12),
+  // ── Infra / transport
+  'Port & Port services':          evEbitdaProfile('Ports / Infra', 15, 6, 28),
+  'Road Assets-Toll, Annuity, Hybrid-Annuity': evEbitdaProfile('Roads / Infra', 11, 5, 22),
+  'Airline':                       peProfile('Airline', 12),
+  'Tour, Travel Related Services': peProfile('Travel / Platform', 32),
+  // ── Chemicals
+  'Specialty Chemicals':           peProfile('Specialty Chemicals', 32),
+  'Commodity Chemicals':           peProfile('Commodity Chemicals', 18),
+  'Pesticides & Agrochemicals':    peProfile('Agrochemicals', 22),
+  'Fertilizers':                   peProfile('Fertilizers', 16),
+  // ── Cement
+  'Cement & Cement Products':      peProfile('Cement', 26),
+  // ── Consumer / retail / hospitality
+  'Speciality Retail':             peProfile('Retail', 45),
+  'Diversified Retail':            peProfile('Retail', 50),
+  'Other Beverages':               peProfile('Beverages', 40),
+  'Breweries & Distilleries':      peProfile('Beverages', 38),
+  'Restaurants':                   peProfile('QSR / Food', 55),
+  'Hotels & Resorts':              peProfile('Hospitality', 34),
+  'Sugar':                         peProfile('Sugar (cyclical)', 14),
+  'Tea & Coffee':                  peProfile('Plantations', 18),
+  // ── Defence / shipbuilding — order-book driven
+  'Aerospace & Defense':           peProfile('Defence', 38),
+  'Ship Building & Allied Services': peProfile('Defence / Shipbuilding', 34),
+  // ── Industrials / materials (common labels)
+  'Iron & Steel':                  evEbitdaProfile('Steel (cyclical)', 6, 2, 12),
+  'Aluminium':                     evEbitdaProfile('Metals (cyclical)', 5, 2, 10),
+  'Tyres & Rubber Products':       peProfile('Tyres', 18),
+  'Paper & Paper Products':        peProfile('Paper (cyclical)', 12),
+  'Diamond & Jewellery':           peProfile('Jewellery', 30),
+  'Edible Oil':                    peProfile('Edible Oil (cyclical)', 14),
+  'Packaged Foods':                peProfile('FMCG', 45),
+
   // ══ EV/Sales-based (high-growth / early-stage) ═════════════════════════════
   'Electronics': {
     model: 'ev_sales',
@@ -174,7 +221,7 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   },
 };
 
-export const DEFAULT_SECTOR_PROFILE: SectorProfile = peProfile('Broad Market', 25);
+export const DEFAULT_SECTOR_PROFILE: SectorProfile = peProfile('Broad Market', 20);
 
 export function getSectorProfile(sector: string): SectorProfile {
   return SECTOR_PROFILES[sector] ?? DEFAULT_SECTOR_PROFILE;
