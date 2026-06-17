@@ -748,11 +748,24 @@ export function suggestAssumptions(
   // double-discount growth. The slider shows the honest year-1 rate.
   const revenueGrowthRate = Math.min(Math.max(rawCompanyGrowth, 1), 60);
 
-  // ── Step 3: Net margin from recent COMPLETE year actuals ──────────────────
+  // ── Step 3: Sustainable (mean-reverted) net margin ────────────────────────
+  // A company earning an exceptional margin today rarely holds it — competition
+  // compresses it toward its normal (Nissim–Penman). So we pull the recent margin
+  // 40% toward the company's OWN long-run median, then cap at a sector-normal
+  // ceiling. Self-calibrating: a genuine high-margin franchise (IT, FMCG) has a
+  // high long-run median too → barely moves; a peak-margin cyclical fades down.
   const recentMargins = completeYears.slice(-3).map(f => f.netMargin).filter(m => m > 0 && m < 80);
-  const netMarginAssumption = recentMargins.length > 0
-    ? recentMargins.reduce((a, b) => a + b, 0) / recentMargins.length
-    : 10; // fallback 10%
+  const allMargins    = completeYears.map(f => f.netMargin).filter(m => m > 0 && m < 80).sort((a, b) => a - b);
+  let netMarginAssumption: number;
+  if (recentMargins.length > 0) {
+    const recent  = recentMargins.reduce((a, b) => a + b, 0) / recentMargins.length;
+    const longRun = allMargins.length > 0 ? allMargins[Math.floor((allMargins.length - 1) / 2)] : recent;
+    const reverted = recent - 0.4 * (recent - longRun);
+    const ceiling  = (MARGIN_BOUNDS[company.sector]?.[1] ?? 40) + 5;
+    netMarginAssumption = Math.min(Math.max(reverted, 1), ceiling);
+  } else {
+    netMarginAssumption = 10;
+  }
 
   // Exit multiple: for banks/NBFCs derive a Gordon-growth fair P/B = (ROE−g)/(CoE−g),
   // so a high-ROE bank justifies a higher multiple and a low-ROE one a lower multiple —
