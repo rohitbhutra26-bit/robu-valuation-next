@@ -1,0 +1,86 @@
+name: Build Android APK
+
+# Builds a signed Robu APK on GitHub's Intel runners and publishes it to Releases.
+# Day-to-day web/content changes do NOT need a new APK (the app loads the live
+# site, so it auto-updates on every Railway deploy). This only rebuilds the
+# native shell when something in mobile/ changes, or when you click "Run workflow".
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # needed to publish the APK as a Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - name: Decode signing keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > robu-release.keystore
+
+      - name: Build signed release APK
+        working-directory: mobile/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon \
+            -PROBU_STORE_FILE="$GITHUB_WORKSPACE/mobile/robu-release.keystore" \
+            -PROBU_STORE_PASSWORD="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -PROBU_KEY_ALIAS="${{ secrets.ANDROID_KEY_ALIAS || 'robu' }}" \
+            -PROBU_KEY_PASSWORD="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -PROBU_VERSION_CODE="${{ github.run_number }}" \
+            -PROBU_VERSION_NAME="1.0.${{ github.run_number }}"
+
+      - name: Stage APK
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/dist
+          cp android/app/build/outputs/apk/release/app-release.apk \
+             $GITHUB_WORKSPACE/dist/robu-1.0.${{ github.run_number }}.apk
+          cp $GITHUB_WORKSPACE/dist/robu-1.0.${{ github.run_number }}.apk \
+             $GITHUB_WORKSPACE/dist/robu-latest.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: robu-apk
+          path: dist/*.apk
+
+      - name: Publish to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Robu 1.0.${{ github.run_number }}
+          body: |
+            Robu Android app — install the APK below.
+            Loads the live app at https://robu.up.railway.app, so it auto-updates on every push.
+          files: dist/*.apk

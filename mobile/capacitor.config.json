@@ -1,0 +1,13 @@
+{
+  "appId": "com.robu.valuation",
+  "appName": "Robu",
+  "webDir": "www",
+  "server": {
+    "url": "https://robu.up.railway.app",
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#7A2238"
+  }
+}

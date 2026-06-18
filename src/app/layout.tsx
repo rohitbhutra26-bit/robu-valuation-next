@@ -10,16 +10,25 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  applicationName: 'Robu',
   title: 'Robu | Know any stock in plain English',
   description: 'Search any Indian stock and instantly see if it looks cheap, fair, or expensive — explained simply.',
+  manifest: '/manifest.webmanifest',
+  formatDetection: { telephone: false },
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Robu',
   },
 };
@@ -36,11 +45,23 @@ const antiFlashScript = `
 })();
 `;
 
+// Register the service worker (installable PWA + offline fallback)
+const swRegisterScript = `
+(function(){
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
+  }
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="light">
       <head>
         <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
+        <script dangerouslySetInnerHTML={{ __html: swRegisterScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Manrope — friendly geometric sans for everything (UI + headings) */}
