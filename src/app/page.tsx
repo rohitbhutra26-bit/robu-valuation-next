@@ -658,7 +658,7 @@ export default function Home() {
               </div>
 
             ) : company ? (
-              <div className="mx-auto max-w-5xl 2xl:max-w-[1380px] 2xl:flex 2xl:gap-6">
+              <div className="mx-auto max-w-4xl 2xl:max-w-[1250px] 2xl:flex 2xl:gap-6">
                 <div className="px-5 sm:px-8 lg:px-10 pt-3 pb-8 space-y-5 flex-1 min-w-0">
                 {/* Sticky mini-ticker — appears once you scroll past the header */}
                 <StickyTicker company={company} financials={financials} assumptions={assumptions} />
