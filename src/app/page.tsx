@@ -22,6 +22,7 @@ import ValuationEngine from '@/components/ValuationEngine';
 import EarningsQuality from '@/components/EarningsQuality';
 import WhatMustHappen from '@/components/WhatMustHappen';
 import ReverseDCF from '@/components/ReverseDCF';
+import StoryPotentialCard from '@/components/StoryPotentialCard';
 import MonteCarloCard from '@/components/MonteCarloCard';
 import RedFlagsCard from '@/components/RedFlagsCard';
 import HistoricalValuationChart from '@/components/HistoricalValuationChart';
@@ -46,7 +47,7 @@ import PlainReasons from '@/components/PlainReasons';
 import ValuationCaveatBanner from '@/components/ValuationCaveatBanner';
 import WealthProjection from '@/components/WealthProjection';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb } from '@/lib/icons';
+import { Calculator, BarChart3, Sparkles, SlidersHorizontal, Zap, X as XIcon, RotateCcw, Bookmark, Briefcase, ShieldAlert, LineChart, Activity, Table2, BadgeCheck, DollarSign, ChevronRight, Lightbulb , Gauge} from '@/lib/icons';
 import { getWatchlist, isInWatchlist, toggleWatchlist } from '@/lib/watchlist';
 import { getPortfolio, isInPortfolio } from '@/lib/portfolio';
 
@@ -587,6 +588,7 @@ export default function Home() {
                     { id: 'sec-assumptions',  label: 'Assumptions',   Icon: SlidersHorizontal, analyst: true },
                     { id: 'sec-evidence',     label: 'The Evidence',  Icon: LineChart,         analyst: true },
                     { id: 'sec-stress',       label: 'Stress Tests',  Icon: Activity,          analyst: true },
+                    { id: 'sec-potential',    label: 'Re-rating',     Icon: Gauge,             analyst: true },
                     { id: 'sec-quality',      label: 'Quality Score', Icon: BadgeCheck },
                   ] as { id: string; label: string; Icon: typeof Sparkles; analyst?: boolean }[]).map(s => (
                     <button
@@ -797,6 +799,14 @@ export default function Home() {
                     <ReverseDCF company={company} financials={financials} assumptions={assumptions} />
                     <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
                     <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
+
+                    <SectionHeader
+                      id="sec-potential"
+                      Icon={Gauge}
+                      title="Re-rating Potential"
+                      desc="Above fair value: will the market pay a higher multiple from here? We weigh the growth the price assumes against how the business is actually trending — plus story, catalysts and rates."
+                    />
+                    <StoryPotentialCard company={company} financials={financials} assumptions={assumptions} />
 
                     {/* Expert tier — collapsed by default, halves the page for casual users */}
                     <details className="group bg-card border border-border rounded-xl">
