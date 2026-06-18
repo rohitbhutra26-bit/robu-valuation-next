@@ -1,29 +1,25 @@
 import { NextResponse } from 'next/server';
 
-// Live India 10-yr G-sec yield for the Macro/Rate layer of the Story engine.
-// Production path: set MACRO_YIELD_URL to an endpoint returning the yield, or add
-// a /macro endpoint on the data server. We fetch best-effort and ALWAYS fall back
-// to a sane recent value so the layer never breaks. Cached for the day.
-export const revalidate = 21600; // 6h
+// Live India 10-yr G-sec yield for the Story engine's Macro/Rate layer.
+// Source of truth: the data server's /macro endpoint (FRED-backed, cached 12h).
+// We pass it through and always fall back to a sane recent value so the layer
+// never breaks. Cached at the edge for 6h.
+export const revalidate = 21600;
 
-type Macro = { y10: number; direction: 'falling' | 'rising' | 'flat'; refLow: number; refHigh: number; asOf: string };
+const DATA_SERVER =
+  process.env.DATA_SERVER_URL ||
+  process.env.NEXT_PUBLIC_DATA_SERVER_URL ||
+  'https://robu-data-server-production.up.railway.app';
 
-const FALLBACK: Macro = { y10: 6.86, direction: 'falling', refLow: 6.5, refHigh: 7.4, asOf: 'recent' };
+const FALLBACK = { y10: 6.86, direction: 'falling', refLow: 6.5, refHigh: 7.4, asOf: 'recent', source: 'fallback' };
 
 export async function GET() {
-  const url = process.env.MACRO_YIELD_URL;
-  if (url) {
-    try {
-      const r = await fetch(url, { next: { revalidate: 21600 } });
-      const txt = await r.text();
-      const m = txt.match(/(\d\.\d{2,3})\s*%/);
-      if (m) {
-        const y10 = parseFloat(m[1]);
-        if (y10 > 4 && y10 < 12) {
-          return NextResponse.json({ ...FALLBACK, y10, asOf: new Date().toISOString().slice(0, 10) });
-        }
-      }
-    } catch { /* fall through to fallback */ }
-  }
+  try {
+    const r = await fetch(`${DATA_SERVER}/macro`, { next: { revalidate: 21600 } });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && typeof d.y10 === 'number' && d.y10 > 4 && d.y10 < 12) return NextResponse.json(d);
+    }
+  } catch { /* fall through */ }
   return NextResponse.json(FALLBACK);
 }
