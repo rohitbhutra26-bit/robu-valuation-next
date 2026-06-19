@@ -11,7 +11,7 @@ function fmtCr(v: number): string {
 }
 
 function Spark({ values, color }: { values: number[]; color: string }) {
-  const w = 104, h = 30, pad = 3;
+  const w = 72, h = 28, pad = 3;
   const vals = values.filter(v => Number.isFinite(v));
   if (vals.length < 2) return <svg width={w} height={h} aria-hidden="true" />;
   const min = Math.min(...vals), max = Math.max(...vals);
@@ -63,13 +63,13 @@ export default function MetricTrends({ financials }: { financials: FinancialYear
           if (r.kind === 'pct') chip = flat ? '▬ steady' : `${up ? '▲' : '▼'} ${last - first >= 0 ? '+' : ''}${(last - first).toFixed(1)}pp`;
           else chip = c === null ? '—' : `${c >= 0 ? '▲ +' : '▼ '}${c.toFixed(0)}% / yr`;
           return (
-            <div key={r.label} className={`flex items-center gap-3 sm:gap-4 py-3 ${i < rows.length - 1 ? 'border-b border-border/60' : ''}`}>
+            <div key={r.label} className={`flex items-center gap-2.5 sm:gap-4 py-3 ${i < rows.length - 1 ? 'border-b border-border/60' : ''}`}>
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-primary font-medium">{r.label}</div>
-                <div className="text-[11.5px] text-muted">{years}-year trend</div>
+                <div className="text-sm text-primary font-medium truncate">{r.label}</div>
+                <div className="text-[11.5px] text-muted truncate">{years}-year trend</div>
               </div>
               <Spark values={r.values} color={color} />
-              <div className="text-right min-w-[80px]">
+              <div className="text-right min-w-[60px] flex-shrink-0">
                 <div className="text-[15px] font-bold font-mono text-primary leading-none">{r.latest}</div>
                 <div className={`text-[11.5px] mt-1 ${tCls}`}>{chip}</div>
               </div>

@@ -427,18 +427,18 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <ValuationCaveatBanner company={company} financials={financials} />
 
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
           <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
             <Pencil size={12} className="text-accent" />
           </div>
           <h3 className="text-sm font-semibold text-primary">Your assumptions</h3>
-          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          <div className="ml-auto flex items-center gap-1.5 min-w-0">
             {hasChanges && (
               <button onClick={onReset} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-loss border border-loss/30 bg-loss/5 active:scale-95 transition-all">
                 <RotateCcw size={11} /> Reset
               </button>
             )}
-            <span className="text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] text-gold font-mono bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded whitespace-nowrap max-w-[55vw] truncate">
               {sectorProfile.sectorLabel}
             </span>
           </div>
