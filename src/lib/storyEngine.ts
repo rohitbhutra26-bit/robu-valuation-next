@@ -543,12 +543,16 @@ export function rateContext(company: Company, macro: MacroInput): LayerResult {
   const base = { id: 'macro', title: 'Macro / Rate context' };
   const lo = macro.refLow ?? 6.5, hi = macro.refHigh ?? 7.4;
 
-  // direction + level tilt for equity multiples in general
+  // LEVEL is the robust, lag-proof signal: where does the yield sit in its recent
+  // band? (The yield series is monthly and lags the spot, so we lean on level and
+  // treat direction as a lighter, secondary input that only registers a real move.)
+  const pos = (macro.y10 - lo) / Math.max(hi - lo, 0.01); // 0 = band low, 1 = band high
   let tilt = 0;
-  if (macro.direction === 'falling') tilt += 1;
-  if (macro.direction === 'rising') tilt -= 1;
-  if (macro.y10 <= lo + (hi - lo) * 0.33) tilt += 1;        // near the low end = supportive
-  if (macro.y10 >= lo + (hi - lo) * 0.67) tilt -= 1;        // near the high end = restrictive
+  if (pos <= 0.34) tilt += 1;        // low in its band = supportive of multiples
+  else if (pos >= 0.66) tilt -= 1;   // high in its band = restrictive
+  // direction at half weight; 'flat' contributes nothing
+  if (macro.direction === 'falling') tilt += 0.5;
+  if (macro.direction === 'rising') tilt -= 0.5;
 
   // how rate-sensitive is THIS stock?
   const sectorStr = `${company.sector} ${company.industry}`;
@@ -564,6 +568,7 @@ export function rateContext(company: Company, macro: MacroInput): LayerResult {
   else if (tilt < 0) dir = sensitivity === 'low' ? 'neutral' : 'negative';
   else dir = 'neutral';
 
+  const bandWord = pos >= 0.66 ? 'high in its recent range' : pos <= 0.34 ? 'low in its recent range' : 'mid-range';
   const envWord = tilt > 0 ? 'a tailwind' : tilt < 0 ? 'a headwind' : 'broadly neutral';
   const ampWord = sensitivity === 'high' ? 'amplified for this stock (high multiple / rate-sensitive sector)'
     : sensitivity === 'med' ? 'moderately relevant here'
@@ -571,9 +576,10 @@ export function rateContext(company: Company, macro: MacroInput): LayerResult {
   const signal = tilt > 0 ? `Rate tailwind · ${sensitivity} sensitivity`
     : tilt < 0 ? `Rate headwind · ${sensitivity} sensitivity` : 'Rates neutral';
 
-  const headline = `India's 10-yr G-sec is ${macro.y10.toFixed(2)}% and ${macro.direction} — ${envWord} for equity multiples, ${ampWord}.`;
+  const headline = `India's 10-yr G-sec is ${macro.y10.toFixed(2)}% — ${bandWord} (${lo}–${hi}%) and ${macro.direction} — ${envWord} for equity multiples, ${ampWord}.`;
   const evidence = [
-    `10-yr yield ${macro.y10.toFixed(2)}%${macro.asOf ? ` (as of ${macro.asOf})` : ''}, ${macro.direction}; recent band ~${lo}–${hi}%.`,
+    `10-yr yield ${macro.y10.toFixed(2)}%${macro.asOf ? ` (as of ${macro.asOf})` : ''}, sitting ${bandWord} of ~${lo}–${hi}%; trend ${macro.direction}.`,
+    `We lean on the LEVEL, not the month-to-month wiggle — the yield series is monthly and lags the live market, so only a real multi-month move shifts the trend.`,
     `Lower rates lift the value of future earnings — strongest for ${sensitivity === 'low' ? 'high-P/E and lender/real-estate/utility names (this isn\'t one)' : 'names like this'}.`,
     `Rate-sensitivity of this stock: ${sensitivity} (P/E ${pe.toFixed(0)}${rateSector ? ', rate-sensitive sector' : ''}).`,
   ];
