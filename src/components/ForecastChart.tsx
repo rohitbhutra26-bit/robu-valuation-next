@@ -98,14 +98,14 @@ export default function ForecastChart({ financials, assumptions }: Props) {
 
   return (
     <div className="bg-card border border-border rounded-3xl p-5 sm:p-6">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-gain/10 border border-gain/20 flex items-center justify-center flex-shrink-0">
             <BarChart3 size={13} className="text-gain" />
           </div>
-          <h3 className="text-sm font-semibold text-primary">Where the business is heading</h3>
+          <h3 className="text-sm font-semibold text-primary truncate">Where the business is heading</h3>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted shrink-0">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2 rounded-sm inline-block" style={{ backgroundColor: REV }} />
             Revenue

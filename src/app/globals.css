@@ -412,6 +412,10 @@ table { border-collapse: collapse; width: 100%; }
 @media (max-width: 1023px) {
   html { scrollbar-gutter: auto; overflow-x: hidden; }
   body { overflow-x: hidden; position: relative; max-width: 100%; }
+  /* A vertical scroll container (overflow-y:auto) silently makes its X-axis
+     scrollable too; on phones that shows as a few-mm left-right wobble when a
+     child is slightly too wide. Clip the X-axis so it never scrolls sideways. */
+  .overflow-y-auto { overflow-x: clip; }
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
     background:
