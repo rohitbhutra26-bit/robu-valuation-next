@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { ChevronsUp, ChevronUp, Minus, ChevronDown, ChevronsDown } from '@/lib/icons';
-import { getCompanyProfile } from '@/lib/sectorModelMap';
-import { runPrimaryModel } from '@/lib/forecastUtils';
+import { getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { runPrimaryModel, suggestAssumptions } from '@/lib/forecastUtils';
 import { generateInsight } from '@/lib/aiInsight';
 import { valuationReliability } from '@/lib/valuationReliability';
 import { verdictKey } from '@/lib/verdict';
@@ -26,16 +26,18 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
     if (!financials.length || !company.currentPrice) return 0;
     try {
       const profile = getCompanyProfile(company);
+      // Robu's verdict is Robu's OWN objective call — it uses the auto-derived
+      // assumptions and must NOT move when the user drags the what-if sliders.
+      const auto = suggestAssumptions(company, financials, getIndustryCagr(profile.sectorLabel), profile, horizon);
       const result = runPrimaryModel(
         profile.model, financials, company,
-        assumptions.revenueGrowthRate, assumptions.netMarginAssumption,
-        assumptions.exitMultiple, horizon,
+        auto.revenueGrowthRate, auto.netMarginAssumption, auto.exitMultiple, horizon,
       );
       return Math.max(result.fairValue, 0);
     } catch {
       return 0;
     }
-  }, [company, financials, assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, horizon]);
+  }, [company, financials, horizon]);
 
   if (!fairValue || !company.currentPrice) return null;
 

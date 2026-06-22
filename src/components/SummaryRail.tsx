@@ -1,8 +1,8 @@
 'use client';
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
-import { getCompanyProfile } from '@/lib/sectorModelMap';
-import { runPrimaryModel } from '@/lib/forecastUtils';
+import { getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { runPrimaryModel, suggestAssumptions } from '@/lib/forecastUtils';
 import { valuationReliability } from '@/lib/valuationReliability';
 
 // Sticky 'at a glance' rail — desktop ultra-wide only. Recaps price, verdict and key
@@ -15,12 +15,15 @@ export default function SummaryRail({ company, financials, assumptions }: {
     if (!valuationReliability(company, financials).reliable) return null;
     try {
       const p = getCompanyProfile(company);
+      // Recap mirrors Robu's verdict — use Robu's OWN auto assumptions, not the
+      // user's what-if sliders, so the headline stays Robu's objective call.
+      const auto = suggestAssumptions(company, financials, getIndustryCagr(p.sectorLabel), p, assumptions.years);
       const r = runPrimaryModel(p.model, financials, company,
-        assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
+        auto.revenueGrowthRate, auto.netMarginAssumption, auto.exitMultiple, assumptions.years);
       if (r.fairValue <= 0) return null;
       return { up: (r.fairValue - company.currentPrice) / company.currentPrice * 100, fair: r.fairValue };
     } catch { return null; }
-  }, [company, financials, assumptions]);
+  }, [company, financials, assumptions.years]);
 
   const isPos = company.changePercent >= 0;
   const word = !v ? 'Limited data' : v.up > 20 ? 'Looks cheap' : v.up < -15 ? 'Looks pricey' : 'Fairly priced';

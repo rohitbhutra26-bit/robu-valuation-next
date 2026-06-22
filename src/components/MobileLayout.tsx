@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   Search, TrendingUp, Users,
@@ -32,7 +32,8 @@ import PortfolioView from './PortfolioView';
 import ROBUScoreCard from './ROBUScoreCard';
 import ScenarioBuilder from './ScenarioBuilder';
 import SectorAlternatives from './SectorAlternatives';
-import { getBaselineFinancial } from '@/lib/forecastUtils';
+import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
+import { valuationReliability } from '@/lib/valuationReliability';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -420,6 +421,18 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   const { baseline, isPartialDetected, yearLabel } = getBaselineFinancial(financials);
   const sectorProfile = getCompanyProfile(company);
 
+  // Live what-if target price from the user's CURRENT sliders — shown inside the
+  // assumptions card so they see the impact here, NOT in Robu's (fixed) verdict.
+  const whatIf = useMemo(() => {
+    try {
+      const r = runPrimaryModel(sectorProfile.model, financials, company,
+        assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years || 5);
+      return Math.max(r.fairValue, 0);
+    } catch { return 0; }
+  }, [company, financials, assumptions, sectorProfile.model]);
+  const whatIfUp = whatIf > 0 && company.currentPrice > 0 ? ((whatIf / company.currentPrice) - 1) * 100 : 0;
+  const whatIfReliable = valuationReliability(company, financials).reliable;
+
   return (
     <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
@@ -443,7 +456,25 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
             </span>
           </div>
         </div>
-        <p className="text-xs text-muted -mt-3">Adjust to see how the target price changes</p>
+        <p className="text-xs text-muted -mt-3">Drag the sliders — this is your own what-if, separate from Robu's verdict above.</p>
+        <div className="flex items-end justify-between rounded-2xl bg-terminal/50 border border-border px-4 py-3 -mt-1">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[1.2px] text-muted">Your target price</p>
+            <p className="text-[10.5px] text-muted/70 mt-0.5">on your assumptions</p>
+          </div>
+          <div className="text-right">
+            {whatIfReliable && whatIf > 0 ? (
+              <>
+                <p className="text-[22px] font-bold font-mono text-primary leading-none">₹{whatIf.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                <p className={`text-[12px] font-semibold font-mono mt-1 ${whatIfUp >= 0 ? 'text-gain' : 'text-loss'}`}>
+                  {whatIfUp >= 0 ? '+' : ''}{whatIfUp.toFixed(0)}% vs ₹{company.currentPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted">can't value reliably</p>
+            )}
+          </div>
+        </div>
         <MobileSlider
           label="Revenue Growth" value={assumptions.revenueGrowthRate}
           min={1} max={50} inputMax={200} step={0.5} suffix="%" color="text-accent"
