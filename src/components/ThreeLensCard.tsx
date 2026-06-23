@@ -2,7 +2,8 @@
 import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
-import { runPrimaryModel, earningsPowerValue, impliedGrowthRate, pegModel } from '@/lib/forecastUtils';
+import { runPrimaryModel, earningsPowerValue } from '@/lib/forecastUtils';
+import { marketImplied } from '@/lib/storyEngine';
 import { valuationReliability } from '@/lib/valuationReliability';
 import SectionCard from './SectionCard';
 import { Activity } from '@/lib/icons';
@@ -47,22 +48,26 @@ export default function ThreeLensCard({ company, financials, assumptions }: {
         : `Today's profit alone is worth ~₹${epv.fairValue.toFixed(0)}; the other ${prem.toFixed(0)}% of the price is what you're paying for future growth.`;
     }
 
-    // Lens 3 — the market's own bet (growth priced in vs delivered)
-    let impSig: Sig = 'fair'; let impText = '';
+    // Lens 3 — the market's own bet, read in the SECTOR's own language (implied ROE
+    // for banks, implied growth at the sector-normal multiple for everyone else).
+    let impSig: Sig = 'fair'; let impText = ''; let impSub = 'what the price assumes vs reality';
     try {
-      // Use the sector-NORMAL exit multiple, not the stock's own (rich) one, so we ask
-      // 'what growth justifies today's price at a normal multiple' — not a circular question.
-      const exitPE = profile.model === 'pe' ? assumptions.exitMultiple : (company.pe > 0 ? company.pe : 22);
-      const implied = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, exitPE, assumptions.years);
-      const delivered = pegModel(financials, company).epsCAGR;
-      impSig = implied > delivered + 5 ? 'rich' : implied < delivered - 3 ? 'cheap' : 'fair';
-      impText = `The price assumes about ${implied.toFixed(0)}%/yr growth; it has actually delivered ${delivered > 0 ? delivered.toFixed(0) + '%' : 'less'}.`;
+      const mi = marketImplied(company, financials, profile, assumptions.years);
+      if (mi.ok && mi.kind === 'roe') {
+        const gap = mi.value - mi.actual;
+        impSig = gap > 3 ? 'rich' : gap < -2 ? 'cheap' : 'fair';
+        impText = mi.sentence; impSub = 'returns priced vs earned';
+      } else if (mi.ok) {
+        // demanding if it needs more than it sustains; cheap only if priced for decline.
+        impSig = mi.value > mi.actual + 5 ? 'rich' : mi.value < -4 ? 'cheap' : 'fair';
+        impText = mi.sentence; impSub = 'growth priced vs delivered';
+      }
     } catch { /* ignore */ }
 
     return [
       { name: 'Our model',      sub: 'vs sector peers',            sig: modelSig, text: modelText },
       { name: 'Earnings floor', sub: "today's profit, no growth",  sig: epvSig,   text: epvText },
-      { name: "Market's bet",   sub: 'growth priced vs delivered', sig: impSig,   text: impText },
+      { name: "Market's bet",   sub: impSub, sig: impSig,   text: impText },
     ].filter(l => l.text);
   }, [company, financials, assumptions]);
 

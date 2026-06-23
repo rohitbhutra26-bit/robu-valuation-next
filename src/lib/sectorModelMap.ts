@@ -98,6 +98,7 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
 
   // ── Consumer ──
   'FMCG':                    peProfile('FMCG', 52),
+  'Diversified FMCG':        peProfile('FMCG', 52),
   'Consumer':                peProfile('Consumer', 40),
   'Consumer Discretionary':  peProfile('Consumer', 35),
   // Yahoo Finance aliases — many Indian stocks come tagged with these
@@ -115,6 +116,7 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   // ── Industrials / Capital Goods ──
   'Capital Goods':           peProfile('Capital Goods', 28),
   'Industrials':             peProfile('Industrials', 26),         // Yahoo Finance alias
+  'Industrial Products':     peProfile('Industrials', 26),
   'Industrial Conglomerates':peProfile('Industrials', 26),
   'Electrical Equipment':    peProfile('Electrical Equip', 30),
   'Defence':                 peProfile('Defence', 35),
@@ -211,6 +213,7 @@ export const SECTOR_PROFILES: Record<string, SectorProfile> = {
   'Auto Ancillaries':              peProfile('Auto Ancillaries', 25),
   'IT Enabled Services':           peProfile('IT / Software', 26),
   'Computers - Software':          peProfile('IT / Software', 28),
+  'Computers - Software & Consulting': peProfile('IT / Software', 28),
   'IT - Software':                 peProfile('IT / Software', 28),
   'Logistics Solution Provider':   peProfile('Logistics', 25),
   'Courier Services':              peProfile('Logistics', 25),
@@ -474,6 +477,31 @@ const INDUSTRY_PROFILES: Record<string, SectorProfile> = {
   'Utilities—Renewable':            evEbitdaProfile('Power / Utilities', 12, 5, 22),
 };
 
+// Keyword fallback — catches granular Screener labels that aren't exact map keys
+// (e.g. "Diversified FMCG", "Computers - Software & Consulting") so they don't drop
+// to the generic Broad-Market default. Driven ONLY by the sector/industry label (not
+// the company name, which would mis-map "Power Finance" → Utilities). Financials are
+// explicitly excluded — banks/NBFCs/exchanges have their own precise routing.
+function keywordSectorFallback(sectorText: string): SectorProfile | null {
+  const t = sectorText.toLowerCase();
+  if (/financ|\bbank\b|nbfc|insur|broking|securities|capital market|exchange|depositor|asset manag|amc\b/.test(t)) return null;
+  if (/\bfmcg\b|consumer staple|personal care|household|packaged food|home care|beverage|tobacco|cigarette/.test(t)) return SECTOR_PROFILES['FMCG'];
+  if (/software|computer|information technology|\bit services\b|\bsaas\b|\bbpo\b|\bkpo\b/.test(t)) return SECTOR_PROFILES['Information Technology'];
+  if (/pharma|drug|biotech|life science|formulation/.test(t)) return SECTOR_PROFILES['Pharmaceuticals'];
+  if (/hospital|diagnostic|healthcare|medical device/.test(t)) return SECTOR_PROFILES['Healthcare'];
+  if (/cement/.test(t)) return SECTOR_PROFILES['Cement'];
+  if (/steel/.test(t)) return SECTOR_PROFILES['Steel'];
+  if (/alumin|copper|zinc|ferro|\bmetal\b|mining|\bore\b/.test(t)) return SECTOR_PROFILES['Metals & Mining'];
+  if (/auto ancill|auto compon|tyre|\btyres\b|auto part/.test(t)) return SECTOR_PROFILES['Automobiles'];
+  if (/automobile|two.?wheeler|passenger vehicle|commercial vehicle|motorcycle/.test(t)) return SECTOR_PROFILES['Automobiles'];
+  if (/industrial product|capital good|machinery|electrical equip|defen[cs]e|engineering services/.test(t)) return SECTOR_PROFILES['Industrials'];
+  if (/power|utilit|electricity|renewable|solar|wind energy|thermal/.test(t)) return SECTOR_PROFILES['Utilities'];
+  if (/refiner|\boil\b|\bgas\b|petroleum|petrochemical/.test(t)) return SECTOR_PROFILES['Oil & Gas'];
+  if (/real ?estate|realty|property develop/.test(t)) return SECTOR_PROFILES['Real Estate'];
+  if (/retail|departmental store/.test(t)) return SECTOR_PROFILES['Retail'];
+  return null;
+}
+
 export function getCompanyProfile(company: {
   name: string;
   symbol: string;
@@ -553,6 +581,9 @@ export function getCompanyProfile(company: {
   ) {
     return pbProfile('Bank', 1.5, 3, 12.5, 9, 14);
   }
+
+  const kw = keywordSectorFallback(`${company.sector} ${company.industry ?? ''}`);
+  if (kw) return kw;
 
   return sectorProfile;
 }

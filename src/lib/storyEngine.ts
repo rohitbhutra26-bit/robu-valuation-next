@@ -17,7 +17,8 @@
 
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
-import { impliedGrowthRate, getBaselineFinancial } from '@/lib/forecastUtils';
+import type { SectorProfile } from '@/lib/sectorModelMap';
+import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
 
 export type StoryDir = 'positive' | 'negative' | 'neutral' | 'unknown';
 
@@ -95,12 +96,6 @@ function expectationsMeasurable(c: Company, f: FinancialYear[]): { ok: boolean; 
   return { ok: true, why: '' };
 }
 
-// A richly-priced stock must defend BOTH its growth and its multiple. Anchoring
-// the reverse-DCF on the stock's own euphoric multiple makes the implied-growth
-// bar look deceptively low. We cap the exit at a defensible premium ceiling so
-// glamour names correctly show a high bar.
-const EXIT_CEILING = 35;
-
 // ─── LAYER 1 — EXPECTATION GAP (the anchor) ──────────────────────────────────
 // Reverse-engineer the growth today's price assumes (ReverseDCF), then compare
 // it to what the company has actually delivered and is currently running.
@@ -132,55 +127,73 @@ export function expectationGap(
 
   const profile = getCompanyProfile(company);
   const years   = assumptions.years || 5;
-  // Same exit-multiple logic the app's "market's bet" lens uses, so the implied
-  // figure here is identical to what the rest of the app shows.
-  const rawExit = profile.model === 'pe'
-    ? assumptions.exitMultiple
-    : (company.pe > 0 ? company.pe : 22);
-  const exitPE = Math.min(rawExit, EXIT_CEILING); // de-euphoria: cap the bar anchor
 
-  const implied   = impliedGrowthRate(financials, company, assumptions.netMarginAssumption, exitPE, years);
-  const delivered = robustDelivered(financials);
-  const trend     = recentRevenueTrend(financials);
-
-  const dGap = delivered - implied; // track record vs the bar
-  const tGap = trend - implied;     // current run-rate vs the bar
-
-  let dir: StoryDir;
-  let signal: string;
-  let headline: string;
-
-  if (implied >= delivered + 5 && tGap < -2) {
-    dir = 'negative';
-    signal = 'Demanding — priced for perfection';
-    headline = `Today's price already assumes about ${round(implied)}%/yr growth — more than the ~${round(delivered)}% it has actually delivered and the ~${round(trend)}% it's running now. The bar is set high, so beating it (and re-rating higher) is hard from here.`;
-  } else if (dGap >= 4 && tGap >= -2) {
-    dir = 'positive';
-    signal = 'Low bar — beatable';
-    headline = `Today's price only assumes about ${round(implied)}%/yr growth, yet the company has delivered ~${round(delivered)}% and is running ~${round(trend)}%. Expectations are set low enough that simply keeping up could earn it a higher multiple — the classic setup for a re-rating up.`;
-  } else {
-    dir = 'neutral';
-    signal = 'Fairly set';
-    headline = `Expectations look about right: the price assumes ~${round(implied)}%/yr, close to the ~${round(delivered)}% delivered (currently ~${round(trend)}%). A re-rating from here needs a genuine surprise, up or down.`;
+  // Sector-native reading of the market's embedded bet: implied ROE for banks,
+  // implied growth (at mid-cycle margins for cyclicals) at the SECTOR's own normal
+  // multiple for everyone else. Mirrors the forward model the verdict uses.
+  const mi = marketImplied(company, financials, profile, years);
+  if (!mi.ok) {
+    return { ...base, dir: 'unknown', signal: 'Not measurable',
+      headline: `Can't read the market's bet here — ${mi.why || 'the sector model could not run'}.`, evidence: [] };
   }
 
-  const evidence = [
-    `Market is pricing in ≈ ${round(implied)}%/yr earnings growth (reverse-DCF, ${round(exitPE)}× exit over ${years}y).`,
-    `Actually delivered ≈ ${delivered > 0 ? round(delivered) + '%' : 'flat/▼'}/yr over its record (EPS CAGR).`,
-    `Currently trending ≈ ${round(trend)}%/yr (latest revenue growth).`,
+  let dir: StoryDir; let signal: string; let headline: string; let evidence: string[];
+
+  if (mi.kind === 'roe') {
+    // Banks/NBFCs re-rate on RETURNS, not revenue growth.
+    const implied = mi.value, actual = mi.actual;
+    const gap = implied - actual; // ROE improvement the price assumes
+    if (gap > 3) {
+      dir = 'negative'; signal = 'Priced for a returns recovery';
+      headline = `The price assumes it can sustain about ${round(implied)}% return on equity — above the ~${round(actual)}% it earns today. That improvement has to actually show up just to hold the multiple, so there's little room to re-rate higher.`;
+    } else if (gap < -2) {
+      dir = 'positive'; signal = 'Low bar on returns';
+      headline = `The price only assumes about ${round(implied)}% return on equity, below the ~${round(actual)}% it already earns. If it simply keeps earning what it does, the market looks too cautious — room to re-rate up.`;
+    } else {
+      dir = 'neutral'; signal = 'Returns fairly priced';
+      headline = `The price assumes about ${round(implied)}% return on equity, close to the ~${round(actual)}% earned today. A re-rating needs a genuine surprise in returns or bad loans.`;
+    }
+    evidence = [
+      `At ${mi.exitMultiple}× book, the price implies a sustainable ~${round(implied)}% ROE.`,
+      `It currently earns ~${round(actual)}% ROE.`,
+      `Banks & lenders re-rate on return on equity and asset quality — not revenue growth — so we read the bet in ROE.`,
+    ];
+    return { ...base, dir, signal, headline, evidence,
+      metrics: { impliedROE: +implied.toFixed(1), actualROE: +actual.toFixed(1), gap: +gap.toFixed(1), marketPB: mi.exitMultiple } };
+  }
+
+  // Growth-driven sectors (P/E, EV/EBITDA mid-cycle, EV/Sales).
+  const implied   = mi.value;
+  const delivered = robustDelivered(financials);
+  const trend     = recentRevenueTrend(financials);
+  const dGap = delivered - implied;
+  const tGap = trend - implied;
+  const basisNote = mi.kind === 'midcycle_growth' ? ' (measured on mid-cycle margins, so a peak/trough year doesn\'t fool it)' : '';
+
+  // What the business can realistically sustain (better of record/run-rate, capped).
+  const achievable = Math.min(Math.max(delivered, trend, 0), 25);
+  if (implied > achievable + 5) {
+    // Needs MORE growth than it can plausibly do, even at the sector-normal multiple.
+    dir = 'negative'; signal = 'Demanding — priced for perfection';
+    headline = `Even at a normal ${mi.exitMultiple}× ${mi.multipleLabel}, today's price needs about ${round(implied)}%/yr growth — more than the ~${round(Math.max(delivered, trend))}% it realistically sustains. The bar is high, so re-rating higher is hard from here.`;
+  } else if (implied < -4 && delivered > 0) {
+    // The price is literally pricing the business to SHRINK while it's still growing.
+    dir = 'positive'; signal = 'Low bar — priced for decline';
+    headline = `Today's price assumes the business basically shrinks (~${round(implied)}%/yr) even at a normal ${mi.exitMultiple}× ${mi.multipleLabel}, yet it has delivered ~${round(delivered)}% and is running ~${round(trend)}%. The market looks too gloomy — the classic setup for a re-rating up.`;
+  } else {
+    dir = 'neutral'; signal = 'Fairly set';
+    headline = `Expectations look about right: at a normal ${mi.exitMultiple}× ${mi.multipleLabel} the price implies ~${round(implied)}%/yr, broadly in line with what the business does (~${round(delivered)}% delivered, ~${round(trend)}% now). A re-rating needs a genuine surprise.`;
+  }
+
+  evidence = [
+    `At a normal ${mi.exitMultiple}× ${mi.multipleLabel}, the price implies ≈ ${round(implied)}%/yr growth${basisNote}.`,
+    `Actually delivered ≈ ${delivered > 0 ? round(delivered) + '%' : 'flat/▼'}/yr over its record.`,
+    `Currently trending ≈ ${round(trend)}%/yr (latest revenue).`,
   ];
 
-  return {
-    ...base, dir, signal, headline, evidence,
-    metrics: {
-      implied: +implied.toFixed(1),
-      delivered: +delivered.toFixed(1),
-      trend: +trend.toFixed(1),
-      deliveredGap: +dGap.toFixed(1),
-      trendGap: +tGap.toFixed(1),
-      exitPE: +exitPE.toFixed(1),
-    },
-  };
+  return { ...base, dir, signal, headline, evidence,
+    metrics: { implied: +implied.toFixed(1), delivered: +delivered.toFixed(1), trend: +trend.toFixed(1),
+      deliveredGap: +dGap.toFixed(1), trendGap: +tGap.toFixed(1), exitMultiple: mi.exitMultiple } };
 }
 
 // ─── LAYER 2 — TRAJECTORY / INFLECTION (direction, not level) ─────────────────
@@ -665,4 +678,115 @@ export function combinePotential(layers: LayerResult[]): PotentialResult['overal
   const conviction = `${agree}/${layers.filter(l => l.dir !== 'unknown').length} layers agree (${pos}↑ / ${neg}↓)`;
 
   return { dir, signal, headline, conviction, score: +score.toFixed(2) };
+}
+
+// ─── SECTOR-NATIVE "MARKET EXPECTS" (reverse model per industry) ─────────────
+// The single "market expects X% growth" line only fits earnings (P/E) businesses.
+// This expresses the market's embedded bet in EACH sector's own language, by
+// reversing the very same forward model the verdict uses, at the sector's own
+// normal multiple:
+//   • P/E sectors      → implied EARNINGS growth
+//   • EV/EBITDA (cyclicals) → implied revenue growth AT MID-CYCLE margins (the model
+//                         normalizes margin internally, so peak/trough years don't lie)
+//   • EV/Sales (EMS/early) → implied SALES growth
+//   • P/B (banks/NBFC) → implied sustainable ROE (reverse of warranted P/B), because a
+//                         bank re-rates on returns-on-equity, not revenue growth
+export type ImpliedKind = 'earnings_growth' | 'midcycle_growth' | 'sales_growth' | 'roe';
+export interface MarketImplied {
+  ok: boolean;
+  kind: ImpliedKind;
+  value: number;          // implied % (growth or ROE)
+  multipleLabel: string;  // P/E | EV/EBITDA | EV/Sales | P/B
+  exitMultiple: number;   // the sector-normal multiple used
+  actual: number;         // comparable actual (revenue CAGR, or current ROE)
+  actualLabel: string;
+  sentence: string;       // plain-English
+  why: string;            // when ok=false, the reason
+}
+
+function medianNetMargin(financials: FinancialYear[]): number {
+  const { completeYears } = getBaselineFinancial(financials);
+  const m = completeYears.map(f => f.netMargin).filter(x => x > 0 && x < 90).slice(-5).sort((a, b) => a - b);
+  return m.length ? m[Math.floor((m.length - 1) / 2)] : 0;
+}
+function revenueCAGR(financials: FinancialYear[]): number {
+  const { completeYears } = getBaselineFinancial(financials);
+  if (completeYears.length < 2) return 0;
+  const n = Math.min(5, completeYears.length - 1);
+  const a = completeYears[completeYears.length - 1 - n].revenue, b = completeYears[completeYears.length - 1].revenue;
+  return a > 0 && b > 0 ? (Math.pow(b / a, 1 / n) - 1) * 100 : 0;
+}
+
+// Reverse any growth-driven sector model by bisection: find the growth that makes
+// the forward model print exactly today's price at the sector's normal multiple.
+// (fairValue is monotonic increasing in growth, so bisection nails it.)
+function impliedGrowthViaModel(
+  model: SectorProfile['model'], financials: FinancialYear[], company: Company,
+  margin: number, exitMultiple: number, years: number,
+): number {
+  const price = company.currentPrice;
+  const f = (g: number) => {
+    try { return runPrimaryModel(model, financials, company, g, margin, exitMultiple, years).fairValue; }
+    catch { return NaN; }
+  };
+  let lo = -15, hi = 100;
+  const flo = f(lo), fhi = f(hi);
+  if (!Number.isFinite(flo) || !Number.isFinite(fhi) || fhi <= 0) return NaN;
+  if (price <= flo) return lo;
+  if (price >= fhi) return hi;
+  for (let i = 0; i < 48; i++) {
+    const mid = (lo + hi) / 2;
+    const fm = f(mid);
+    if (!Number.isFinite(fm)) return NaN;
+    if (fm < price) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+export function marketImplied(
+  company: Company, financials: FinancialYear[], profile: SectorProfile, years = 5,
+): MarketImplied {
+  const base = { ok: false as const, value: 0, exitMultiple: 0, actual: 0, sentence: '', why: '' };
+  const price = company.currentPrice;
+  if (price <= 0 || !financials.length) return { ...base, kind: 'earnings_growth', multipleLabel: '—', actualLabel: '—', why: 'no price/financials' };
+
+  // ── Banks / NBFCs / Insurance: implied sustainable ROE (reverse warranted P/B) ──
+  if (profile.model === 'pb') {
+    const coe = profile.coe ?? 12.5, g = profile.durableG ?? 9;
+    const { baseline } = getBaselineFinancial(financials);
+    const shares = Math.max(baseline.shares ?? company.shares ?? 1, 0.001);
+    const bvps = baseline.equity && baseline.equity > 0 ? baseline.equity / shares
+               : (company.pb > 0 ? price / company.pb : 0);
+    const marketPB = bvps > 0 ? price / bvps : company.pb;
+    if (!marketPB || marketPB <= 0 || coe <= g) {
+      return { ...base, kind: 'roe', multipleLabel: 'P/B', actualLabel: 'current ROE', why: 'P/B or book value unavailable' };
+    }
+    // warranted P/B = (ROE − g)/(CoE − g)  ⇒  implied steady-state ROE the price assumes
+    const impliedROE = marketPB * (coe - g) + g;
+    const actualROE = company.roe || 0;
+    return {
+      ok: true, kind: 'roe', value: impliedROE, multipleLabel: 'P/B', exitMultiple: +marketPB.toFixed(2),
+      actual: actualROE, actualLabel: 'current ROE',
+      sentence: `At ${marketPB.toFixed(2)}× book, the price assumes the business can sustain about ${impliedROE.toFixed(0)}% return on equity; it currently earns ~${actualROE.toFixed(0)}%.`,
+      why: '',
+    };
+  }
+
+  // ── Growth-driven sectors: reverse the sector model at its normal multiple ──
+  const exitMultiple = profile.defaultExitMultiple;
+  const margin = medianNetMargin(financials);
+  const g = impliedGrowthViaModel(profile.model, financials, company, margin, exitMultiple, years);
+  if (!Number.isFinite(g)) {
+    return { ...base, kind: 'earnings_growth', multipleLabel: profile.exitMultipleLabel.replace('Exit ', ''), actualLabel: 'revenue CAGR', why: 'model could not run (losses / missing margin)' };
+  }
+  const actual = revenueCAGR(financials);
+  const kind: ImpliedKind = profile.model === 'ev_ebitda' ? 'midcycle_growth' : profile.model === 'ev_sales' ? 'sales_growth' : 'earnings_growth';
+  const mlabel = profile.exitMultipleLabel.replace('Exit ', '');
+  const basisNote = kind === 'midcycle_growth' ? ' (off mid-cycle margins, so a peak/trough year doesn\'t distort it)' : '';
+  return {
+    ok: true, kind, value: g, multipleLabel: mlabel, exitMultiple,
+    actual, actualLabel: kind === 'sales_growth' || kind === 'midcycle_growth' ? 'revenue CAGR' : 'revenue/earnings CAGR',
+    sentence: `At a normal ${exitMultiple}× ${mlabel}, today's price implies about ${g.toFixed(0)}%/yr growth${basisNote}; it has actually grown ~${actual.toFixed(0)}%/yr.`,
+    why: '',
+  };
 }
