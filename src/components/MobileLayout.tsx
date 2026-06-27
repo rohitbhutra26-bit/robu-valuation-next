@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   Search, TrendingUp, Users,
@@ -10,30 +11,30 @@ import {
 import ThemeToggle from './ThemeToggle';
 import { getCompanyProfile } from '@/lib/sectorModelMap';
 import CompanySearch from './CompanySearch';
-import AIOverview from './AIOverview';
-import ScenarioCards from './ScenarioCards';
-import FinancialsTable from './FinancialsTable';
-import ValuationEngine from './ValuationEngine';
-import EarningsQuality from './EarningsQuality';
-import WhatMustHappen from './WhatMustHappen';
-import ReverseDCF from './ReverseDCF';
-import MonteCarloCard from './MonteCarloCard';
+const AIOverview = dynamic(() => import('./AIOverview'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ScenarioCards = dynamic(() => import('./ScenarioCards'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const FinancialsTable = dynamic(() => import('./FinancialsTable'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ValuationEngine = dynamic(() => import('./ValuationEngine'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const EarningsQuality = dynamic(() => import('./EarningsQuality'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const WhatMustHappen = dynamic(() => import('./WhatMustHappen'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ReverseDCF = dynamic(() => import('./ReverseDCF'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const MonteCarloCard = dynamic(() => import('./MonteCarloCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import RedFlagsCard from './RedFlagsCard';
-import HistoricalValuationChart from './HistoricalValuationChart';
-import ForecastChart from './ForecastChart';
-import IndustryBenchmarks from './IndustryBenchmarks';
-import PeerCompare from './PeerCompare';
+const HistoricalValuationChart = dynamic(() => import('./HistoricalValuationChart'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ForecastChart = dynamic(() => import('./ForecastChart'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const IndustryBenchmarks = dynamic(() => import('./IndustryBenchmarks'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const PeerCompare = dynamic(() => import('./PeerCompare'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import VerdictCard from './VerdictCard';
 import MetricTrends from './MetricTrends';
 import ValuationCaveatBanner from './ValuationCaveatBanner';
 import WealthProjection from './WealthProjection';
-import WatchlistView from './WatchlistView';
-import PortfolioView from './PortfolioView';
-import ROBUScoreCard from './ROBUScoreCard';
-import ScenarioBuilder from './ScenarioBuilder';
-import SectorAlternatives from './SectorAlternatives';
+const WatchlistView = dynamic(() => import('./WatchlistView'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const PortfolioView = dynamic(() => import('./PortfolioView'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ROBUScoreCard = dynamic(() => import('./ROBUScoreCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ScenarioBuilder = dynamic(() => import('./ScenarioBuilder'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const SectorAlternatives = dynamic(() => import('./SectorAlternatives'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import ThreeLensCard from './ThreeLensCard';
-import StoryPotentialCard from './StoryPotentialCard';
+const StoryPotentialCard = dynamic(() => import('./StoryPotentialCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
 import { valuationReliability } from '@/lib/valuationReliability';
 

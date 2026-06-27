@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+import dynamic from 'next/dynamic';
 
 // Runs before the browser paints (client) so we never flash the home screen when the
 // URL already has ?symbol= ; falls back to useEffect during SSR to avoid warnings.
@@ -11,31 +12,31 @@ import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib
 import DataQualityBanner from '@/components/DataQualityBanner';
 import CompanySearch from '@/components/CompanySearch';
 import CompanyHeader from '@/components/CompanyHeader';
-import WatchlistView from '@/components/WatchlistView';
-import PortfolioView from '@/components/PortfolioView';
-import QuarterlyFlash from '@/components/QuarterlyFlash';
+const WatchlistView = dynamic(() => import('@/components/WatchlistView'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const PortfolioView = dynamic(() => import('@/components/PortfolioView'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const QuarterlyFlash = dynamic(() => import('@/components/QuarterlyFlash'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import ExportReport, { PrintableReport } from '@/components/ExportReport';
-import AddToPortfolioModal from '@/components/AddToPortfolioModal';
+const AddToPortfolioModal = dynamic(() => import('@/components/AddToPortfolioModal'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import KeyMetrics from '@/components/KeyMetrics';
-import AIOverview from '@/components/AIOverview';
-import FinancialsTable from '@/components/FinancialsTable';
-import ScenarioCards from '@/components/ScenarioCards';
-import SensitivityMatrix from '@/components/SensitivityMatrix';
-import IndustryBenchmarks from '@/components/IndustryBenchmarks';
-import ValuationEngine from '@/components/ValuationEngine';
-import EarningsQuality from '@/components/EarningsQuality';
-import WhatMustHappen from '@/components/WhatMustHappen';
-import ReverseDCF from '@/components/ReverseDCF';
-import StoryPotentialCard from '@/components/StoryPotentialCard';
-import MonteCarloCard from '@/components/MonteCarloCard';
+const AIOverview = dynamic(() => import('@/components/AIOverview'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const FinancialsTable = dynamic(() => import('@/components/FinancialsTable'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ScenarioCards = dynamic(() => import('@/components/ScenarioCards'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const SensitivityMatrix = dynamic(() => import('@/components/SensitivityMatrix'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const IndustryBenchmarks = dynamic(() => import('@/components/IndustryBenchmarks'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ValuationEngine = dynamic(() => import('@/components/ValuationEngine'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const EarningsQuality = dynamic(() => import('@/components/EarningsQuality'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const WhatMustHappen = dynamic(() => import('@/components/WhatMustHappen'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ReverseDCF = dynamic(() => import('@/components/ReverseDCF'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const StoryPotentialCard = dynamic(() => import('@/components/StoryPotentialCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const MonteCarloCard = dynamic(() => import('@/components/MonteCarloCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import RedFlagsCard from '@/components/RedFlagsCard';
-import HistoricalValuationChart from '@/components/HistoricalValuationChart';
-import ForecastChart from '@/components/ForecastChart';
-import SectorAlternatives from '@/components/SectorAlternatives';
-import ScenarioBuilder from '@/components/ScenarioBuilder';
+const HistoricalValuationChart = dynamic(() => import('@/components/HistoricalValuationChart'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ForecastChart = dynamic(() => import('@/components/ForecastChart'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const SectorAlternatives = dynamic(() => import('@/components/SectorAlternatives'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const ScenarioBuilder = dynamic(() => import('@/components/ScenarioBuilder'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import SectionHeader from '@/components/SectionHeader';
 import StickyTicker from '@/components/StickyTicker';
-import ROBUScoreCard from '@/components/ROBUScoreCard';
+const ROBUScoreCard = dynamic(() => import('@/components/ROBUScoreCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
