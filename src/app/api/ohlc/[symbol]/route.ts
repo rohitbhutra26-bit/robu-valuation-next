@@ -14,7 +14,7 @@ export async function GET(
       { next: { revalidate: 900 } } // cache 15 min — daily candles update once a day
     );
     if (res.ok) {
-      return NextResponse.json(await res.json());
+      return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=900' } });
     }
     const err = await res.json().catch(() => ({}));
     return NextResponse.json(

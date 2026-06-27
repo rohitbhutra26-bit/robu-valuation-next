@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest,
       return NextResponse.json({
         ...data,
         changePercent: data.changePercent ?? data.changePct ?? 0,
-      });
+      }, { headers: { 'Cache-Control': 'public, max-age=120, stale-while-revalidate=600' } });
     }
     const err = await res.json().catch(() => ({}));
     return NextResponse.json(

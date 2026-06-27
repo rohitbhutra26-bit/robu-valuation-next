@@ -167,12 +167,12 @@ export default function Home() {
   async function _fetchSymbol(symbol: string): Promise<{ company: Company; financials: FinancialYear[] }> {
     // Try Screener.in-backed endpoints first; fall back to Yahoo if unavailable
     const [companyRes, financialsRes] = await Promise.all([
-      fetch(`/api/company-v2/${symbol}`, { cache: 'no-store' })
-        .then(r => r.ok ? r : fetch(`/api/company/${symbol}`, { cache: 'no-store' }))
-        .catch(() => fetch(`/api/company/${symbol}`, { cache: 'no-store' })),
-      fetch(`/api/financials-v2/${symbol}`, { cache: 'no-store' })
-        .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`, { cache: 'no-store' }))
-        .catch(() => fetch(`/api/financials/${symbol}`, { cache: 'no-store' })),
+      fetch(`/api/company-v2/${symbol}`)
+        .then(r => r.ok ? r : fetch(`/api/company/${symbol}`))
+        .catch(() => fetch(`/api/company/${symbol}`)),
+      fetch(`/api/financials-v2/${symbol}`)
+        .then(r => r.ok ? r : fetch(`/api/financials/${symbol}`))
+        .catch(() => fetch(`/api/financials/${symbol}`)),
     ]);
     if (!companyRes.ok) {
       const err = await companyRes.json().catch(() => ({}));

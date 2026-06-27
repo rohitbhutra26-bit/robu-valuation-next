@@ -16,7 +16,7 @@ export async function GET(
       { next: { revalidate: 900 } } // 15-min cache; valuation history changes slowly
     );
     if (res.ok) {
-      return NextResponse.json(await res.json());
+      return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=900' } });
     }
     const err = await res.json().catch(() => ({}));
     return NextResponse.json(

@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest,
       { next: { revalidate: 900 } }   // 15-min cache at edge
     );
     if (res.ok) {
-      return NextResponse.json(await res.json());
+      return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=900' } });
     }
     const err = await res.json().catch(() => ({}));
     return NextResponse.json(

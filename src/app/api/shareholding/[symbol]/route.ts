@@ -12,7 +12,7 @@ export async function GET(
     const res = await fetch(`${DATA_SERVER}/shareholding/${encodeURIComponent(symbol)}`, {
       next: { revalidate: 3600 },
     });
-    if (res.ok) return NextResponse.json(await res.json());
+    if (res.ok) return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=900' } });
     return NextResponse.json({ error: 'Not found' }, { status: res.status });
   } catch {
     return NextResponse.json({ error: 'Data server unavailable' }, { status: 503 });

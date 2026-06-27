@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest,
       `${DATA_SERVER}/price/${encodeURIComponent(symbol)}`,
       { next: { revalidate: 60 } }   // 1-min cache — near-live quotes
     );
-    if (res.ok) return NextResponse.json(await res.json());
+    if (res.ok) return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=90' } });
     const err = await res.json().catch(() => ({}));
     return NextResponse.json({ error: err.detail || 'Price not found' }, { status: res.status });
   } catch {

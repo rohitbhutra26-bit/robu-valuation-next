@@ -9,7 +9,7 @@ export async function GET(
   const symbol = params.symbol.toUpperCase();
   try {
     const res = await fetch(`${DATA_SERVER}/quarterly/${symbol}`, { cache: 'no-store' });
-    if (res.ok) return NextResponse.json(await res.json());
+    if (res.ok) return NextResponse.json(await res.json(), { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=900' } });
     return NextResponse.json({ error: 'Not found' }, { status: res.status });
   } catch {
     return NextResponse.json({ error: 'Data server unavailable' }, { status: 503 });
