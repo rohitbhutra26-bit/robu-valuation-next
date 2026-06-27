@@ -32,6 +32,8 @@ import PortfolioView from './PortfolioView';
 import ROBUScoreCard from './ROBUScoreCard';
 import ScenarioBuilder from './ScenarioBuilder';
 import SectorAlternatives from './SectorAlternatives';
+import ThreeLensCard from './ThreeLensCard';
+import StoryPotentialCard from './StoryPotentialCard';
 import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
 import { valuationReliability } from '@/lib/valuationReliability';
 
@@ -251,13 +253,38 @@ function MobileHeader({
 
 // ─── Loader / Error ───────────────────────────────────────────────────────────
 function MobileLoader({ symbol }: { symbol: string }) {
+  // Ghost skeleton that mirrors the real valuation layout, so the page keeps its
+  // shape while live data loads (feels far faster than a blank spinner).
   return (
-    <div className="flex flex-col items-center justify-center h-64 gap-4 px-6">
-      <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-      <div className="text-center">
-        <p className="text-sm text-muted">Loading {symbol || '…'}</p>
-        <p className="text-xs text-muted/50 mt-1">Fetching live data from NSE/BSE</p>
+    <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl mx-auto w-full" aria-busy="true" aria-label={`Loading ${symbol || ''}`}>
+      {/* Verdict card */}
+      <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+        <div className="skeleton h-3 w-24 rounded-cds-sm" />
+        <div className="flex items-center gap-3">
+          <div className="skeleton w-12 h-12 rounded-2xl flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <div className="skeleton h-7 w-40 rounded-cds-sm" />
+            <div className="skeleton h-5 w-28 rounded-cds-sm" />
+          </div>
+        </div>
+        <div className="skeleton h-2.5 w-full rounded-full" />
+        <div className="flex gap-6">
+          <div className="space-y-2"><div className="skeleton h-3 w-20 rounded-cds-sm" /><div className="skeleton h-5 w-24 rounded-cds-sm" /></div>
+          <div className="space-y-2"><div className="skeleton h-3 w-16 rounded-cds-sm" /><div className="skeleton h-5 w-20 rounded-cds-sm" /></div>
+        </div>
       </div>
+      {/* Three-lens / assumptions blocks */}
+      {[0, 1].map(i => (
+        <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-3">
+          <div className="skeleton h-4 w-32 rounded-cds-sm" />
+          <div className="skeleton h-3 w-full rounded-cds-sm" />
+          <div className="skeleton h-3 w-5/6 rounded-cds-sm" />
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <div className="skeleton h-16 rounded-2xl" /><div className="skeleton h-16 rounded-2xl" />
+          </div>
+        </div>
+      ))}
+      <p className="text-center text-xs text-muted/60">Fetching live data for {symbol || '…'} from NSE/BSE…</p>
     </div>
   );
 }
@@ -437,6 +464,8 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
     <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
+      <ThreeLensCard company={company} financials={financials} assumptions={assumptions} />
+
       <ValuationCaveatBanner company={company} financials={financials} />
 
       <div className="bg-card border border-border rounded-2xl p-4 space-y-5">
@@ -520,6 +549,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <ScenarioBuilder company={company} financials={financials} />
       <SectorAlternatives company={company} onSelectSymbol={() => {}} />
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
+      <StoryPotentialCard company={company} financials={financials} assumptions={assumptions} />
     </div>
   );
 }

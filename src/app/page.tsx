@@ -1,6 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
+
+// Runs before the browser paints (client) so we never flash the home screen when the
+// URL already has ?symbol= ; falls back to useEffect during SSR to avoid warnings.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getSectorProfile, getCompanyProfile, getIndustryCagr, valuationCaveat } from '@/lib/sectorModelMap';
 import { suggestAssumptions, validateFinancials, DataQualityResult } from '@/lib/forecastUtils';
@@ -147,13 +151,13 @@ export default function Home() {
   // ── URL persistence: restore stock from ?symbol= on page load ────────────
   // Read directly from window.location — no useSearchParams/Suspense needed.
   // On refresh: URL has ?symbol=RELIANCE → we auto-load that stock.
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sym = params.get('symbol');
     if (sym) {
       const clean = sym.toUpperCase();
       setSelectedSymbol(clean);
-      setHomeMode(false);
+      setHomeMode(false);   // set BEFORE paint → no home-screen flash on refresh
       loadCompany(clean);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
