@@ -55,6 +55,27 @@ export function valuationReliability(
     };
   }
 
+  // Pattern — FINANCIAL DISTRESS: profitable on paper, but operating profit barely
+  // covers the interest bill and leverage is heavy. Catches the "positive EPS yet going
+  // bankrupt" case the loss/neg-book guards miss (the spirit of an Altman distress flag,
+  // built from the data we actually have: EBITDA, interest, debt, equity). Excludes
+  // banks/NBFCs — borrowing IS their business and is judged on asset quality instead.
+  if (profile.model !== 'pb') {
+    const _ebitda = latest.ebitda ?? 0;
+    const _int    = latest.interest ?? 0;
+    const _eq     = latest.equity ?? 0;
+    const coverage = _int > 0 ? _ebitda / _int : Infinity;
+    const lev      = _eq > 0 ? (latest.borrowings ?? 0) / _eq : Infinity;
+    if (_int > 0 && _ebitda > 0 && coverage < 1.5 && (lev > 1.5 || !isFinite(lev))) {
+      const n = company.name.split(' ').slice(0, 2).join(' ');
+      return {
+        reliable: false,
+        title: 'Financially stressed — interest barely covered',
+        note: `${n}'s operating profit covers its interest bill only ${coverage.toFixed(1)}× (a healthy business clears 3×+)${isFinite(lev) ? `, while carrying ${lev.toFixed(1)}× debt-to-equity` : ', on very heavy debt'}. When most of the profit goes to lenders, a small dip can wipe out the equity — so an earnings-based fair value overstates what's actually safe here. Watch debt, refinancing and cash flow, not the multiple.`,
+      };
+    }
+  }
+
   // Pattern 2 — exceptional-gain earnings: PAT jumps, operating cash doesn't follow
   if (prev && prev.pat > 0 && latest.pat > 0) {
     const patJump  = latest.pat / prev.pat;
