@@ -325,6 +325,9 @@ const BROKER_PROFILE: SectorProfile = {
 // Known symbols that are mis-classified by Screener.in (belt-and-suspenders)
 // Add any stock here where the name-based detection doesn't catch it.
 const SYMBOL_OVERRIDES: Record<string, SectorProfile> = {
+  // ── No/placeholder sector from Screener (health-check L1) ──
+  BEEKAY:    evEbitdaProfile('Steel', 6, 2, 12),   // Beekay Steel Industries
+  BENGALASM: peProfile('Holding Co', 16),           // Bengal & Assam (holding co)
   // ── Exchanges ──
   MCX:       EXCHANGE_PROFILE,
   BSE:       EXCHANGE_PROFILE,
