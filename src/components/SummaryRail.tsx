@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import { getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
 import { runPrimaryModel, suggestAssumptions } from '@/lib/forecastUtils';
+import { verdictKey } from '@/lib/verdict';
 import { valuationReliability } from '@/lib/valuationReliability';
 
 // Sticky 'at a glance' rail — desktop ultra-wide only. Recaps price, verdict and key
@@ -26,8 +27,9 @@ export default function SummaryRail({ company, financials, assumptions }: {
   }, [company, financials, assumptions.years]);
 
   const isPos = company.changePercent >= 0;
-  const word = !v ? 'Limited data' : v.up > 20 ? 'Looks cheap' : v.up < -15 ? 'Looks pricey' : 'Fairly priced';
-  const tone = !v ? 'text-muted' : v.up > 20 ? 'text-gain' : v.up < -15 ? 'text-loss' : 'text-warning';
+  const _vk = v ? verdictKey(v.up) : null;
+  const word = !_vk ? 'Limited data' : (_vk === 'cheap' || _vk === 'very-cheap') ? 'Looks cheap' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'Looks pricey' : 'Fairly priced';
+  const tone = !_vk ? 'text-muted' : (_vk === 'cheap' || _vk === 'very-cheap') ? 'text-gain' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'text-loss' : 'text-warning';
   const box  = !v ? 'bg-border/30 border-border' : v.up > 20 ? 'bg-gain/10 border-gain/20' : v.up < -15 ? 'bg-loss/10 border-loss/20' : 'bg-warning/10 border-warning/20';
   const ratios = [
     { l: 'P/E', x: company.pe > 0 ? `${company.pe.toFixed(1)}x` : '—' },
