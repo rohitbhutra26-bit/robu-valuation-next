@@ -37,6 +37,7 @@ const ScenarioBuilder = dynamic(() => import('@/components/ScenarioBuilder'), { 
 import SectionHeader from '@/components/SectionHeader';
 import StickyTicker from '@/components/StickyTicker';
 const ROBUScoreCard = dynamic(() => import('@/components/ROBUScoreCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
+const FScoreCard = dynamic(() => import('@/components/FScoreCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-32 animate-pulse" /> });
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import CompanyBrief from '@/components/CompanyBrief';
@@ -881,6 +882,7 @@ export default function Home() {
                       desc="One grade for overall business quality, recent company announcements, and stronger options in the same sector if this one doesn't convince you."
                     />
                     <ROBUScoreCard company={company} financials={financials} />
+                    <FScoreCard company={company} financials={financials} />
                   </>
                 )}
                 {companyTab === 'valuation' && activeView === 'valuation' && company && (

@@ -37,6 +37,7 @@ import ThreeLensCard from './ThreeLensCard';
 const StoryPotentialCard = dynamic(() => import('./StoryPotentialCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-40 animate-pulse" /> });
 import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
 import { valuationReliability } from '@/lib/valuationReliability';
+import FScoreCard from './FScoreCard';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -547,6 +548,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <MonteCarloCard company={company} financials={financials} assumptions={assumptions} />
       <RedFlagsCard company={company} financials={financials} />
       {financials.length >= 3 && <ROBUScoreCard company={company} financials={financials} />}
+      <FScoreCard company={company} financials={financials} />
       <ScenarioBuilder company={company} financials={financials} />
       <SectorAlternatives company={company} onSelectSymbol={() => {}} />
       <WhatMustHappen company={company} financials={financials} assumptions={assumptions} />
