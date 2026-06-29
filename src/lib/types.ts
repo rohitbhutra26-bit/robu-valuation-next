@@ -10,7 +10,9 @@ export interface FinancialYear {
   shares: number;
   ocf?: number;        // Operating Cash Flow — from Screener.in (not available in Yahoo)
   interest?: number;   // Interest expense (₹ Cr) — for coverage ratio
-  borrowings?: number; // Total debt from balance sheet (₹ Cr)
+  borrowings?: number; // Total debt from balance sheet
+  totalAssets?: number;// Balance-sheet total assets (= total liabilities)
+  reserves?: number;   // Retained earnings / reserves (₹ Cr)
   equity?: number;     // Equity capital + reserves (₹ Cr)
   source?: string;     // 'screener' | 'yahoo' — which data source this year came from
 }

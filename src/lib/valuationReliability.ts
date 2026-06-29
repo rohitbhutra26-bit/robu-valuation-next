@@ -66,6 +66,12 @@ export function valuationReliability(
     const _eq     = latest.equity ?? 0;
     const coverage = _int > 0 ? _ebitda / _int : Infinity;
     const lev      = _eq > 0 ? (latest.borrowings ?? 0) / _eq : Infinity;
+    const _reserves = latest.reserves;
+    if (_reserves != null && _reserves < 0 && _eq <= 0) {
+      const n = company.name.split(' ').slice(0, 2).join(' ');
+      return { reliable: false, title: 'Accumulated losses have eaten the reserves',
+        note: `${n} has negative reserves — years of losses have eroded the money shareholders put in. An earnings or book "fair value" assumes a healthy balance sheet, which this isn't. Treat as a turnaround/special situation; watch whether losses are narrowing and the balance sheet repairing, not a multiple.` };
+    }
     if (_int > 0 && _ebitda > 0 && coverage < 1.5 && (lev > 1.5 || !isFinite(lev))) {
       const n = company.name.split(' ').slice(0, 2).join(' ');
       return {

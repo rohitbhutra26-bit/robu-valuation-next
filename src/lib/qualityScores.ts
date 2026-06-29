@@ -19,9 +19,11 @@ export function piotroskiFScore(company: Company, financials: FinancialYear[]): 
   const t = completeYears[completeYears.length - 1];
   const p = completeYears[completeYears.length - 2];
 
-  const cap  = (f: FinancialYear) => (f.equity ?? 0) + (f.borrowings ?? 0); // capital base (no total-assets in feed)
-  const roa  = (f: FinancialYear) => { const c = cap(f); return c > 0 ? f.pat / c : NaN; };
-  const turn = (f: FinancialYear) => { const c = cap(f); return c > 0 ? f.revenue / c : NaN; };
+  // Prefer real total assets (now parsed from the balance sheet); fall back to the
+  // capital base (equity + debt) for older rows that predate the totalAssets field.
+  const base = (f: FinancialYear) => (f.totalAssets && f.totalAssets > 0) ? f.totalAssets : (f.equity ?? 0) + (f.borrowings ?? 0);
+  const roa  = (f: FinancialYear) => { const c = base(f); return c > 0 ? f.pat / c : NaN; };
+  const turn = (f: FinancialYear) => { const c = base(f); return c > 0 ? f.revenue / c : NaN; };
   const de   = (f: FinancialYear) => ((f.equity ?? 0) > 0 ? (f.borrowings ?? 0) / (f.equity as number) : Infinity);
 
   const checks: { ok: boolean; text: string }[] = [
