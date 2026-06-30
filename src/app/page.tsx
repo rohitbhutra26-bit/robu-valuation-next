@@ -41,6 +41,7 @@ const FScoreCard = dynamic(() => import('@/components/FScoreCard'), { ssr: false
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import FreshnessNote from '@/components/FreshnessNote';
+const ShareVerdictCard = dynamic(() => import('@/components/ShareVerdictCard'), { ssr: false });
 const EarningsFlash = dynamic(() => import('@/components/EarningsFlash'), { ssr: false });
 import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
@@ -715,6 +716,7 @@ export default function Home() {
                     {/* Verdict — the big plain-English answer at the very top */}
                     <div id="sec-verdict" className="scroll-mt-24">
                       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+                      <div className="flex justify-end"><ShareVerdictCard company={company} financials={financials} /></div>
                     </div>
 
                     {/* Fallback rough read — only appears when the full model can't value it */}

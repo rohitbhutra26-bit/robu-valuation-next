@@ -40,6 +40,7 @@ import { valuationReliability } from '@/lib/valuationReliability';
 import FScoreCard from './FScoreCard';
 import FreshnessNote from './FreshnessNote';
 import EarningsFlash from './EarningsFlash';
+import ShareVerdictCard from './ShareVerdictCard';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -469,6 +470,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
       <FreshnessNote company={company} />
       <EarningsFlash company={company} />
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
+      <div className="flex justify-end"><ShareVerdictCard company={company} financials={financials} /></div>
 
       <ThreeLensCard company={company} financials={financials} assumptions={assumptions} />
 
