@@ -52,6 +52,8 @@ export interface Company {
   website?: string;
   employees?: number;
   financials?: FinancialYear[];
+  stale?: boolean;     // served from last-good cache (live source was down)
+  asOf?: number;       // unix ts of the last-good snapshot
 }
 
 export interface ValuationAssumptions {

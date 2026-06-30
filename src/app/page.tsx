@@ -40,6 +40,7 @@ const ROBUScoreCard = dynamic(() => import('@/components/ROBUScoreCard'), { ssr:
 const FScoreCard = dynamic(() => import('@/components/FScoreCard'), { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl h-32 animate-pulse" /> });
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
+import FreshnessNote from '@/components/FreshnessNote';
 import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
 import ThreeLensCard from '@/components/ThreeLensCard';
