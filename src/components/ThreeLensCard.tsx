@@ -33,7 +33,7 @@ export default function ThreeLensCard({ company, financials, assumptions }: {
         assumptions.revenueGrowthRate, assumptions.netMarginAssumption, assumptions.exitMultiple, assumptions.years);
       if (r.fairValue > 0) {
         const up = (r.fairValue - price) / price * 100;
-        const _vk = verdictKey(up); modelSig = (_vk === 'cheap' || _vk === 'very-cheap') ? 'cheap' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'rich' : 'fair';
+        const _vk = verdictKey(up, assumptions.years); modelSig = (_vk === 'cheap' || _vk === 'very-cheap') ? 'cheap' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'rich' : 'fair';
         modelText = `Worth about ₹${r.fairValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} on its ${profile.exitMultipleLabel.replace('Exit ', '')} — ${up >= 0 ? '+' : ''}${up.toFixed(0)}% over ${assumptions.years}y.`;
       }
     } catch { /* ignore */ }

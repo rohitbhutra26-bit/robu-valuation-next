@@ -782,9 +782,15 @@ export function suggestAssumptions(
     const mc = company.marketCap || 0;   // ₹ Crore
     const sizeAdj = mc >= 50000 ? 1.0 : mc >= 20000 ? 0.95 : mc >= 7000 ? 0.86 : mc >= 2000 ? 0.74 : 0.60;
     let m = profile.defaultExitMultiple * sizeAdj;
-    // a small/micro cap shouldn't be assumed to re-rate far beyond its current multiple
-    if (mc < 7000 && profile.model === 'pe' && company.pe > 3) {
-      m = Math.min(m, company.pe * 1.6);
+    // Don't assume a stock re-rates ALL THE WAY to the sector multiple — only PART of the
+    // way from where it trades today. (Granting INFY at 14x the full 28x IT multiple, on
+    // top of 5y of growth, produced implausible "+186% very cheap" headlines.) Applies to
+    // every cap, only when the stock trades BELOW the target (de-rated); premium names keep
+    // the sector multiple so they still read expensive. Bigger/more-liquid names re-rate
+    // more readily than micro-caps.
+    if (profile.model === 'pe' && company.pe > 3 && company.pe < m) {
+      const rerate = mc >= 20000 ? 0.40 : mc >= 7000 ? 0.35 : 0.30;
+      m = company.pe + rerate * (m - company.pe);
     }
     exitMultiple = Math.round(m * 10) / 10;
   }

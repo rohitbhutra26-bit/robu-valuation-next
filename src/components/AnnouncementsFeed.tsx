@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { cachedJson } from '@/lib/clientCache';
 import { Company } from '@/lib/types';
 
 interface Announcement {
@@ -18,9 +19,8 @@ export default function AnnouncementsFeed({ company }: { company: Company }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API}/announcements/${company.symbol}`)
-      .then(r => r.json())
-      .then(d => setItems(d.announcements || []))
+    cachedJson(`${API}/announcements/${company.symbol}`)
+      .then((d:any) => setItems((d && d.announcements) || []))
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, [company.symbol]);

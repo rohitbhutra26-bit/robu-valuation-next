@@ -57,7 +57,7 @@ function MethodCard({
   const upside    = fairValue > 0 ? (fairValue / currentPrice - 1) * 100 : 0;
   const isUp      = upside >= 0;
   const buyPrice  = fairValue > 0 ? fairValue * (1 - marginOfSafety / 100) : 0;
-  const vk        = verdictKey(upside);  // shared thresholds — see lib/verdict.ts
+  const vk        = verdictKey(upside, 5);  // shared thresholds — see lib/verdict.ts
   const verdict   = (vk === 'cheap' || vk === 'very-cheap') ? { label: 'Looks cheap',  cls: 'text-gain bg-gain/10 border-gain/20' }
                   : (vk === 'expensive' || vk === 'very-expensive') ? { label: 'Looks pricey', cls: 'text-loss bg-loss/10 border-loss/20' }
                   :                 { label: 'About right',  cls: 'text-gold bg-gold/10 border-gold/20' };
@@ -204,7 +204,7 @@ export default function ValuationEngine({ company, financials, assumptions, comp
   const currentPEG = pegResult.currentPEG;
 
   // Verdict (shared thresholds — see lib/verdict.ts)
-  const compositeVK = verdictKey(compositeUp);
+  const compositeVK = verdictKey(compositeUp, assumptions.years);
   const verdict =
     (compositeVK === 'cheap' || compositeVK === 'very-cheap')        ? { text: 'Potentially Undervalued', cls: 'text-gain bg-gain/10 border-gain/20' } :
     (compositeVK === 'expensive' || compositeVK === 'very-expensive') ? { text: 'Potentially Overvalued',  cls: 'text-loss bg-loss/10 border-loss/20' } :

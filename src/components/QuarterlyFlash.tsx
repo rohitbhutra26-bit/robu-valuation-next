@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { cachedJson } from '@/lib/clientCache';
 import { Company } from '@/lib/types';
 import { Zap, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
 
@@ -43,8 +44,7 @@ export default function QuarterlyFlash({ company }: QuarterlyFlashProps) {
     setError(false);
 
     const base = process.env.NEXT_PUBLIC_DATA_SERVER_URL || '';
-    fetch(`${base}/api/quarterly/${company.symbol}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    cachedJson(`${base}/api/quarterly/${company.symbol}`)
       .then(data => {
         setQuarters(Array.isArray(data) ? data.slice(0, 8) : []);
         setLoading(false);

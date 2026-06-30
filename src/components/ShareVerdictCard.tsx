@@ -46,7 +46,7 @@ export default function ShareVerdictCard({ company, financials }: { company: Com
       const r = runPrimaryModel(profile.model, financials, company, auto.revenueGrowthRate, auto.netMarginAssumption, auto.exitMultiple, 5);
       fair = Math.max(r.fairValue, 0); upside = fair > 0 && company.currentPrice > 0 ? (fair - company.currentPrice) / company.currentPrice * 100 : 0;
     } catch { reliable = false; }
-    const vk = verdictKey(upside);
+    const vk = verdictKey(upside, 5);
     const tone = !reliable ? C.warn : (vk === 'cheap' || vk === 'very-cheap') ? C.gain : vk === 'fair' ? C.warn : C.loss;
     const word = !reliable ? 'Hard to value' : VERDICT_WORD[vk];
 

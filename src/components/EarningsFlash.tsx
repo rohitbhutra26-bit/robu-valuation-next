@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { cachedJson } from '@/lib/clientCache';
 import { Company } from '@/lib/types';
 import { Zap, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
 
@@ -20,8 +21,8 @@ export default function EarningsFlash({ company }: { company: Company }) {
     let on = true;
     const base = process.env.NEXT_PUBLIC_DATA_SERVER_URL || '';
     Promise.all([
-      fetch(`${base}/api/quarterly/${company.symbol}`).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API}/announcements/${company.symbol}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      cachedJson(`${base}/api/quarterly/${company.symbol}`).then(d => d ?? []).catch(() => []),
+      cachedJson(`${API}/announcements/${company.symbol}`).then(d => d ?? {}).catch(() => ({})),
     ]).then(([qd, ad]) => {
       if (!on) return;
       setQ(Array.isArray(qd) ? qd : []);

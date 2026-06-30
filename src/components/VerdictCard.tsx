@@ -56,7 +56,7 @@ export default function VerdictCard({ company, financials, assumptions }: Props)
   // earnings) we must NOT show a confident cheap/expensive call.
   const reliability = valuationReliability(company, financials);
   const v = reliability.reliable
-    ? VERDICT_UI[verdictKey(upside)]
+    ? VERDICT_UI[verdictKey(upside, horizon)]
     : { label: 'Hard to value', sub: reliability.title, tone: 'warning', Icon: Minus } as const;
 
   const toneText   = `text-${v.tone}`;

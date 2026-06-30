@@ -27,7 +27,7 @@ export default function SummaryRail({ company, financials, assumptions }: {
   }, [company, financials, assumptions.years]);
 
   const isPos = company.changePercent >= 0;
-  const _vk = v ? verdictKey(v.up) : null;
+  const _vk = v ? verdictKey(v.up, assumptions.years) : null;
   const word = !_vk ? 'Limited data' : (_vk === 'cheap' || _vk === 'very-cheap') ? 'Looks cheap' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'Looks pricey' : 'Fairly priced';
   const tone = !_vk ? 'text-muted' : (_vk === 'cheap' || _vk === 'very-cheap') ? 'text-gain' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'text-loss' : 'text-warning';
   const box  = !v ? 'bg-border/30 border-border' : v.up > 20 ? 'bg-gain/10 border-gain/20' : v.up < -15 ? 'bg-loss/10 border-loss/20' : 'bg-warning/10 border-warning/20';

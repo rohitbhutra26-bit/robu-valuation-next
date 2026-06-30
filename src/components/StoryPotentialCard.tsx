@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { cachedJson } from '@/lib/clientCache';
 import { Company, FinancialYear, ValuationAssumptions } from '@/lib/types';
 import {
   expectationGap, trajectoryInflection, narrativeLayer, catalystWatch, rateContext,
   combinePotential, QuarterRow, SourceDoc, NarrativeItem, MacroInput, LayerResult, StoryDir,
 } from '@/lib/storyEngine';
 import SectionCard from './SectionCard';
+import { valuationReliability } from '@/lib/valuationReliability';
+import { verdictKey } from '@/lib/verdict';
+import { getCompanyProfile, getIndustryCagr } from '@/lib/sectorModelMap';
+import { runPrimaryModel, suggestAssumptions } from '@/lib/forecastUtils';
 import { Gauge, TrendingUp, TrendingDown, Minus } from '@/lib/icons';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://robu-data-server-production.up.railway.app';
@@ -36,10 +41,10 @@ export default function StoryPotentialCard({ company, financials, assumptions }:
     let alive = true;
     const base = process.env.NEXT_PUBLIC_DATA_SERVER_URL || '';
     Promise.all([
-      fetch(`${base}/api/quarterly/${company.symbol}`).then(r => r.ok ? r.json() : []).catch(() => []),
-      fetch(`${API}/announcements/${company.symbol}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
-      fetch(`/api/macro`).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`/api/story-narrative/${company.symbol}`).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
+      cachedJson(`${base}/api/quarterly/${company.symbol}`).then(d => d ?? []).catch(() => []),
+      cachedJson(`${API}/announcements/${company.symbol}`).then(d => d ?? {}).catch(() => ({})),
+      cachedJson<MacroInput>(`/api/macro`).then(d => d ?? null).catch(() => null),
+      cachedJson<{items:NarrativeItem[]}>(`/api/story-narrative/${company.symbol}`).then(d => d ?? { items: [] }).catch(() => ({ items: [] })),
     ]).then(([q, a, m, n]) => {
       if (!alive) return;
       setQuarters(Array.isArray(q) ? q : []);
@@ -63,6 +68,29 @@ export default function StoryPotentialCard({ company, financials, assumptions }:
     return { layers, overall: combinePotential(layers) };
   }, [company, financials, assumptions, quarters, sources, macro, narrative]);
 
+  // #3 — for loss-makers / distorted earnings, a re-rating read doesn't apply: mute it.
+  const reliable = financials.length ? valuationReliability(company, financials).reliable : true;
+  // #2 — the fair-value verdict direction, to flag genuine conflicts with the re-rating read.
+  let verdictDir: 'cheap' | 'fair' | 'pricey' | null = null;
+  try {
+    const _p = getCompanyProfile(company);
+    const _a = suggestAssumptions(company, financials, getIndustryCagr(_p.sectorLabel), _p, 5);
+    const _r = runPrimaryModel(_p.model, financials, company, _a.revenueGrowthRate, _a.netMarginAssumption, _a.exitMultiple, 5);
+    const _up = _r.fairValue > 0 && company.currentPrice > 0 ? (_r.fairValue - company.currentPrice) / company.currentPrice * 100 : 0;
+    const _vk = verdictKey(_up, 5);
+    verdictDir = (_vk === 'cheap' || _vk === 'very-cheap') ? 'cheap' : (_vk === 'expensive' || _vk === 'very-expensive') ? 'pricey' : 'fair';
+  } catch { /* ignore */ }
+  const shown = reliable ? overall : {
+    dir: 'neutral' as StoryDir, signal: "Re-rating can't be assessed here",
+    headline: 'This is a special situation (loss-making or distorted earnings), so fair value and re-rating potential don\'t apply until the business normalises. The layers below are shown only as evidence.',
+    conviction: '', score: 0,
+  };
+  let reconcile = '';
+  if (reliable) {
+    if (verdictDir === 'cheap' && shown.dir === 'negative') reconcile = 'Note: it looks cheap on fair value, but these re-rating signals lean down — the discount can persist until the trend turns (a possible value trap).';
+    else if (verdictDir === 'pricey' && shown.dir === 'positive') reconcile = 'Note: it looks pricey on fair value, but the momentum/story lean up — it can stay expensive while it keeps executing.';
+  }
+
   if (!financials.length) return null;
 
   return (
@@ -71,17 +99,18 @@ export default function StoryPotentialCard({ company, financials, assumptions }:
       eyebrow="Story engine · expectations investing"
       desc="A layer above fair value: will the market pay a HIGHER or lower multiple from here? We compare the growth the price already assumes against how the business is actually trending — plus its story, catalysts and the rate backdrop. Evidence, never a black-box buy."
       Icon={Gauge}
-      tone={overall.dir === 'positive' ? 'gain' : overall.dir === 'negative' ? 'loss' : 'warning'}
+      tone={shown.dir === 'positive' ? 'gain' : shown.dir === 'negative' ? 'loss' : 'warning'}
       id="sec-potential"
     >
       {/* overall read */}
-      <div className={`rounded-2xl border p-4 mb-4 ${TONE[overall.dir]}`}>
+      <div className={`rounded-2xl border p-4 mb-4 ${TONE[shown.dir]}`}>
         <div className="flex items-center gap-2 mb-1.5">
-          <DirIcon dir={overall.dir} />
-          <span className="text-sm font-bold">{overall.signal}</span>
+          <DirIcon dir={shown.dir} />
+          <span className="text-sm font-bold">{shown.signal}</span>
         </div>
-        <p className="text-[13px] leading-relaxed text-primary/90">{overall.headline}</p>
-        <p className="text-[11px] text-muted mt-2">{overall.conviction}</p>
+        <p className="text-[13px] leading-relaxed text-primary/90">{shown.headline}</p>
+        {shown.conviction && <p className="text-[11px] text-muted mt-2">{shown.conviction}</p>}
+        {reconcile && <p className="text-[11px] text-warning/90 mt-2 leading-relaxed">{reconcile}</p>}
       </div>
 
       {/* layer rows */}
