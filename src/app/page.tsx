@@ -41,6 +41,7 @@ const FScoreCard = dynamic(() => import('@/components/FScoreCard'), { ssr: false
 import MobileLayout, { RobuLogo, RobuWordmark } from '@/components/MobileLayout';
 import VerdictCard from '@/components/VerdictCard';
 import FreshnessNote from '@/components/FreshnessNote';
+const EarningsFlash = dynamic(() => import('@/components/EarningsFlash'), { ssr: false });
 import CompanyBrief from '@/components/CompanyBrief';
 import MetricTrends from '@/components/MetricTrends';
 import ThreeLensCard from '@/components/ThreeLensCard';

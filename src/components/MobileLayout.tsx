@@ -39,6 +39,7 @@ import { getBaselineFinancial, runPrimaryModel } from '@/lib/forecastUtils';
 import { valuationReliability } from '@/lib/valuationReliability';
 import FScoreCard from './FScoreCard';
 import FreshnessNote from './FreshnessNote';
+import EarningsFlash from './EarningsFlash';
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type MainTab  = 'home' | 'watchlist' | 'portfolio' | 'stock';
@@ -466,6 +467,7 @@ function ValuationView({ company, financials, assumptions, setAssumptions, isLoa
   return (
     <div className="px-4 pt-4 pb-32 space-y-4 max-w-2xl md:max-w-3xl mx-auto w-full">
       <FreshnessNote company={company} />
+      <EarningsFlash company={company} />
       <VerdictCard company={company} financials={financials} assumptions={assumptions} />
 
       <ThreeLensCard company={company} financials={financials} assumptions={assumptions} />
