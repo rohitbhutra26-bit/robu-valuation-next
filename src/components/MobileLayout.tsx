@@ -68,7 +68,7 @@ export function RobuLogo({ size = 32 }: { size?: number }) {
       {/* The actual 'r' glyph from the robu wordmark, so the mark and the wordmark
           are the same letterform everywhere (header, favicon, app icon). */}
       <g transform="translate(31.7, 12) scale(0.41)">
-        <path fill="#FFFFFF" d="M1 161 L1 102 A57 77 0 0 1 58 25 L82 25 A6 6 0 0 1 88 31 L88 44 A6 6 0 0 1 82 50 L58 50 A32 52 0 0 0 26 102 L26 161 Z" />
+        <path d="M13.5 147.5 L13.5 75.5 A38 38 0 0 1 75.93 46.39" fill="none" stroke="#FFFFFF" strokeWidth="25" strokeLinecap="round" />
       </g>
     </svg>
   );
@@ -79,10 +79,10 @@ export function RobuWordmark({ height = 22, className = '' }: { height?: number;
   return (
     <svg height={height} viewBox="0 0 516 160" fill="currentColor" role="img" aria-label="robu"
       className={className} style={{ width: 'auto', display: 'block' }}>
-      <path d="M232 93 A69.5 68 0 1 1 371 93 A69.5 68 0 1 1 232 93 Z M257 93 A44.5 43 0 1 0 346 93 A44.5 43 0 1 0 257 93 Z M232 1 L257 1 L257 161 L232 161 Z"/>
-      <path d="M87.3 93 A69.5 68 0 1 1 226.3 93 A69.5 68 0 1 1 87.3 93 Z M112.3 93 A44.5 43 0 1 0 201.3 93 A44.5 43 0 1 0 112.3 93 Z"/>
-      <path d="M377 25 L402 25 L402 93 A45 43 0 0 0 492 93 L492 25 L517 25 L517 93 A70 68 0 0 1 377 93 Z"/>
-      <path d="M1 161 L1 102 A57 77 0 0 1 58 25 L82 25 A6 6 0 0 1 88 31 L88 44 A6 6 0 0 1 82 50 L58 50 A32 52 0 0 0 26 102 L26 161 Z"/>
+      <path d="M244.5 13.5 L244.5 147.5 M244.5 92.5 A57 55 0 1 1 358.5 92.5 A57 55 0 1 1 244.5 92.5 Z" fill="none" stroke="currentColor" strokeWidth="25" strokeLinecap="round" />
+      <path d="M99.8 92.5 A57 55 0 1 1 213.8 92.5 A57 55 0 1 1 99.8 92.5 Z" fill="none" stroke="currentColor" strokeWidth="25" strokeLinecap="round" />
+      <path d="M389.5 37.5 L389.5 92.5 A57.5 55 0 0 0 504.5 92.5 L504.5 37.5" fill="none" stroke="currentColor" strokeWidth="25" strokeLinecap="round" />
+      <path d="M13.5 147.5 L13.5 75.5 A38 38 0 0 1 75.93 46.39" fill="none" stroke="currentColor" strokeWidth="25" strokeLinecap="round" />
     </svg>
   );
 }
